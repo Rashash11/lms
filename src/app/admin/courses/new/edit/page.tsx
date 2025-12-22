@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Box,
@@ -148,7 +148,7 @@ const createEmptyCourseData = (): CourseData => ({
     scoreCalculation: 'all',
 });
 
-export default function CourseEditorPage() {
+function CourseEditorContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [courseId, setCourseId] = useState<string | null | undefined>(undefined);
@@ -1579,5 +1579,18 @@ export default function CourseEditorPage() {
                 </Alert>
             </Snackbar>
         </Box>
+    );
+}
+
+export default function CourseEditorPage() {
+    return (
+        <Suspense fallback={
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', bgcolor: '#f5f5f5' }}>
+                <CircularProgress />
+                <Typography sx={{ ml: 2 }}>Loading editor...</Typography>
+            </Box>
+        }>
+            <CourseEditorContent />
+        </Suspense>
     );
 }
