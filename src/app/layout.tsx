@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-    title: 'Zedny LMS',
+    title: {
+        default: 'Zedny LMS',
+        template: '%s | Zedny LMS',
+    },
     description: 'Cloud Learning Management System',
 }
 
