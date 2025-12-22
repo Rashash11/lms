@@ -1,0 +1,891 @@
+# LMS Feature Registry
+# Status: planned | in-progress | done | flagged
+# Every feature must be: implemented OR flagged with UI shell + "Coming Soon" messaging
+
+version: "1.0"
+last_updated: "2024-12-19"
+
+# ============================================
+# SUPERADMIN FEATURES
+# ============================================
+superadmin:
+  tenant_management:
+    - id: SA-001
+      name: Create/Edit/Delete Tenant
+      status: planned
+      priority: high
+      route: /superadmin/tenants
+      
+    - id: SA-002
+      name: Domain/Subdomain Management
+      status: planned
+      priority: high
+      route: /superadmin/tenants/[id]
+      
+    - id: SA-003
+      name: Global Feature Flags
+      status: planned
+      priority: medium
+      route: /superadmin/settings/flags
+      
+    - id: SA-004
+      name: Global Limits (uploads/users/storage)
+      status: planned
+      priority: medium
+      route: /superadmin/settings/limits
+
+  monitoring:
+    - id: SA-005
+      name: Global Audit Logs
+      status: planned
+      priority: high
+      route: /superadmin/audit
+      
+    - id: SA-006
+      name: System Health Page
+      status: planned
+      priority: high
+      route: /superadmin/system-health
+      
+    - id: SA-007
+      name: Job Queue Monitoring (BullMQ)
+      status: planned
+      priority: medium
+      route: /superadmin/jobs
+
+  admin_tools:
+    - id: SA-008
+      name: Impersonate Admin
+      status: flagged
+      flag: FEATURE_IMPERSONATION
+      priority: low
+      route: /superadmin/impersonate
+      
+    - id: SA-009
+      name: Global Announcements
+      status: flagged
+      flag: FEATURE_ANNOUNCEMENTS
+      priority: low
+      route: /superadmin/announcements
+
+# ============================================
+# ADMIN FEATURES
+# ============================================
+admin:
+  dashboard:
+    - id: AD-001
+      name: Admin Dashboard with KPIs
+      status: done
+      priority: critical
+      route: /admin/dashboard
+      
+  users:
+    - id: AD-002
+      name: Users Table (CRUD/Search/Filter)
+      status: in-progress
+      priority: critical
+      route: /admin/users
+      
+    - id: AD-003
+      name: User Create/Edit Form
+      status: planned
+      priority: critical
+      route: /admin/users/new, /admin/users/[id]
+      
+    - id: AD-004
+      name: User Bulk Actions
+      status: planned
+      priority: high
+      route: /admin/users
+      
+    - id: AD-005
+      name: Password Reset / Unlock
+      status: planned
+      priority: high
+      route: /admin/users/[id]
+      
+    - id: AD-006
+      name: User Types & Permission Tree
+      status: planned
+      priority: high
+      route: /admin/user-types
+      
+    - id: AD-007
+      name: Custom User Fields Manager
+      status: planned
+      priority: medium
+      route: /admin/settings/user-fields
+
+  branches:
+    - id: AD-008
+      name: Branches CRUD
+      status: planned
+      priority: high
+      route: /admin/branches
+      
+    - id: AD-009
+      name: Branch User/Course Assignment
+      status: planned
+      priority: high
+      route: /admin/branches/[id]
+      
+    - id: AD-010
+      name: Branch Branding Override
+      status: planned
+      priority: medium
+      route: /admin/branches/[id]/branding
+
+  courses:
+    - id: AD-011
+      name: Courses Table (CRUD)
+      status: in-progress
+      priority: critical
+      route: /admin/courses
+      
+    - id: AD-012
+      name: Course Create/Edit Wizard
+      status: done
+      priority: critical
+      route: /admin/courses/new
+      
+    - id: AD-013
+      name: Enrollment Management
+      status: planned
+      priority: high
+      route: /admin/courses/[id]/enrollments
+      
+    - id: AD-014
+      name: Assign Instructors
+      status: planned
+      priority: high
+      route: /admin/courses/[id]
+
+  categories:
+    - id: AD-015
+      name: Categories Hierarchy CRUD
+      status: in-progress
+      priority: high
+      route: /admin/categories
+      
+    - id: AD-016
+      name: Import Categories (CSV/XLSX)
+      status: planned
+      priority: medium
+      route: /admin/categories/import
+
+  groups:
+    - id: AD-017
+      name: Groups CRUD + Members
+      status: planned
+      priority: high
+      route: /admin/groups
+      
+    - id: AD-018
+      name: Group Course Assignments
+      status: planned
+      priority: high
+      route: /admin/groups/[id]
+      
+    - id: AD-019
+      name: Group Join Key
+      status: flagged
+      flag: FEATURE_GROUP_JOIN_KEY
+      priority: low
+      route: /admin/groups/[id]
+
+  learning_paths:
+    - id: AD-020
+      name: Learning Paths CRUD
+      status: planned
+      priority: medium
+      route: /admin/learning-paths
+      
+    - id: AD-021
+      name: Learning Path Course Ordering
+      status: planned
+      priority: medium
+      route: /admin/learning-paths/[id]
+      
+    - id: AD-022
+      name: Learning Path Enrollments
+      status: planned
+      priority: medium
+      route: /admin/learning-paths/[id]/enrollments
+
+  certificates:
+    - id: AD-023
+      name: Certificate Template Editor
+      status: done
+      priority: high
+      route: /admin/certificates
+      
+    - id: AD-024
+      name: Certificate Preview & PDF
+      status: done
+      priority: high
+      route: /admin/certificates/[id]/preview
+      
+    - id: AD-025
+      name: Certificates Issued Listing
+      status: planned
+      priority: medium
+      route: /admin/certificates/issued
+
+  gamification:
+    - id: AD-026
+      name: Gamification Settings
+      status: flagged
+      flag: FEATURE_GAMIFICATION
+      priority: low
+      route: /admin/gamification
+      
+    - id: AD-027
+      name: Badges/Levels Editor
+      status: flagged
+      flag: FEATURE_GAMIFICATION
+      priority: low
+      route: /admin/gamification/badges
+
+  notifications:
+    - id: AD-028
+      name: Notification Templates
+      status: planned
+      priority: high
+      route: /admin/notifications
+      
+    - id: AD-029
+      name: Event Triggers Setup
+      status: planned
+      priority: high
+      route: /admin/notifications/triggers
+      
+    - id: AD-030
+      name: Notification Logs
+      status: planned
+      priority: medium
+      route: /admin/notifications/logs
+
+  automations:
+    - id: AD-031
+      name: Automation Rule Builder
+      status: planned
+      priority: medium
+      route: /admin/automations
+      
+    - id: AD-032
+      name: Automation Logs & Retry
+      status: planned
+      priority: medium
+      route: /admin/automations/logs
+
+  reports:
+    - id: AD-033
+      name: Reports Dashboard
+      status: in-progress
+      priority: high
+      route: /admin/reports
+      
+    - id: AD-034
+      name: User Progress Report
+      status: planned
+      priority: high
+      route: /admin/reports/user-progress
+      
+    - id: AD-035
+      name: Course Progress Report
+      status: planned
+      priority: high
+      route: /admin/reports/course-progress
+      
+    - id: AD-036
+      name: Export CSV/XLSX
+      status: planned
+      priority: high
+      route: /admin/reports/*
+      
+    - id: AD-037
+      name: Scheduled Reports (BullMQ)
+      status: flagged
+      flag: FEATURE_SCHEDULED_REPORTS
+      priority: low
+      route: /admin/reports/scheduled
+
+  discussions:
+    - id: AD-038
+      name: Discussions Moderation
+      status: planned
+      priority: medium
+      route: /admin/discussions
+      
+    - id: AD-039
+      name: Internal Messages
+      status: flagged
+      flag: FEATURE_MESSAGES
+      priority: low
+      route: /admin/messages
+
+  files:
+    - id: AD-040
+      name: Asset Library
+      status: planned
+      priority: medium
+      route: /admin/files
+
+  integrations:
+    - id: AD-041
+      name: SSO Settings (SAML/OIDC)
+      status: flagged
+      flag: FEATURE_SSO_SAML
+      priority: medium
+      route: /admin/settings/sso
+      
+    - id: AD-042
+      name: LDAP Settings
+      status: flagged
+      flag: FEATURE_LDAP
+      priority: low
+      route: /admin/settings/ldap
+      
+    - id: AD-043
+      name: SCIM Provisioning
+      status: flagged
+      flag: FEATURE_SCIM
+      priority: low
+      route: /admin/settings/scim
+      
+    - id: AD-044
+      name: Conferencing (Zoom/Teams/BBB)
+      status: flagged
+      flag: FEATURE_CONFERENCING
+      priority: medium
+      route: /admin/settings/conferencing
+      
+    - id: AD-045
+      name: API Keys Management
+      status: planned
+      priority: high
+      route: /admin/settings/api-keys
+      
+    - id: AD-046
+      name: Branding/Theme Settings
+      status: planned
+      priority: high
+      route: /admin/settings/branding
+
+  candidates:
+    - id: AD-047
+      name: Candidates Live Proctoring
+      status: done
+      priority: high
+      route: /admin/candidates (Live Proctoring tab)
+      
+    - id: AD-048
+      name: Candidates Test Attempts
+      status: done
+      priority: high
+      route: /admin/candidates (Test Attempts tab)
+      
+    - id: AD-049
+      name: Candidates Rescheduling
+      status: done
+      priority: medium
+      route: /admin/candidates (Rescheduling tab)
+      
+    - id: AD-050
+      name: Candidates Imported Results
+      status: done
+      priority: medium
+      route: /admin/candidates (Imported Results tab)
+      
+    - id: AD-051
+      name: Personal Report (7 tabs)
+      status: done
+      priority: high
+      route: /admin/candidates/report
+
+# ============================================
+# INSTRUCTOR FEATURES
+# ============================================
+instructor:
+  dashboard:
+    - id: IN-001
+      name: Instructor Dashboard
+      status: planned
+      priority: high
+      route: /instructor/dashboard
+
+  courses:
+    - id: IN-002
+      name: My Courses List
+      status: planned
+      priority: high
+      route: /instructor/courses
+      
+    - id: IN-003
+      name: Course Editor (Unit Builder)
+      status: planned
+      priority: high
+      route: /instructor/courses/[id]/edit
+      
+    - id: IN-004
+      name: Course Files Management
+      status: planned
+      priority: medium
+      route: /instructor/courses/[id]/files
+      
+    - id: IN-005
+      name: Course Discussions
+      status: planned
+      priority: medium
+      route: /instructor/courses/[id]/discussions
+
+  learners:
+    - id: IN-006
+      name: Course Learners List
+      status: planned
+      priority: high
+      route: /instructor/courses/[id]/learners
+      
+    - id: IN-007
+      name: Learner Progress View
+      status: planned
+      priority: high
+      route: /instructor/courses/[id]/learners/[userId]
+      
+    - id: IN-008
+      name: Message Learners
+      status: flagged
+      flag: FEATURE_MESSAGES
+      priority: low
+      route: /instructor/messages
+
+  grading:
+    - id: IN-009
+      name: Grading Hub
+      status: planned
+      priority: critical
+      route: /instructor/grading
+      
+    - id: IN-010
+      name: Assignment Grading
+      status: planned
+      priority: critical
+      route: /instructor/grading/assignments
+      
+    - id: IN-011
+      name: Test Manual Grading
+      status: planned
+      priority: high
+      route: /instructor/grading/tests
+      
+    - id: IN-012
+      name: Bulk Grading Actions
+      status: planned
+      priority: medium
+      route: /instructor/grading
+
+  ilt:
+    - id: IN-013
+      name: ILT Sessions Management
+      status: planned
+      priority: medium
+      route: /instructor/ilt
+      
+    - id: IN-014
+      name: Attendance Marking
+      status: planned
+      priority: medium
+      route: /instructor/ilt/[sessionId]/attendance
+      
+    - id: IN-015
+      name: Attendance Export
+      status: planned
+      priority: low
+      route: /instructor/ilt/[sessionId]/export
+
+  reports:
+    - id: IN-016
+      name: Instructor Reports
+      status: planned
+      priority: high
+      route: /instructor/reports
+
+# ============================================
+# LEARNER FEATURES
+# ============================================
+learner:
+  dashboard:
+    - id: LR-001
+      name: Learner Dashboard
+      status: planned
+      priority: critical
+      route: /learner/dashboard
+
+  courses:
+    - id: LR-002
+      name: My Courses List
+      status: planned
+      priority: critical
+      route: /learner/courses
+      
+    - id: LR-003
+      name: Course Catalog
+      status: planned
+      priority: high
+      route: /learner/catalog
+      
+    - id: LR-004
+      name: Course Detail Page
+      status: planned
+      priority: high
+      route: /learner/catalog/[id]
+      
+    - id: LR-005
+      name: Self-Enrollment
+      status: planned
+      priority: high
+      route: /learner/catalog/[id]
+
+  player:
+    - id: LR-006
+      name: Course Player
+      status: planned
+      priority: critical
+      route: /learner/course/[id]
+      
+    - id: LR-007
+      name: Unit Progress Tracking
+      status: planned
+      priority: critical
+      route: /learner/course/[id]
+      
+    - id: LR-008
+      name: Video Playback
+      status: planned
+      priority: high
+      route: /learner/course/[id]
+      
+    - id: LR-009
+      name: File Downloads
+      status: planned
+      priority: high
+      route: /learner/course/[id]
+
+  assessments:
+    - id: LR-010
+      name: Take Quiz/Test
+      status: planned
+      priority: critical
+      route: /learner/course/[id]/test/[testId]
+      
+    - id: LR-011
+      name: Test Results Page
+      status: planned
+      priority: high
+      route: /learner/course/[id]/test/[testId]/results
+      
+    - id: LR-012
+      name: Submit Survey
+      status: planned
+      priority: medium
+      route: /learner/course/[id]/survey/[surveyId]
+      
+    - id: LR-013
+      name: Submit Assignment
+      status: planned
+      priority: high
+      route: /learner/course/[id]/assignment/[assignmentId]
+      
+    - id: LR-014
+      name: View Assignment Feedback
+      status: planned
+      priority: high
+      route: /learner/course/[id]/assignment/[assignmentId]
+
+  ilt:
+    - id: LR-015
+      name: View ILT Sessions
+      status: planned
+      priority: medium
+      route: /learner/ilt
+      
+    - id: LR-016
+      name: Join Meeting URL
+      status: planned
+      priority: medium
+      route: /learner/ilt/[sessionId]
+
+  achievements:
+    - id: LR-017
+      name: My Certificates
+      status: planned
+      priority: high
+      route: /learner/certificates
+      
+    - id: LR-018
+      name: Download Certificate PDF
+      status: planned
+      priority: high
+      route: /learner/certificates/[id]/download
+      
+    - id: LR-019
+      name: Badges & Points
+      status: flagged
+      flag: FEATURE_GAMIFICATION
+      priority: low
+      route: /learner/achievements
+      
+    - id: LR-020
+      name: Leaderboard
+      status: flagged
+      flag: FEATURE_GAMIFICATION
+      priority: low
+      route: /learner/leaderboard
+
+  social:
+    - id: LR-021
+      name: Course Discussions
+      status: planned
+      priority: medium
+      route: /learner/course/[id]/discussions
+      
+    - id: LR-022
+      name: Messages Inbox
+      status: flagged
+      flag: FEATURE_MESSAGES
+      priority: low
+      route: /learner/messages
+
+# ============================================
+# CANDIDATE FEATURES
+# ============================================
+candidate:
+  profile:
+    - id: CA-001
+      name: Candidate Dashboard
+      status: planned
+      priority: high
+      route: /candidate/dashboard
+      
+    - id: CA-002
+      name: Candidate Profile
+      status: planned
+      priority: high
+      route: /candidate/profile
+      
+    - id: CA-003
+      name: Onboarding Checklist
+      status: planned
+      priority: medium
+      route: /candidate/onboarding
+
+  exams:
+    - id: CA-004
+      name: Assigned Exams List
+      status: planned
+      priority: critical
+      route: /candidate/exams
+      
+    - id: CA-005
+      name: Exam Eligibility Checks
+      status: planned
+      priority: high
+      route: /candidate/exams/[id]
+      
+    - id: CA-006
+      name: Exam Player
+      status: planned
+      priority: critical
+      route: /candidate/exams/[id]/start
+      
+    - id: CA-007
+      name: Exam Timer & Autosave
+      status: planned
+      priority: critical
+      route: /candidate/exams/[id]/start
+      
+    - id: CA-008
+      name: View Exam Results
+      status: planned
+      priority: high
+      route: /candidate/exams/[id]/results
+
+  proctoring:
+    - id: CA-009
+      name: Proctoring Session Start
+      status: flagged
+      flag: FEATURE_PROCTORING
+      priority: medium
+      route: /candidate/exams/[id]/start
+      
+    - id: CA-010
+      name: Proctoring Alerts Display
+      status: flagged
+      flag: FEATURE_PROCTORING
+      priority: medium
+      route: /candidate/exams/[id]/start
+
+# ============================================
+# CORE INFRASTRUCTURE
+# ============================================
+infrastructure:
+  auth:
+    - id: INFRA-001
+      name: JWT Auth with httpOnly Cookies
+      status: done
+      priority: critical
+      
+    - id: INFRA-002
+      name: Login Page
+      status: done
+      priority: critical
+      route: /login
+      
+    - id: INFRA-003
+      name: Role-Based Middleware
+      status: in-progress
+      priority: critical
+      
+    - id: INFRA-004
+      name: Permission Guard (API)
+      status: planned
+      priority: critical
+      
+    - id: INFRA-005
+      name: Permission Guard (Routes)
+      status: planned
+      priority: critical
+
+  database:
+    - id: INFRA-006
+      name: Prisma Schema (50+ models)
+      status: done
+      priority: critical
+      
+    - id: INFRA-007
+      name: Database Migrations
+      status: done
+      priority: critical
+      
+    - id: INFRA-008
+      name: Seed Script (all roles)
+      status: in-progress
+      priority: critical
+
+  api:
+    - id: INFRA-009
+      name: API Routes Structure
+      status: in-progress
+      priority: critical
+      
+    - id: INFRA-010
+      name: Zod Validation
+      status: planned
+      priority: high
+      
+    - id: INFRA-011
+      name: Error Handling
+      status: in-progress
+      priority: high
+
+  jobs:
+    - id: INFRA-012
+      name: BullMQ Setup
+      status: planned
+      priority: medium
+      
+    - id: INFRA-013
+      name: Redis Connection
+      status: planned
+      priority: medium
+
+  exports:
+    - id: INFRA-014
+      name: CSV Export
+      status: planned
+      priority: high
+      
+    - id: INFRA-015
+      name: XLSX Export
+      status: planned
+      priority: high
+      
+    - id: INFRA-016
+      name: PDF Generation (Puppeteer)
+      status: planned
+      priority: high
+
+  docker:
+    - id: INFRA-017
+      name: Docker Compose
+      status: planned
+      priority: high
+      
+    - id: INFRA-018
+      name: Production Dockerfile
+      status: planned
+      priority: medium
+
+# ============================================
+# FEATURE FLAGS
+# ============================================
+feature_flags:
+  - name: FEATURE_SCORM
+    default: false
+    description: SCORM content support
+    
+  - name: FEATURE_XAPI
+    default: false
+    description: xAPI/Tin Can support
+    
+  - name: FEATURE_CMI5
+    default: false
+    description: cmi5 content support
+    
+  - name: FEATURE_LTI
+    default: false
+    description: LTI integration
+    
+  - name: FEATURE_SSO_SAML
+    default: false
+    description: SAML 2.0 SSO
+    
+  - name: FEATURE_SSO_OIDC
+    default: false
+    description: OpenID Connect SSO
+    
+  - name: FEATURE_LDAP
+    default: false
+    description: LDAP/AD integration
+    
+  - name: FEATURE_SCIM
+    default: false
+    description: SCIM user provisioning
+    
+  - name: FEATURE_CONFERENCING
+    default: false
+    description: Video conferencing (Zoom/Teams/BBB)
+    
+  - name: FEATURE_ECOMMERCE
+    default: false
+    description: Course selling and payments
+    
+  - name: FEATURE_MESSAGES
+    default: false
+    description: Internal messaging system
+    
+  - name: FEATURE_GAMIFICATION
+    default: false
+    description: Badges, points, levels, leaderboard
+    
+  - name: FEATURE_PROCTORING
+    default: true
+    description: Exam proctoring system
+    
+  - name: FEATURE_IMPERSONATION
+    default: false
+    description: Admin impersonation
+    
+  - name: FEATURE_SCHEDULED_REPORTS
+    default: false
+    description: Scheduled report generation

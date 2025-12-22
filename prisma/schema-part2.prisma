@@ -1,0 +1,366 @@
+
+// 15. REPORTS
+model Report {
+  id        String   @id @default(uuid())
+  name      String
+  type      String
+  ruleset   Json
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("reports")
+}
+model ScheduledReport {
+  id         String    @id @default(uuid())
+  reportId   String
+  frequency  String
+  config     Json
+  recipients Json
+  nextRunAt  DateTime
+  lastRunAt  DateTime?
+  active     Boolean   @default(true)
+  @@map("scheduled_reports")
+}
+model AnalyticsDashboard {
+  id          String   @id @default(uuid())
+  title       String
+  targetType  String
+  targetId    String?
+  bannerImage String?
+  widgets     Json
+  filters     Json
+  isDefault   Boolean  @default(false)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  @@map("analytics_dashboards")
+}
+model TimelineEvent {
+  id        String   @id @default(uuid())
+  userId    String?
+  courseId  String?
+  eventType String
+  details   Json
+  timestamp DateTime @default(now())
+  @@map("timeline_events")
+}
+
+// 16. DISCUSSIONS
+model Discussion {
+  id           String       @id @default(uuid())
+  topic        String
+  body         String       @db.Text
+  audienceType AudienceType
+  audienceId   String?
+  branchId     String?
+  createdBy    String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  @@map("discussions")
+}
+model DiscussionComment {
+  id            String   @id @default(uuid())
+  discussionId  String
+  body          String   @db.Text
+  createdBy     String
+  createdAt     DateTime @default(now())
+  @@map("discussion_comments")
+}
+model Attachment {
+  id         String   @id @default(uuid())
+  entityType String
+  entityId   String
+  filename   String
+  filepath   String
+  filesize   Int
+  uploadedBy String
+  uploadedAt DateTime @default(now())
+  @@map("attachments")
+}
+model DiscussionModerationSettings {
+  id              String @id @default(uuid())
+  editWindowHours Int    @default(2)
+  moderatorRole   String @default("Instructor")
+  settings        Json
+  @@map("discussion_moderation_settings")
+}
+
+// 17. INTEGRATIONS
+model Integration {
+  id        String   @id @default(uuid())
+  type      String
+  enabled   Boolean  @default(false)
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("integrations")
+}
+model APIKey {
+  id          String   @id @default(uuid())
+  keyHash     String   @unique
+  description String?
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  @@map("api_keys")
+}
+model SSOConfig{
+  id        String   @id @default(uuid())
+  provider  String
+  config    Json
+  enabled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("sso_configs")
+}
+
+// 18. IMPERSONATION
+model ImpersonationSession {
+  id            String    @id @default(uuid())
+  adminId       String
+  targetUserId  String
+  reason        String?
+  startedAt     DateTime  @default(now())
+  endedAt       DateTime?
+  active        Boolean   @default(true)
+  @@map("impersonation_sessions")
+}
+
+// 19. IMPORT/EXPORT
+model ImportJob {
+  id           String    @id @default(uuid())
+  type         String
+  filename     String
+  status       String
+  totalRows    Int
+  successRows  Int       @default(0)
+  errorRows    Int       @default(0)
+  errors       Json?
+  uploadedBy   String
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+  @@map("import_jobs")
+}
+model ImportResult {
+  id          String  @id @default(uuid())
+  importJobId String
+  rowNumber   Int
+  status      String
+  message     String?
+  data        Json?
+  @@map("import_results")
+}
+
+// 20. UPLOAD POLICIES
+model UploadPolicy {
+  id            String @id @default(uuid())
+  planTier      String
+  fileType      String
+  maxSizeMB     Int
+  restrictions  Json?
+  @@map("upload_policies")
+}
+
+// 21. MESSAGING
+model MessageThread {
+  id        String   @id @default(uuid())
+  subject   String
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("message_threads")
+}
+model Message {
+  id          String   @id @default(uuid())
+  threadId    String
+  senderId    String
+  body        String   @db.Text
+  attachments Json?
+  sentAt      DateTime @default(now())
+  @@map("messages")
+}
+model MessageRecipient {
+  id       String    @id @default(uuid())
+  threadId String
+  userId   String
+  isRead   Boolean   @default(false)
+  readAt   DateTime?
+  @@unique([threadId, userId])
+  @@map("message_recipients")
+}
+model MessagingPermissions {
+  id                     String  @id @default(uuid())
+  userTypeId             String
+  canMessageAdmins       Boolean @default(true)
+  canMessageUsers        Boolean @default(true)
+  canMessageInstructors  Boolean @default(true)
+  @@map("messaging_permissions")
+}
+
+// 22. FILES
+model File {
+  id           String   @id @default(uuid())
+  filename     String
+  filepath     String?
+  externalUrl  String?
+  filesize     Int?
+  mimeType     String
+  ownerType    String
+  ownerId      String
+  uploadedBy   String
+  isShared     Boolean  @default(false)
+  canShare     Boolean  @default(true)
+  uploadedAt   DateTime @default(now())
+  @@map("files")
+}
+model FileVisibility {
+  id      String  @id @default(uuid())
+  fileId  String
+  userId  String
+  canView Boolean @default(true)
+  @@unique([fileId, userId])
+  @@map("file_visibility")
+}
+
+// 23. GRADING
+model AssignmentSubmission {
+  id               String    @id @default(uuid())
+  assignmentUnitId String
+  userId           String
+  courseId         String
+  submissionType   String
+  content          String?   @db.Text
+  fileId           String?
+  submittedAt      DateTime  @default(now())
+  gradedAt         DateTime?
+  gradedBy         String?
+  score            Int?
+  maxScore         Int       @default(100)
+  status           String
+  comment          String?   @db.Text
+  @@map("assignment_submissions")
+}
+model ILTSession {
+  id           String   @id @default(uuid())
+  iltUnitId    String
+  courseId     String
+  sessionDate  DateTime
+  duration     Int
+  provider     String
+  providerData Json
+  @@map("ilt_sessions")
+}
+model ILTAttendance {
+  id        String    @id @default(uuid())
+  sessionId String
+  userId    String
+  attended  Boolean   @default(false)
+  score     Int?
+  status    String
+  gradedAt  DateTime?
+  gradedBy  String?
+  comment   String?   @db.Text
+  @@unique([sessionId, userId])
+  @@map("ilt_attendance")
+}
+
+// 24. TESTS
+model Test {
+  id              String   @id @default(uuid())
+  unitId          String
+  isRandomized    Boolean  @default(false)
+  questionsToShow Int?
+  passingScore    Int      @default(50)
+  settings        Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@map("tests")
+}
+model Question {
+  id             String   @id @default(uuid())
+  testId         String?
+  questionPoolId String?
+  type           String
+  text           String   @db.Text
+  options        Json?
+  correctAnswer  Json
+  points         Int      @default(1)
+  feedback       String?  @db.Text
+  tags           Json?
+  aiGenerated    Boolean  @default(false)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  @@map("questions")
+}
+model QuestionPool {
+  id           String   @id @default(uuid())
+  name         String
+  courseId     String?
+  minQuestions Int      @default(2)
+  createdAt    DateTime @default(now())
+  @@map("question_pools")
+}
+model FreeTextKeyword {
+  id              String  @id @default(uuid())
+  questionId      String
+  keyword         String
+  pointsModifier  Int
+  isRequired      Boolean @default(false)
+  @@map("free_text_keywords")
+}
+model TestAttempt {
+  id          String    @id @default(uuid())
+  testId      String
+  userId      String
+  courseId    String
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  score       Int?
+  maxScore    Int
+  passed      Boolean   @default(false)
+  answers     Json
+  @@map("test_attempts")
+}
+
+// 25. RATINGS
+model CourseRatingSetting {
+  id        String  @id @default(uuid())
+  tenantId  String
+  enabled   Boolean @default(false)
+  @@map("course_rating_settings")
+}
+model CourseRating {
+  id        String   @id @default(uuid())
+  courseId  String
+  userId    String
+  rating    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([courseId, userId])
+  @@map("course_ratings")
+}
+
+// 26. EXTENSIONS
+model EnrollmentExtension {
+  id                 String   @id @default(uuid())
+  enrollmentId       String
+  userId             String
+  courseId           String
+  newExpirationDate  DateTime
+  extendedBy         String
+  reason             String?
+  extendedAt         DateTime @default(now())
+  @@map("enrollment_extensions")
+}
+
+// 27. FEATURE FLAGS
+model PortalFeatureFlags {
+  id                    String   @id @default(uuid())
+  tenantId              String   @unique
+  createdAt             DateTime @default(now())
+  planTier              String
+  prerequisitesEnabled  Boolean  @default(true)
+  learningPathsEnabled  Boolean  @default(false)
+  learningPathsLimit    Int?
+  messagingEnabled      Boolean  @default(false)
+  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  @@map("portal_feature_flags")
+}

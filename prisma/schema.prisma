@@ -1,0 +1,1010 @@
+// This is your Prisma schema file
+// TalentLMS Clone - 50+ Models for Full Parity
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. PORTAL & BRANCHES
+model Tenant {
+  id        String   @id @default(uuid())
+  domain    String   @unique
+  name      String
+  settings  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  branches      Branch[]
+  featureFlags  PortalFeatureFlags?
+  @@map("tenants")
+}
+
+model Branch {
+  id              String   @id @default(uuid())
+  tenantId        String
+  name            String
+  slug            String
+  title           String?
+  description     String?
+  themeId         String?
+  defaultLanguage String   @default("en")
+  aiEnabled       Boolean  @default(true)
+  settings        Json
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([tenantId, slug])
+  @@map("branches")
+}
+
+// 2. USERS
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  DEACTIVATED
+  LOCKED
+}
+
+// TalentLMS Roles: Admin, Instructor, Learner
+enum RoleKey {
+  ADMIN
+  INSTRUCTOR
+  LEARNER
+}
+
+model User {
+  id                   String     @id @default(uuid())
+  username             String     @unique
+  email                String     @unique
+  firstName            String
+  lastName             String
+  bio                  String?    @db.Text
+  timezone             String     @default("UTC")
+  language             String     @default("en")
+  userTypeId           String?
+  passwordHash         String?
+  avatar               String?
+  status               UserStatus @default(ACTIVE)
+  deactivateAt         DateTime?
+  activeRole           RoleKey    @default(LEARNER)
+  lastLoginAt          DateTime?
+  failedLoginAttempts  Int        @default(0)
+  lockedUntil          DateTime?
+  excludeFromEmails    Boolean    @default(false)
+  certificatesArchive  Json?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  roles                UserRole[]
+  userType             UserType?  @relation(fields: [userTypeId], references: [id])
+  @@map("users")
+}
+
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleKey   RoleKey
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([userId, roleKey])
+  @@map("user_roles")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  @@map("password_reset_tokens")
+}
+
+model UserType {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  permissions Json
+  createdAt   DateTime @default(now())
+  users       User[]
+  @@map("user_types")
+}
+
+
+// 3. COURSES
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+}
+model Course {
+  id                      String        @id @default(uuid())
+  code                    String        @unique
+  title                   String
+  description             String?
+  image                   String?
+  status                  CourseStatus  @default(DRAFT)
+  instructorId            String?       // Instructor assigned to this course
+  
+  // Info tab fields
+  isActive                Boolean       @default(false)
+  coachEnabled            Boolean       @default(false)
+  categoryId              String?
+  introVideoType          String?       // 'youtube' | 'custom'
+  introVideoUrl           String?
+  price                   Decimal?      @db.Decimal(10, 2)
+  contentLocked           Boolean       @default(false)
+  
+  // Availability tab fields
+  hiddenFromCatalog       Boolean       @default(false)
+  showInCatalog           Boolean       @default(true)
+  capacity                Int?          // max enrollment capacity
+  publicSharingEnabled    Boolean       @default(false)
+  enrollmentRequestEnabled Boolean      @default(false)
+  
+  // Limits tab fields
+  timeLimitType           String?       // 'limit' | 'timeframe'
+  timeLimit               Int?          // days
+  accessRetentionEnabled  Boolean       @default(false)
+  requiredLevel           Int?
+  
+  // Completion tab fields
+  unitsOrdering           String        @default("sequential") // 'sequential' | 'any'
+  completionRule          String        @default("all")        // 'all' | 'any'
+  scoreCalculation        String        @default("all")        // 'all' | 'tests' | 'assignments'
+  certificateTemplateId   String?
+  
+  expiration              DateTime?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  
+  enrollments             Enrollment[]
+  learningPaths           LearningPathCourse[]
+  
+  @@map("courses")
+}
+
+// ENROLLMENTS - Track learner course progress
+enum EnrollmentStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+model Enrollment {
+  id              String           @id @default(uuid())
+  userId          String
+  courseId        String
+  status          EnrollmentStatus @default(NOT_STARTED)
+  progress        Int              @default(0) // 0-100
+  score           Decimal?         @db.Decimal(5, 2)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  expiresAt       DateTime?
+  certificateId   String?
+  lastAccessedAt  DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  course          Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+enum UnitType {
+  TEXT
+  FILE
+  EMBED
+  VIDEO
+  TEST
+  SURVEY
+  ASSIGNMENT
+  ILT
+  SCORM
+  XAPI
+  CMI5
+  TALENTCRAFT
+  SECTION
+}
+enum UnitStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED_CHANGES
+}
+model CourseUnit {
+  id              String      @id @default(uuid())
+  courseId        String
+  type            UnitType
+  title           String
+  content         Json
+  status          UnitStatus  @default(DRAFT)
+  isSample        Boolean     @default(false)
+  order           Int
+  versionHistory  Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  @@map("course_units")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  parentId    String?
+  description String?
+  price       Decimal?  @db.Decimal(10, 2)
+  createdAt   DateTime  @default(now())
+  @@map("categories")
+}
+
+// GROUPS - TalentLMS Groups for organizing users
+model Group {
+  id           String   @id @default(uuid())
+  name         String
+  description  String?  @db.VarChar(500)
+  groupKey     String?  @unique  // Join key for self-enrollment
+  price        Decimal? @db.Decimal(10, 2)
+  autoEnroll   Boolean  @default(false)
+  maxMembers   Int?
+  branchId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  members      GroupMember[]
+  courses      GroupCourse[]
+  @@map("groups")
+}
+
+model GroupMember {
+  id        String   @id @default(uuid())
+  groupId   String
+  userId    String
+  addedAt   DateTime @default(now())
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  @@unique([groupId, userId])
+  @@map("group_members")
+}
+
+model GroupCourse {
+  id        String   @id @default(uuid())
+  groupId   String
+  courseId  String
+  addedAt   DateTime @default(now())
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  @@unique([groupId, courseId])
+  @@map("group_courses")
+}
+
+
+// 4. LEARNING PATHS
+enum UnlockType {
+  NONE
+  AFTER_COURSE
+  AFTER_SCORE
+}
+
+enum CourseOrderMode {
+  SEQUENTIAL
+  ANY
+}
+
+enum CompletionRule {
+  ALL_COURSES_COMPLETED
+}
+
+enum CertificateType {
+  CLASSIC
+  FANCY
+  MODERN
+  SIMPLE
+}
+
+model LearningPath {
+  id                      String            @id @default(uuid())
+  name                    String
+  code                    String?           @unique  // Made nullable for new paths
+  description             String?           @db.Text
+  image                   String?
+  category                String?           // Direct category field instead of relation
+  status                  String            @default("inactive") // inactive, draft, published
+  isActive                Boolean           @default(false)
+  
+  // Options - Limits tab
+  completionDaysLimit     Int?              // Time limit in days after enrollment
+  accessRetentionEnabled  Boolean           @default(false)  // Retain access after completion
+  
+  // Options - Completion tab
+  courseOrderMode         CourseOrderMode   @default(ANY)  // Sequential or any order
+  completionRule          CompletionRule    @default(ALL_COURSES_COMPLETED)
+  certificateType         CertificateType?  // Certificate type to issue on completion
+  
+  // Legacy/deprecated fields (keep for migration compatibility)
+  limitDays               Int?
+  accessRetention         Int?
+  isSequential            Boolean           @default(false)
+  certificateId           String?
+  
+  maxCourses              Int               @default(25)
+  branchId                String?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  courses                 LearningPathCourse[]
+  sections                LearningPathSection[]
+  @@map("learning_paths")
+}
+
+model LearningPathSection {
+  id        String               @id @default(uuid())
+  pathId    String
+  name      String
+  order     Int
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  
+  path      LearningPath         @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  courses   LearningPathCourse[]
+  
+  @@map("learning_path_sections")
+}
+
+model LearningPathCourse {
+  id              String       @id @default(uuid())
+  pathId          String
+  courseId        String
+  order           Int
+  sectionId       String?
+  
+  // Prerequisite/unlock fields
+  unlockType      UnlockType   @default(NONE)
+  unlockCourseId  String?
+  minScore        Int?
+  
+  createdAt       DateTime     @default(now())
+  learningPath    LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  course          Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  section         LearningPathSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  @@unique([pathId, courseId])
+  @@map("learning_path_courses")
+}
+
+// 5. PREREQUISITES
+model Prerequisite {
+  id                String @id @default(uuid())
+  courseId          String
+  pathIndex         Int
+  requiredCourseId  String
+  requiredLevel     Int?
+  @@unique([courseId, pathIndex, requiredCourseId])
+  @@map("prerequisites")
+}
+
+// 6. SKILLS
+model Skill {
+  id                    String   @id @default(uuid())
+  name                  String
+  description           String?
+  image                 String?
+  aiInstructions        String?
+  numQuestionsRequired  Int      @default(10)
+  timerDuration         Int?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  @@map("skills")
+}
+model SkillQuestion {
+  id             String  @id @default(uuid())
+  skillId        String
+  question       String
+  options        Json
+  correctAnswer  String
+  aiGenerated    Boolean @default(false)
+  order          Int
+  @@map("skill_questions")
+}
+model SkillCourse {
+  id        String @id @default(uuid())
+  skillId   String
+  courseId  String
+  @@unique([skillId, courseId])
+  @@map("skill_courses")
+}
+model SkillResource {
+  id      String @id @default(uuid())
+  skillId String
+  title   String
+  url     String
+  order   Int
+  @@map("skill_resources")
+}
+
+// 7. CALENDAR
+enum AudienceType {
+  EVERYONE
+  BRANCH
+  GROUP
+  COURSE
+  SPECIFIC_USERS
+}
+model CalendarEvent {
+  id           String       @id @default(uuid())
+  title        String
+  description  String?
+  startTime    DateTime
+  endTime      DateTime
+  audienceType AudienceType
+  audienceId   String?
+  createdAt    DateTime     @default(now())
+  @@map("calendar_events")
+}
+
+// 8. CONFERENCES
+model Conference {
+  id              String   @id @default(uuid())
+  name            String
+  welcomeMessage  String?
+  startTime       DateTime
+  duration        Int
+  provider        String
+  providerData    Json
+  createdAt       DateTime @default(now())
+  @@map("conferences")
+}
+model ConferenceParticipant {
+  id            String  @id @default(uuid())
+  conferenceId  String
+  userId        String
+  notified      Boolean @default(false)
+  @@unique([conferenceId, userId])
+  @@map("conference_participants")
+}
+
+// 9. SCORM/LRS
+model LRSStatement {
+  id        String   @id @default(uuid())
+  actor     Json
+  verb      Json
+  object    Json
+  result    Json?
+  context   Json?
+  timestamp DateTime @default(now())
+  stored    DateTime @default(now())
+  authority Json?
+  version   String   @default("1.0.3")
+  @@map("lrs_statements")
+}
+model SCORMData {
+  id              String   @id @default(uuid())
+  userId          String
+  unitId          String
+  lessonStatus    String?
+  lessonLocation  String?
+  suspendData     String?  @db.Text
+  scoreRaw        Float?
+  scoreMax        Float?
+  scoreMin        Float?
+  sessionTime     String?
+  totalTime       String?
+  updatedAt       DateTime @updatedAt
+  @@unique([userId, unitId])
+  @@map("scorm_data")
+}
+
+// 10. GAMIFICATION
+model GamificationSettings {
+  id                  String  @id @default(uuid())
+  portalId            String?
+  branchId            String?
+  enabled             Boolean @default(true)
+  pointsEnabled       Boolean @default(true)
+  badgesEnabled       Boolean @default(true)
+  levelsEnabled       Boolean @default(true)
+  rewardsEnabled      Boolean @default(true)
+  leaderboardEnabled  Boolean @default(true)
+  pointsPerLogin      Int     @default(10)
+  maxLevel            Int     @default(20)
+  @@map("gamification_settings")
+}
+model PointsLedger {
+  id        String   @id @default(uuid())
+  userId    String
+  points    Int
+  reason    String
+  createdAt DateTime @default(now())
+  @@map("points_ledger")
+}
+model Badge {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  image       String
+  criteria    Json
+  createdAt   DateTime @default(now())
+  @@map("badges")
+}
+model Level {
+  id              String  @id @default(uuid())
+  levelNumber     Int     @unique
+  pointsRequired  Int
+  name            String
+  badge           String?
+  @@map("levels")
+}
+model Reward {
+  id               String  @id @default(uuid())
+  name             String
+  type             String
+  discountPercent  Int?
+  criteria         Json
+  active           Boolean @default(true)
+  @@map("rewards")
+}
+
+// 11. NOTIFICATIONS
+model Notification {
+  id              String   @id @default(uuid())
+  name            String
+  eventType       String
+  rulesets        Json
+  subject         String
+  body            String   @db.Text
+  smartTags       Json
+  isRecurring     Boolean  @default(false)
+  recurringConfig Json?
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@map("notifications")
+}
+model Automation {
+  id         String   @id @default(uuid())
+  name       String
+  type       String
+  parameters Json
+  filters    Json?
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  @@map("automations")
+}
+model AutomationLog {
+  id            String   @id @default(uuid())
+  automationId  String
+  userId        String
+  status        String
+  details       Json?
+  executedAt    DateTime @default(now())
+  @@map("automation_logs")
+}
+
+// 12. CERTIFICATES
+model CertificateTemplate {
+  id        String   @id @default(uuid())
+  name      String
+  htmlBody  String   @db.Text
+  smartTags Json
+  isSystem  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("certificate_templates")
+}
+model CertificateIssue {
+  id              String    @id @default(uuid())
+  userId          String
+  courseId        String?
+  pathId          String?
+  templateId      String
+  issuedAt        DateTime  @default(now())
+  lastIssuedDate  DateTime  @default(now())
+  expiresAt       DateTime?
+  linkedInShared  Boolean   @default(false)
+  @@map("certificate_issues")
+}
+
+// 13. HOMEPAGE
+model Homepage {
+  id        String   @id @default(uuid())
+  portalId  String?
+  branchId  String?
+  type      String
+  isActive  Boolean  @default(false)
+  menuItems Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("homepages")
+}
+model HomepageSection {
+  id          String  @id @default(uuid())
+  homepageId  String
+  type        String
+  content     Json
+  order       Int
+  hasDivider  Boolean @default(false)
+  @@map("homepage_sections")
+}
+
+// 14. TALENTLIBRARY
+model TalentLibraryCourse {
+  id              String  @id @default(uuid())
+  externalId      String  @unique
+  title           String
+  description     String?
+  previewTrailer  String?
+  categories      Json
+  isPromoted      Boolean @default(false)
+  license         Json
+  @@map("talent_library_courses")
+}
+model AcquiredLibraryCourse {
+  id                 String   @id @default(uuid())
+  libraryCourseId    String
+  localCourseId      String
+  hiddenFromCatalog  Boolean  @default(true)
+  acquiredAt         DateTime @default(now())
+  @@map("acquired_library_courses")
+}
+// 15. REPORTS
+model Report {
+  id        String   @id @default(uuid())
+  name      String
+  type      String
+  ruleset   Json
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("reports")
+}
+model ScheduledReport {
+  id         String    @id @default(uuid())
+  reportId   String
+  frequency  String
+  config     Json
+  recipients Json
+  nextRunAt  DateTime
+  lastRunAt  DateTime?
+  active     Boolean   @default(true)
+  @@map("scheduled_reports")
+}
+model AnalyticsDashboard {
+  id          String   @id @default(uuid())
+  title       String
+  targetType  String
+  targetId    String?
+  bannerImage String?
+  widgets     Json
+  filters     Json
+  isDefault   Boolean  @default(false)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  @@map("analytics_dashboards")
+}
+model TimelineEvent {
+  id        String   @id @default(uuid())
+  userId    String?
+  courseId  String?
+  eventType String
+  details   Json
+  timestamp DateTime @default(now())
+  @@map("timeline_events")
+}
+
+// 16. DISCUSSIONS
+model Discussion {
+  id           String       @id @default(uuid())
+  topic        String
+  body         String       @db.Text
+  audienceType AudienceType
+  audienceId   String?
+  branchId     String?
+  createdBy    String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  @@map("discussions")
+}
+model DiscussionComment {
+  id            String   @id @default(uuid())
+  discussionId  String
+  body          String   @db.Text
+  createdBy     String
+  createdAt     DateTime @default(now())
+  @@map("discussion_comments")
+}
+model Attachment {
+  id         String   @id @default(uuid())
+  entityType String
+  entityId   String
+  filename   String
+  filepath   String
+  filesize   Int
+  uploadedBy String
+  uploadedAt DateTime @default(now())
+  @@map("attachments")
+}
+model DiscussionModerationSettings {
+  id              String @id @default(uuid())
+  editWindowHours Int    @default(2)
+  moderatorRole   String @default("Instructor")
+  settings        Json
+  @@map("discussion_moderation_settings")
+}
+
+// 17. INTEGRATIONS
+model Integration {
+  id        String   @id @default(uuid())
+  type      String
+  enabled   Boolean  @default(false)
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("integrations")
+}
+model APIKey {
+  id          String   @id @default(uuid())
+  keyHash     String   @unique
+  description String?
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  @@map("api_keys")
+}
+model SSOConfig{
+  id        String   @id @default(uuid())
+  provider  String
+  config    Json
+  enabled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("sso_configs")
+}
+
+// 18. IMPERSONATION
+model ImpersonationSession {
+  id            String    @id @default(uuid())
+  adminId       String
+  targetUserId  String
+  reason        String?
+  startedAt     DateTime  @default(now())
+  endedAt       DateTime?
+  active        Boolean   @default(true)
+  @@map("impersonation_sessions")
+}
+
+// 19. IMPORT/EXPORT
+model ImportJob {
+  id           String    @id @default(uuid())
+  type         String
+  filename     String
+  status       String
+  totalRows    Int
+  successRows  Int       @default(0)
+  errorRows    Int       @default(0)
+  errors       Json?
+  uploadedBy   String
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+  @@map("import_jobs")
+}
+model ImportResult {
+  id          String  @id @default(uuid())
+  importJobId String
+  rowNumber   Int
+  status      String
+  message     String?
+  data        Json?
+  @@map("import_results")
+}
+
+// 20. UPLOAD POLICIES
+model UploadPolicy {
+  id            String @id @default(uuid())
+  planTier      String
+  fileType      String
+  maxSizeMB     Int
+  restrictions  Json?
+  @@map("upload_policies")
+}
+
+// 21. MESSAGING
+model MessageThread {
+  id        String   @id @default(uuid())
+  subject   String
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("message_threads")
+}
+model Message {
+  id          String   @id @default(uuid())
+  threadId    String
+  senderId    String
+  body        String   @db.Text
+  attachments Json?
+  sentAt      DateTime @default(now())
+  @@map("messages")
+}
+model MessageRecipient {
+  id       String    @id @default(uuid())
+  threadId String
+  userId   String
+  isRead   Boolean   @default(false)
+  readAt   DateTime?
+  @@unique([threadId, userId])
+  @@map("message_recipients")
+}
+model MessagingPermissions {
+  id                     String  @id @default(uuid())
+  userTypeId             String
+  canMessageAdmins       Boolean @default(true)
+  canMessageUsers        Boolean @default(true)
+  canMessageInstructors  Boolean @default(true)
+  @@map("messaging_permissions")
+}
+
+// 22. FILES
+model File {
+  id           String   @id @default(uuid())
+  filename     String
+  filepath     String?
+  externalUrl  String?
+  filesize     Int?
+  mimeType     String
+  ownerType    String
+  ownerId      String
+  uploadedBy   String
+  isShared     Boolean  @default(false)
+  canShare     Boolean  @default(true)
+  uploadedAt   DateTime @default(now())
+  @@map("files")
+}
+model FileVisibility {
+  id      String  @id @default(uuid())
+  fileId  String
+  userId  String
+  canView Boolean @default(true)
+  @@unique([fileId, userId])
+  @@map("file_visibility")
+}
+
+// 23. GRADING
+model AssignmentSubmission {
+  id               String    @id @default(uuid())
+  assignmentUnitId String
+  userId           String
+  courseId         String
+  submissionType   String
+  content          String?   @db.Text
+  fileId           String?
+  submittedAt      DateTime  @default(now())
+  gradedAt         DateTime?
+  gradedBy         String?
+  score            Int?
+  maxScore         Int       @default(100)
+  status           String
+  comment          String?   @db.Text
+  @@map("assignment_submissions")
+}
+model ILTSession {
+  id           String   @id @default(uuid())
+  iltUnitId    String
+  courseId     String
+  sessionDate  DateTime
+  duration     Int
+  provider     String
+  providerData Json
+  @@map("ilt_sessions")
+}
+model ILTAttendance {
+  id        String    @id @default(uuid())
+  sessionId String
+  userId    String
+  attended  Boolean   @default(false)
+  score     Int?
+  status    String
+  gradedAt  DateTime?
+  gradedBy  String?
+  comment   String?   @db.Text
+  @@unique([sessionId, userId])
+  @@map("ilt_attendance")
+}
+
+// 24. TESTS
+model Test {
+  id              String   @id @default(uuid())
+  unitId          String
+  isRandomized    Boolean  @default(false)
+  questionsToShow Int?
+  passingScore    Int      @default(50)
+  settings        Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@map("tests")
+}
+model Question {
+  id             String   @id @default(uuid())
+  testId         String?
+  questionPoolId String?
+  type           String
+  text           String   @db.Text
+  options        Json?
+  correctAnswer  Json
+  points         Int      @default(1)
+  feedback       String?  @db.Text
+  tags           Json?
+  aiGenerated    Boolean  @default(false)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  @@map("questions")
+}
+model QuestionPool {
+  id           String   @id @default(uuid())
+  name         String
+  courseId     String?
+  minQuestions Int      @default(2)
+  createdAt    DateTime @default(now())
+  @@map("question_pools")
+}
+model FreeTextKeyword {
+  id              String  @id @default(uuid())
+  questionId      String
+  keyword         String
+  pointsModifier  Int
+  isRequired      Boolean @default(false)
+  @@map("free_text_keywords")
+}
+model TestAttempt {
+  id          String    @id @default(uuid())
+  testId      String
+  userId      String
+  courseId    String
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  score       Int?
+  maxScore    Int
+  passed      Boolean   @default(false)
+  answers     Json
+  @@map("test_attempts")
+}
+
+// 25. RATINGS
+model CourseRatingSetting {
+  id        String  @id @default(uuid())
+  tenantId  String
+  enabled   Boolean @default(false)
+  @@map("course_rating_settings")
+}
+model CourseRating {
+  id        String   @id @default(uuid())
+  courseId  String
+  userId    String
+  rating    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([courseId, userId])
+  @@map("course_ratings")
+}
+
+// 26. EXTENSIONS
+model EnrollmentExtension {
+  id                 String   @id @default(uuid())
+  enrollmentId       String
+  userId             String
+  courseId           String
+  newExpirationDate  DateTime
+  extendedBy         String
+  reason             String?
+  extendedAt         DateTime @default(now())
+  @@map("enrollment_extensions")
+}
+
+// 27. FEATURE FLAGS
+model PortalFeatureFlags {
+  id                    String   @id @default(uuid())
+  tenantId              String   @unique
+  createdAt             DateTime @default(now())
+  planTier              String
+  prerequisitesEnabled  Boolean  @default(true)
+  learningPathsEnabled  Boolean  @default(false)
+  learningPathsLimit    Int?
+  messagingEnabled      Boolean  @default(false)
+  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  @@map("portal_feature_flags")
+}
