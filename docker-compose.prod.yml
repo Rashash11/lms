@@ -1,0 +1,51 @@
+services:
+  app:
+    image: zedny7386/talentlms-clone:latest
+    container_name: lms_app
+    restart: always
+    ports:
+      - "3070:3000"
+    environment:
+      - DATABASE_URL=postgresql://lms_user:password@postgres:5432/lms_db
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - BASE_URL=${BASE_URL:-http://localhost:3070}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-http://localhost:3070}
+      - NODE_ENV=production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: lms_postgres_prod
+    restart: always
+    environment:
+      - POSTGRES_DB=lms_db
+      - POSTGRES_USER=lms_user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - lms_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U lms_user -d lms_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: lms_redis_prod
+    restart: always
+    volumes:
+      - lms_redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  lms_postgres_data:
+  lms_redis_data:
