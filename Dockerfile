@@ -39,10 +39,14 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-# Copy prisma CLI and its internal dependencies explicitly since standalone prunes them
+# Copy prisma CLI and its internal dependencies explicitly
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+
+# Recreate the symlink for prisma CLI to preserve relative path lookups for WASM files
+RUN mkdir -p node_modules/.bin && \
+    ln -s ../prisma/build/index.js ./node_modules/.bin/prisma && \
+    chown -R nextjs:nodejs node_modules/.bin
 
 USER nextjs
 
