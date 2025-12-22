@@ -134,3 +134,25 @@ Visit `http://your-server-ip:3070` in your browser.
 - **Firewall**: Ensure port `3070` is open on your server's firewall.
 - **SSL**: For production use, it is highly recommended to set up a reverse proxy (like Nginx or Caddy) with Let's Encrypt for HTTPS.
 - **Passwords**: Never use default passwords for `POSTGRES_PASSWORD` or `JWT_SECRET`.
+
+---
+
+## 6. How to Update
+
+To update your server with the latest changes (like rebranding or bug fixes) from GitHub:
+
+1.  **Wait** for the GitHub Action to finish building (check the "Actions" tab in GitHub).
+2.  **SSH** into your server.
+3.  **Run these commands:**
+
+```bash
+cd /opt/mostafa/lms
+# Pull the latest image
+docker compose pull
+# Restart the app with new changes
+docker compose up -d
+```
+
+> [!TIP]
+> If you've modified the database schema (Prisma), remember to run:
+> `docker exec -it lms_app npm run db:push`
