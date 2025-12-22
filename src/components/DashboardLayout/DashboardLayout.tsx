@@ -155,7 +155,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         {open ? <ChevronLeftIcon /> : <MenuIcon />}
                     </IconButton>
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: 'grey.800' }}>
-                        TalentLMS Clone
+                        Zedny LMS
                     </Typography>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

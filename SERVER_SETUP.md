@@ -1,6 +1,6 @@
 # Server Installation Guide: Zedny LMS
 
-This guide explains how to install and run the Zedny LMS (TalentLMS Clone) on a fresh Linux server using Docker and Docker Compose.
+This guide explains how to install and run the Zedny LMS on a fresh Linux server using Docker and Docker Compose.
 
 ## 1. Prerequisites
 

@@ -75,7 +75,7 @@ export default function LoginPage() {
                 >
                     <Box sx={{ mb: 4, textAlign: 'center' }}>
                         <Typography variant="h4" component="h1" fontWeight="700" color="primary" sx={{ mb: 1 }}>
-                            TalentLMS
+                            Zedny LMS
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             Welcome back! Please login to your account.
@@ -147,7 +147,7 @@ export default function LoginPage() {
                 </Card>
                 <Box sx={{ mt: 4, textAlign: 'center' }}>
                     <Typography variant="caption" color="text.secondary">
-                        &copy; 2025 TalentLMS Clone. All rights reserved.
+                        &copy; 2025 Zedny LMS. All rights reserved.
                     </Typography>
                 </Box>
             </Container>
