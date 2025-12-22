@@ -112,7 +112,7 @@ docker compose up -d
 After the containers are running, you need to sync the database schema:
 
 ```bash
-docker exec -it lms_app npx prisma db push
+docker exec -it lms_app npm run db:push
 ```
 
 ---
