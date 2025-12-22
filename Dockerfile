@@ -24,7 +24,6 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 RUN apk add --no-cache openssl libc6-compat
-ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
