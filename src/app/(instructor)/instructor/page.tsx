@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Button, Card, CardContent, CardMedia, CardActionArea, Skeleton } from '@mui/material';
-import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/GridLegacy';
 import CelebrationIcon from '@mui/icons-material/Celebration';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
