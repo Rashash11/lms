@@ -99,6 +99,7 @@ export default function AdminDashboard() {
     });
     const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
     const [trainingTime, setTrainingTime] = useState('0h 0m');
+    const [currentUser, setCurrentUser] = useState<{ firstName: string; username: string } | null>(null);
 
     // User breakdown data - matching TalentLMS colors
     const userBreakdown = [
@@ -109,7 +110,23 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchDashboardData();
+        fetchCurrentUser();
     }, []);
+
+    const fetchCurrentUser = async () => {
+        try {
+            const res = await fetch('/api/auth/me');
+            if (res.ok) {
+                const data = await res.json();
+                setCurrentUser({
+                    firstName: data.firstName,
+                    username: data.username,
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+        }
+    };
 
     const fetchDashboardData = async () => {
         try {
@@ -183,7 +200,7 @@ export default function AdminDashboard() {
             {/* Header with Welcome message and Customize button */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h5" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#1a2b4a', fontWeight: 500 }}>
-                    <span style={{ fontSize: 24 }}>👋</span> Welcome, mostafa!
+                    <span style={{ fontSize: 24 }}>👋</span> Welcome, {currentUser?.firstName || currentUser?.username || 'User'}!
                 </Typography>
                 <Button
                     variant="outlined"

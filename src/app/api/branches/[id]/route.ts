@@ -3,15 +3,37 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
 const updateBranchSchema = z.object({
-    name: z.string().min(1).optional(),
+    name: z.string().min(3).regex(/^[a-z0-9-]+$/).optional(),
     slug: z.string().min(1).regex(/^[a-z0-9-]+$/).optional(),
     title: z.string().nullable().optional(),
-    description: z.string().nullable().optional(),
+    description: z.string().max(255).nullable().optional(),
+    isActive: z.boolean().optional(),
+    languageCode: z.string().optional(),
+    timezone: z.string().optional(),
+    internalAnnouncementEnabled: z.boolean().optional(),
+    internalAnnouncement: z.string().nullable().optional(),
+    externalAnnouncementEnabled: z.boolean().optional(),
+    externalAnnouncement: z.string().nullable().optional(),
+    signupMode: z.enum(['direct', 'invitation', 'approval']).optional(),
+    allowedDomains: z.array(z.string()).optional(),
+    maxRegistrations: z.number().int().positive().nullable().optional(),
+    disallowMainDomainLogin: z.boolean().optional(),
+    termsOfService: z.string().nullable().optional(),
+    defaultUserTypeId: z.string().uuid().nullable().optional(),
+    defaultGroupId: z.string().uuid().nullable().optional(),
+    ecommerceProcessor: z.string().nullable().optional(),
+    subscriptionEnabled: z.boolean().optional(),
+    creditsEnabled: z.boolean().optional(),
+    badgeSet: z.string().optional(),
+    aiFeaturesEnabled: z.boolean().optional(),
+    brandingLogoUrl: z.string().nullable().optional(),
+    brandingFaviconUrl: z.string().nullable().optional(),
+    defaultCourseImageUrl: z.string().nullable().optional(),
     themeId: z.string().nullable().optional(),
     defaultLanguage: z.string().optional(),
     aiEnabled: z.boolean().optional(),
     settings: z.record(z.any()).optional(),
-});
+}).passthrough();
 
 // GET single branch
 export async function GET(
@@ -37,8 +59,8 @@ export async function GET(
     }
 }
 
-// PUT update branch
-export async function PUT(
+// PATCH update branch
+export async function PATCH(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
@@ -48,7 +70,7 @@ export async function PUT(
         const validation = updateBranchSchema.safeParse(body);
         if (!validation.success) {
             return NextResponse.json(
-                { error: validation.error.errors[0].message },
+                { error: validation.error.errors[0].message, details: validation.error.errors },
                 { status: 400 }
             );
         }
@@ -73,15 +95,13 @@ export async function PUT(
             }
         }
 
+        // Build update data object - only include defined fields
         const updateData: any = {};
-        if (data.name !== undefined) updateData.name = data.name;
-        if (data.slug !== undefined) updateData.slug = data.slug;
-        if (data.title !== undefined) updateData.title = data.title;
-        if (data.description !== undefined) updateData.description = data.description;
-        if (data.themeId !== undefined) updateData.themeId = data.themeId;
-        if (data.defaultLanguage !== undefined) updateData.defaultLanguage = data.defaultLanguage;
-        if (data.aiEnabled !== undefined) updateData.aiEnabled = data.aiEnabled;
-        if (data.settings !== undefined) updateData.settings = data.settings;
+        Object.keys(data).forEach(key => {
+            if (data[key as keyof typeof data] !== undefined) {
+                updateData[key] = data[key as keyof typeof data];
+            }
+        });
 
         const branch = await prisma.branch.update({
             where: { id: params.id },
@@ -93,6 +113,14 @@ export async function PUT(
         console.error('Error updating branch:', error);
         return NextResponse.json({ error: 'Failed to update branch' }, { status: 500 });
     }
+}
+
+// PUT for backwards compatibility (alias to PATCH)
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    return PATCH(request, { params });
 }
 
 // DELETE branch

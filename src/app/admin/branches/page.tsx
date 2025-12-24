@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     Box, Typography, Button, TextField, InputAdornment, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, Paper, Chip, IconButton, Card, CardContent,
-    Dialog, DialogTitle, DialogContent, DialogActions, Switch, FormControlLabel,
 } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import SearchIcon from '@mui/icons-material/Search';
@@ -42,8 +42,8 @@ const stats = [
 ];
 
 export default function BranchesPage() {
+    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
-    const [addDialogOpen, setAddDialogOpen] = useState(false);
 
     const filteredBranches = mockBranches.filter(branch =>
         branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -54,7 +54,11 @@ export default function BranchesPage() {
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h4" fontWeight="bold">Branches</Typography>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => setAddDialogOpen(true)}>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => router.push('/admin/branches/create')}
+                >
                     Add Branch
                 </Button>
             </Box>
@@ -114,7 +118,12 @@ export default function BranchesPage() {
                                     {branch.customBranding ? <Chip label="Custom" size="small" color="info" /> : '-'}
                                 </TableCell>
                                 <TableCell align="right">
-                                    <IconButton size="small"><EditIcon fontSize="small" /></IconButton>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => router.push(`/admin/branches/${branch.id}/edit`)}
+                                    >
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
                                     <IconButton size="small" color="error"><DeleteIcon fontSize="small" /></IconButton>
                                 </TableCell>
                             </TableRow>
@@ -122,24 +131,6 @@ export default function BranchesPage() {
                     </TableBody>
                 </Table>
             </TableContainer>
-
-            {/* Add Branch Dialog */}
-            <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Add New Branch</DialogTitle>
-                <DialogContent>
-                    <Grid container spacing={2} sx={{ mt: 1 }}>
-                        <Grid item xs={12}><TextField fullWidth label="Branch Name" /></Grid>
-                        <Grid item xs={12}><TextField fullWidth label="Slug" helperText="URL-friendly identifier (e.g., 'new-york')" /></Grid>
-                        <Grid item xs={12}>
-                            <FormControlLabel control={<Switch />} label="Enable Custom Branding" />
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setAddDialogOpen(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={() => setAddDialogOpen(false)}>Create Branch</Button>
-                </DialogActions>
-            </Dialog>
         </Box>
     );
 }

@@ -296,25 +296,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                     <Box sx={{ flexGrow: 1 }} />
 
-                    {/* Trial Badge */}
-                    <Box sx={{
-                        width: 36, height: 36, borderRadius: '50%',
-                        bgcolor: '#E3F2FD', color: '#1976D2', fontWeight: 600,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 14, border: '1px solid #BBDEFB'
-                    }}>
-                        14
-                    </Box>
 
-                    {/* Upgrade now button */}
-                    <Button variant="contained" size="small" sx={{
-                        bgcolor: '#1976D2', textTransform: 'none', fontWeight: 500,
-                        boxShadow: 'none', fontSize: 13, height: 36, px: 2.5,
-                        borderRadius: 18,
-                        '&:hover': { boxShadow: 'none', bgcolor: '#1565C0' }
-                    }}>
-                        Upgrade now
-                    </Button>
 
                     {/* Notifications */}
                     <IconButton size="small" sx={{ p: 1 }}>

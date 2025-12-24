@@ -34,8 +34,51 @@ model Branch {
   themeId         String?
   defaultLanguage String   @default("en")
   aiEnabled       Boolean  @default(true)
-  settings        Json
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  settings        Json     @default("{}")
+  
+  // IDENTITY
+  isActive                    Boolean  @default(false)
+  
+  // LOCALE
+  languageCode                String   @default("en")
+  timezone                    String   @default("UTC")
+  
+  // ANNOUNCEMENTS
+  internalAnnouncementEnabled Boolean  @default(false)
+  internalAnnouncement        String?  @db.Text
+  externalAnnouncementEnabled Boolean  @default(false)
+  externalAnnouncement        String?  @db.Text
+  
+  // USERS
+  signupMode                  String   @default("direct") // direct, invitation, approval
+  allowedDomains              String[] // Array of allowed domains
+  maxRegistrations            Int?
+  disallowMainDomainLogin     Boolean  @default(false)
+  termsOfService              String?  @db.Text
+  defaultUserTypeId           String?
+  defaultGroupId              String?
+  
+  // E-COMMERCE
+  ecommerceProcessor          String?  // none, stripe, paypal
+  subscriptionEnabled         Boolean  @default(false)
+  creditsEnabled              Boolean  @default(false)
+  
+  // GAMIFICATION
+  badgeSet                    String   @default("old-school") // old-school, modern, minimal
+  
+  // AI SETTINGS
+  aiFeaturesEnabled           Boolean  @default(false)
+  
+  // BRANDING
+  brandingLogoUrl             String?
+  brandingFaviconUrl          String?
+  defaultCourseImageUrl       String?
+  
+  // Relations
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  defaultUserType UserType? @relation(fields: [defaultUserTypeId], references: [id], name: "BranchDefaultUserType")
+  defaultGroup    Group?    @relation(fields: [defaultGroupId], references: [id], name: "BranchDefaultGroup")
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([tenantId, slug])
@@ -111,6 +154,7 @@ model UserType {
   permissions Json
   createdAt   DateTime @default(now())
   users       User[]
+  branches    Branch[] @relation("BranchDefaultUserType")
   @@map("user_types")
 }
 
@@ -254,6 +298,7 @@ model Group {
   updatedAt    DateTime @updatedAt
   members      GroupMember[]
   courses      GroupCourse[]
+  branches     Branch[] @relation("BranchDefaultGroup")
   @@map("groups")
 }
 
@@ -562,19 +607,72 @@ model Reward {
 
 // 11. NOTIFICATIONS
 model Notification {
-  id              String   @id @default(uuid())
-  name            String
-  eventType       String
-  rulesets        Json
-  subject         String
-  body            String   @db.Text
-  smartTags       Json
-  isRecurring     Boolean  @default(false)
-  recurringConfig Json?
-  enabled         Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                String   @id @default(uuid())
+  name              String
+  eventKey          String   // Normalized event identifier (e.g., 'ON_USER_SIGNUP', 'HOURS_AFTER_COURSE_COMPLETION')
+  isActive          Boolean  @default(true)
+  
+  // For "X hours..." events
+  hoursOffset       Int?
+  offsetDirection   String?  // 'AFTER' | 'BEFORE' | 'SINCE'
+  
+  // Filter rules (only for events that support filtering)
+  filterCourses     String[] @default([]) // Array of course IDs
+  filterGroups      String[] @default([]) // Array of group IDs
+  filterBranches    String[] @default([]) // Array of branch IDs
+  
+  // Recipient configuration
+  recipientType     String   // 'RELATED_USER' | 'COURSE_INSTRUCTORS' | 'ADMINS' | 'ACCOUNT_OWNERS' | 'SPECIFIC_USER'
+  recipientUserId   String?  // For SPECIFIC_USER type
+  
+  // Message content
+  messageSubject    String
+  messageBody       String   @db.Text
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  history           NotificationHistory[]
+  queue             NotificationQueue[]
+  
   @@map("notifications")
+}
+
+model NotificationHistory {
+  id                String       @id @default(uuid())
+  notificationId    String
+  notification      Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  
+  recipientEmail    String
+  recipientUserId   String?
+  eventKey          String
+  contextJson       Json?        // {courseId, assignmentId, learningPathId, etc}
+  
+  sentAt            DateTime     @default(now())
+  status            String       // 'SENT' | 'FAILED'
+  errorMessage      String?      @db.Text
+  
+  @@map("notification_history")
+}
+
+model NotificationQueue {
+  id                String       @id @default(uuid())
+  notificationId    String
+  notification      Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  
+  scheduledFor      DateTime
+  recipientUserId   String
+  recipientEmail    String
+  payloadJson       Json         // Event context data
+  
+  status            String       @default("PENDING") // 'PENDING' | 'CANCELED' | 'SENT' | 'FAILED'
+  processedAt       DateTime?
+  errorMessage      String?      @db.Text
+  
+  createdAt         DateTime     @default(now())
+  
+  @@index([status, scheduledFor])
+  @@map("notification_queue")
 }
 model Automation {
   id         String   @id @default(uuid())
@@ -697,6 +795,20 @@ model AnalyticsDashboard {
   createdBy   String
   createdAt   DateTime @default(now())
   @@map("analytics_dashboards")
+}
+model ReportExport {
+  id          String    @id @default(uuid())
+  reportType  String    // 'training_progress', 'training_matrix', etc.
+  format      String    // 'xlsx', 'csv'
+  fileName    String
+  filePath    String?
+  fileSize    Int?
+  status      String    // 'pending', 'completed', 'failed'
+  filters     Json?     // Store applied filters
+  generatedBy String
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  @@map("report_exports")
 }
 model TimelineEvent {
   id        String   @id @default(uuid())

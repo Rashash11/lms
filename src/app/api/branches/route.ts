@@ -2,18 +2,65 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
-const createBranchSchema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    slug: z.string().min(1, 'Slug is required').regex(/^[a-z0-9-]+$/, 'Slug must be lowercase with hyphens'),
+// Validation schema for branch creation/update
+const branchSchema = z.object({
+    // IDENTITY
+    name: z.string()
+        .min(3, 'Name must be at least 3 characters')
+        .regex(/^[a-z0-9-]+$/, 'Name must contain only lowercase letters, numbers, and hyphens'),
+    slug: z.string().optional(), // Auto-generated from name
     title: z.string().optional(),
-    description: z.string().optional(),
+    description: z.string().max(255, 'Description must be 255 characters or less').optional(),
+    isActive: z.boolean().default(false),
+
+    // LOCALE
+    languageCode: z.string().default('en'),
+    timezone: z.string().default('UTC'),
+
+    // ANNOUNCEMENTS
+    internalAnnouncementEnabled: z.boolean().default(false),
+    internalAnnouncement: z.string().optional(),
+    externalAnnouncementEnabled: z.boolean().default(false),
+    externalAnnouncement: z.string().optional(),
+
+    // USERS
+    signupMode: z.enum(['direct', 'invitation', 'approval']).default('direct'),
+    allowedDomains: z.array(z.string().regex(/^[a-z0-9.-]+\.[a-z]{2,}$/i, 'Invalid domain format')).optional(),
+    maxRegistrations: z.number().int().positive().optional().nullable(),
+    disallowMainDomainLogin: z.boolean().default(false),
+    termsOfService: z.string().optional().nullable(),
+    defaultUserTypeId: z.string().uuid().optional().nullable(),
+    defaultGroupId: z.string().uuid().optional().nullable(),
+
+    // E-COMMERCE
+    ecommerceProcessor: z.enum(['none', 'stripe', 'paypal']).optional().nullable(),
+    subscriptionEnabled: z.boolean().default(false),
+    creditsEnabled: z.boolean().default(false),
+
+    // GAMIFICATION
+    badgeSet: z.enum(['old-school', 'modern', 'minimal']).default('old-school'),
+
+    // AI SETTINGS
+    aiFeaturesEnabled: z.boolean().default(false),
+
+    // BRANDING
+    brandingLogoUrl: z.string().optional().nullable(),
+    brandingFaviconUrl: z.string().optional().nullable(),
+    defaultCourseImageUrl: z.string().optional().nullable(),
+
+    // Legacy fields
     themeId: z.string().optional(),
     defaultLanguage: z.string().default('en'),
     aiEnabled: z.boolean().default(true),
     settings: z.record(z.any()).optional(),
-});
+}).passthrough();
 
-// GET all branches with user/course counts
+// Helper to generate slug from name
+function generateSlug(name: string): string {
+    return name.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+
+// GET all branches with pagination and filtering
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
@@ -27,6 +74,7 @@ export async function GET(request: NextRequest) {
             where.OR = [
                 { name: { contains: search, mode: 'insensitive' } },
                 { slug: { contains: search, mode: 'insensitive' } },
+                { title: { contains: search, mode: 'insensitive' } },
             ];
         }
 
@@ -39,6 +87,12 @@ export async function GET(request: NextRequest) {
                 include: {
                     tenant: {
                         select: { name: true, domain: true }
+                    },
+                    defaultUserType: {
+                        select: { id: true, name: true }
+                    },
+                    defaultGroup: {
+                        select: { id: true, name: true }
                     }
                 },
             }),
@@ -62,15 +116,20 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
 
-        const validation = createBranchSchema.safeParse(body);
+        const validation = branchSchema.safeParse(body);
         if (!validation.success) {
+            console.error('Validation failed:', validation.error.errors);
             return NextResponse.json(
-                { error: validation.error.errors[0].message },
+                { error: validation.error.errors[0].message, details: validation.error.errors },
                 { status: 400 }
             );
         }
 
         const data = validation.data;
+        console.log('Validated data:', JSON.stringify(data, null, 2));
+
+        // Generate slug from name if not provided
+        const slug = data.slug || generateSlug(data.name);
 
         // Get default tenant
         let tenant = await prisma.tenant.findFirst();
@@ -89,7 +148,7 @@ export async function POST(request: NextRequest) {
         const existingBranch = await prisma.branch.findFirst({
             where: {
                 tenantId: tenant.id,
-                slug: data.slug
+                slug: slug
             },
         });
 
@@ -104,20 +163,68 @@ export async function POST(request: NextRequest) {
             data: {
                 tenantId: tenant.id,
                 name: data.name,
-                slug: data.slug,
+                slug: slug,
                 title: data.title,
                 description: data.description,
+                isActive: data.isActive,
+
+                // LOCALE
+                languageCode: data.languageCode,
+                timezone: data.timezone,
+
+                // ANNOUNCEMENTS
+                internalAnnouncementEnabled: data.internalAnnouncementEnabled,
+                internalAnnouncement: data.internalAnnouncement,
+                externalAnnouncementEnabled: data.externalAnnouncementEnabled,
+                externalAnnouncement: data.externalAnnouncement,
+
+                // USERS
+                signupMode: data.signupMode,
+                allowedDomains: data.allowedDomains || [],
+                maxRegistrations: data.maxRegistrations,
+                disallowMainDomainLogin: data.disallowMainDomainLogin,
+                termsOfService: data.termsOfService,
+                defaultUserTypeId: data.defaultUserTypeId,
+                defaultGroupId: data.defaultGroupId,
+
+                // E-COMMERCE
+                ecommerceProcessor: data.ecommerceProcessor,
+                subscriptionEnabled: data.subscriptionEnabled,
+                creditsEnabled: data.creditsEnabled,
+
+                // GAMIFICATION
+                badgeSet: data.badgeSet,
+
+                // AI SETTINGS
+                aiFeaturesEnabled: data.aiFeaturesEnabled,
+
+                // BRANDING
+                brandingLogoUrl: data.brandingLogoUrl,
+                brandingFaviconUrl: data.brandingFaviconUrl,
+                defaultCourseImageUrl: data.defaultCourseImageUrl,
+
+                // Legacy fields
                 themeId: data.themeId,
                 defaultLanguage: data.defaultLanguage,
                 aiEnabled: data.aiEnabled,
                 settings: data.settings || {},
             },
+            include: {
+                defaultUserType: {
+                    select: { id: true, name: true }
+                },
+                defaultGroup: {
+                    select: { id: true, name: true }
+                }
+            }
         });
 
         return NextResponse.json(branch, { status: 201 });
     } catch (error) {
         console.error('Error creating branch:', error);
-        return NextResponse.json({ error: 'Failed to create branch' }, { status: 500 });
+        console.error('Error details:', error instanceof Error ? error.message : String(error));
+        console.error('Error stack:', error instanceof Error ? error.stack : 'N/A');
+        return NextResponse.json({ error: 'Failed to create branch', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
     }
 }
 
