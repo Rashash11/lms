@@ -133,7 +133,7 @@ export default function SignupPage() {
                             Create Account
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Join TalentLMS Clone and start your learning journey
+                            Join Zedny LMS and start your learning journey
                         </Typography>
                     </Box>
 

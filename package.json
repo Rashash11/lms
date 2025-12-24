@@ -1,5 +1,5 @@
 {
-  "name": "talentlms-clone",
+  "name": "zedny-lms",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -31,7 +31,8 @@
     "next": "14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -40,7 +41,6 @@
     "@types/react-dom": "^18.3.1",
     "eslint": "^8.57.1",
     "eslint-config-next": "14.2.15",
-    "prisma": "^5.22.0",
     "tsx": "^4.21.0",
     "typescript": "^5.6.3"
   },

@@ -33,20 +33,7 @@ const SectionTitle = styled(Typography)({
     letterSpacing: '-0.2px',
 });
 
-const ViewAllButton = styled(Button)({
-    height: '40px',
-    borderRadius: '10px',
-    padding: '0 16px',
-    borderColor: '#1E6FE6',
-    color: '#1E6FE6',
-    textTransform: 'none',
-    fontSize: '14px',
-    fontWeight: 600,
-    '&:hover': {
-        borderColor: '#155DCC',
-        backgroundColor: 'rgba(30, 111, 230, 0.04)',
-    },
-});
+// ViewAllButton styles are now moved to sx props in the component
 
 const ChipsRow = styled(Box)({
     display: 'flex',
@@ -120,9 +107,27 @@ export default function StoreSection({
                         ))}
                     </ChipsRow>
                 </Box>
-                <ViewAllButton variant="outlined" component={Link} href={viewAllUrl}>
+                <Button
+                    variant="outlined"
+                    component={Link}
+                    href={viewAllUrl}
+                    sx={{
+                        height: '40px',
+                        borderRadius: '10px',
+                        padding: '0 16px',
+                        borderColor: '#1E6FE6',
+                        color: '#1E6FE6',
+                        textTransform: 'none',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        '&:hover': {
+                            borderColor: '#155DCC',
+                            backgroundColor: 'rgba(30, 111, 230, 0.04)',
+                        },
+                    }}
+                >
                     View all
-                </ViewAllButton>
+                </Button>
             </SectionHeader>
             <Description>{parseDescription(description)}</Description>
             <StoreCarousel courses={courses} onAddCourse={onAddCourse} />

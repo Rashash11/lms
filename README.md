@@ -1,4 +1,4 @@
-# TalentLMS Clone - Full Parity Implementation
+# Zedny LMS - Full Parity Implementation
 
 A complete Learning Management System clone matching TalentLMS functionality with 50+ database models, multi-tenant architecture, and extensive features.
 
@@ -184,4 +184,4 @@ See `task.md` for implementation checklist (35 phases).
 
 ## License
 
-Proprietary - TalentLMS Clone Project
+Proprietary - Zedny LMS Project

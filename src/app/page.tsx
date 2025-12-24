@@ -48,7 +48,7 @@ export default function HomePage() {
                                 mb: 2,
                             }}
                         >
-                            TalentLMS Clone
+                            Zedny LMS
                         </Typography>
                         <Typography
                             variant="h5"

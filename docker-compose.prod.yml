@@ -1,0 +1,64 @@
+services:
+  app:
+    image: zedny7386/talentlms-clone:latest
+    container_name: lms_app
+    restart: always
+    ports:
+      - "3070:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:password@postgres:5432/exam_platform}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - BASE_URL=${BASE_URL:-http://localhost:3070}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-http://localhost:3070}
+      - NODE_ENV=production
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ZOOM_CLIENT_ID=${ZOOM_CLIENT_ID}
+      - ZOOM_CLIENT_SECRET=${ZOOM_CLIENT_SECRET}
+      - BBB_URL=${BBB_URL}
+      - BBB_SECRET=${BBB_SECRET}
+      - MAX_FILE_SIZE_MB=${MAX_FILE_SIZE_MB:-600}
+      - UPLOAD_DIR=/app/uploads
+    volumes:
+      - lms_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: lms_postgres_prod
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-exam_platform}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+    volumes:
+      - lms_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-exam_platform}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: lms_redis_prod
+    restart: always
+    volumes:
+      - lms_redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  lms_postgres_data:
+  lms_redis_data:
+  lms_uploads:
