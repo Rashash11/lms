@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box, Typography, Button, TextField, InputAdornment, IconButton,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -44,8 +44,7 @@ export default function LearningPathsPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
-    // Fetch learning paths
-    const fetchLearningPaths = async () => {
+    const fetchLearningPaths = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -64,11 +63,11 @@ export default function LearningPathsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [searchQuery, statusFilter, sortBy, sortOrder]);
 
     useEffect(() => {
         fetchLearningPaths();
-    }, [searchQuery, statusFilter, sortBy, sortOrder]);
+    }, [fetchLearningPaths]);
 
     const handleSort = (field: SortField) => {
         if (sortBy === field) {

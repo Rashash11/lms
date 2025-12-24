@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     Box,
@@ -58,11 +58,7 @@ export default function CoursePlayerPage() {
     const [currentUnitIndex, setCurrentUnitIndex] = useState(0);
     const [completedUnits, setCompletedUnits] = useState<Set<string>>(new Set());
 
-    useEffect(() => {
-        loadCourse();
-    }, [courseId]);
-
-    const loadCourse = async () => {
+    const loadCourse = useCallback(async () => {
         try {
             setLoading(true);
             const response = await fetch(`/api/courses/${courseId}`);
@@ -74,7 +70,11 @@ export default function CoursePlayerPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [courseId]);
+
+    useEffect(() => {
+        loadCourse();
+    }, [loadCourse]);
 
     const handleUnitClick = (index: number) => {
         setCurrentUnitIndex(index);

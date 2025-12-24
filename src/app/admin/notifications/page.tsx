@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -74,11 +74,7 @@ export default function NotificationsPage() {
 
     const tabs = ['Overview', 'History', 'Pending', 'System notifications'];
 
-    useEffect(() => {
-        fetchData();
-    }, [currentTab, searchQuery]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             const tabMap = ['overview', 'history', 'pending', 'system'];
@@ -99,7 +95,11 @@ export default function NotificationsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentTab, searchQuery]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setCurrentTab(newValue);

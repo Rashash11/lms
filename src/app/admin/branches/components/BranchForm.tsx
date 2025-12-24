@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Typography, Button, TextField, CircularProgress } from '@mui/material';
 import { useSnackbar } from 'notistack';
@@ -114,14 +114,6 @@ export default function BranchForm({ branchId }: BranchFormProps) {
         defaultCourseImageUrl: null,
     });
 
-    // Load data on mount
-    useEffect(() => {
-        loadDropdownData();
-        if (branchId) {
-            loadBranch();
-        }
-    }, [branchId]);
-
     const loadDropdownData = async () => {
         try {
             const [userTypesRes, groupsRes] = await Promise.all([
@@ -137,7 +129,7 @@ export default function BranchForm({ branchId }: BranchFormProps) {
         }
     };
 
-    const loadBranch = async () => {
+    const loadBranch = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch(`/api/branches/${branchId}`);
@@ -174,7 +166,14 @@ export default function BranchForm({ branchId }: BranchFormProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [branchId, enqueueSnackbar]);
+
+    useEffect(() => {
+        loadDropdownData();
+        if (branchId) {
+            loadBranch();
+        }
+    }, [branchId, loadBranch]);
 
     const handleSave = async () => {
         if (!formData.name || formData.name.length < 3) {

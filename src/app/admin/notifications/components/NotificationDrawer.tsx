@@ -339,13 +339,17 @@ export default function NotificationDrawer({
                                                         <TextField {...params} label="Courses" placeholder="Select courses" />
                                                     )}
                                                     renderTags={(value, getTagProps) =>
-                                                        value.map((option, index) => (
-                                                            <Chip
-                                                                label={option.title || option.name}
-                                                                {...getTagProps({ index })}
-                                                                size="small"
-                                                            />
-                                                        ))
+                                                        value.map((option, index) => {
+                                                            const { key, ...tagProps } = getTagProps({ index });
+                                                            return (
+                                                                <Chip
+                                                                    key={key}
+                                                                    label={option.title || option.name}
+                                                                    {...tagProps}
+                                                                    size="small"
+                                                                />
+                                                            );
+                                                        })
                                                     }
                                                 />
                                             )}
@@ -361,9 +365,17 @@ export default function NotificationDrawer({
                                                         <TextField {...params} label="Groups" placeholder="Select groups" />
                                                     )}
                                                     renderTags={(value, getTagProps) =>
-                                                        value.map((option, index) => (
-                                                            <Chip label={option.name} {...getTagProps({ index })} size="small" />
-                                                        ))
+                                                        value.map((option, index) => {
+                                                            const { key, ...tagProps } = getTagProps({ index });
+                                                            return (
+                                                                <Chip
+                                                                    key={key}
+                                                                    label={option.name}
+                                                                    {...tagProps}
+                                                                    size="small"
+                                                                />
+                                                            );
+                                                        })
                                                     }
                                                 />
                                             )}
@@ -379,9 +391,17 @@ export default function NotificationDrawer({
                                                         <TextField {...params} label="Branches" placeholder="Select branches" />
                                                     )}
                                                     renderTags={(value, getTagProps) =>
-                                                        value.map((option, index) => (
-                                                            <Chip label={option.name} {...getTagProps({ index })} size="small" />
-                                                        ))
+                                                        value.map((option, index) => {
+                                                            const { key, ...tagProps } = getTagProps({ index });
+                                                            return (
+                                                                <Chip
+                                                                    key={key}
+                                                                    label={option.name}
+                                                                    {...tagProps}
+                                                                    size="small"
+                                                                />
+                                                            );
+                                                        })
                                                     }
                                                 />
                                             )}
