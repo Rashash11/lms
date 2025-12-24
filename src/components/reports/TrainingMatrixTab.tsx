@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     Box,
     TextField,
@@ -17,6 +17,7 @@ import {
     Paper,
     Avatar,
     CircularProgress,
+    Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -47,11 +48,7 @@ export default function TrainingMatrixTab() {
     const [viewAnchor, setViewAnchor] = useState<null | HTMLElement>(null);
     const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
 
-    useEffect(() => {
-        fetchData();
-    }, [search]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -65,7 +62,11 @@ export default function TrainingMatrixTab() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [search]);
+
+    useEffect(() => {
+        fetchData();
+    }, [search, fetchData]);
 
     const handleExport = async () => {
         try {
