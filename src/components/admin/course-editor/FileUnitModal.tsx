@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -48,7 +48,7 @@ export default function FileUnitModal({ open, onClose, courseId, onSave, editUni
         }
     };
 
-    const handleUpload = async () => {
+    const handleUpload = useCallback(async () => {
         if (!file) return;
 
         setUploading(true);
@@ -77,7 +77,7 @@ export default function FileUnitModal({ open, onClose, courseId, onSave, editUni
         } finally {
             setUploading(false);
         }
-    };
+    }, [file]);
 
     const handleSave = async () => {
         if (!title.trim()) {
@@ -144,7 +144,7 @@ export default function FileUnitModal({ open, onClose, courseId, onSave, editUni
         if (file && !uploading) {
             handleUpload();
         }
-    }, [file]);
+    }, [file, uploading, handleUpload]);
 
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>

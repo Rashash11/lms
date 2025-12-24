@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     Box,
     TextField,
@@ -39,11 +39,7 @@ export default function TimelineTab() {
         course: '',
     });
 
-    useEffect(() => {
-        fetchEvents();
-    }, [filters]);
-
-    const fetchEvents = async () => {
+    const fetchEvents = useCallback(async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -61,7 +57,11 @@ export default function TimelineTab() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters]);
+
+    useEffect(() => {
+        fetchEvents();
+    }, [fetchEvents]);
 
     const handleReset = () => {
         setFilters({

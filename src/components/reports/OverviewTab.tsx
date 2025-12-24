@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Box, Card, CardContent, Typography, MenuItem, Select, FormControl } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
@@ -39,11 +39,7 @@ export default function OverviewTab() {
     const [period, setPeriod] = useState('month');
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchData();
-    }, [period]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const res = await fetch(`/api/reports/overview?period=${period}`);
@@ -54,7 +50,11 @@ export default function OverviewTab() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [period]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     if (loading || !data) {
         return <Box>Loading...</Box>;
