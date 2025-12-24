@@ -4,14 +4,17 @@ import { z } from 'zod';
 
 const createNotificationSchema = z.object({
     name: z.string().min(1, 'Name is required'),
-    eventType: z.string().min(1, 'Event type is required'),
-    subject: z.string().min(1, 'Subject is required'),
-    body: z.string().min(1, 'Body is required'),
-    rulesets: z.record(z.any()).optional(),
-    smartTags: z.array(z.string()).optional(),
-    isRecurring: z.boolean().optional(),
-    recurringConfig: z.record(z.any()).optional(),
-    enabled: z.boolean().optional(),
+    eventKey: z.string().min(1, 'Event key is required'),
+    messageSubject: z.string().min(1, 'Subject is required'),
+    messageBody: z.string().min(1, 'Body is required'),
+    hoursOffset: z.number().nullable().optional(),
+    offsetDirection: z.string().nullable().optional(),
+    filterCourses: z.array(z.string()).optional(),
+    filterGroups: z.array(z.string()).optional(),
+    filterBranches: z.array(z.string()).optional(),
+    recipientType: z.string().min(1, 'Recipient type is required'),
+    recipientUserId: z.string().nullable().optional(),
+    isActive: z.boolean().optional(),
 });
 
 // GET all notifications
@@ -19,8 +22,8 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search') || '';
-        const eventType = searchParams.get('eventType') || '';
-        const enabled = searchParams.get('enabled');
+        const eventKey = searchParams.get('eventKey') || '';
+        const isActive = searchParams.get('isActive');
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
         const skip = (page - 1) * limit;
@@ -30,16 +33,16 @@ export async function GET(request: NextRequest) {
         if (search) {
             where.OR = [
                 { name: { contains: search, mode: 'insensitive' } },
-                { subject: { contains: search, mode: 'insensitive' } },
+                { messageSubject: { contains: search, mode: 'insensitive' } },
             ];
         }
 
-        if (eventType) {
-            where.eventType = eventType;
+        if (eventKey) {
+            where.eventKey = eventKey;
         }
 
-        if (enabled !== null && enabled !== undefined) {
-            where.enabled = enabled === 'true';
+        if (isActive !== null && isActive !== undefined) {
+            where.isActive = isActive === 'true';
         }
 
         const [notifications, total] = await Promise.all([
@@ -82,14 +85,17 @@ export async function POST(request: NextRequest) {
         const notification = await prisma.notification.create({
             data: {
                 name: data.name,
-                eventType: data.eventType,
-                subject: data.subject,
-                body: data.body,
-                rulesets: data.rulesets || {},
-                smartTags: data.smartTags || [],
-                isRecurring: data.isRecurring || false,
-                recurringConfig: data.recurringConfig,
-                enabled: data.enabled ?? true,
+                eventKey: data.eventKey,
+                messageSubject: data.messageSubject,
+                messageBody: data.messageBody,
+                hoursOffset: data.hoursOffset,
+                offsetDirection: data.offsetDirection,
+                filterCourses: data.filterCourses || [],
+                filterGroups: data.filterGroups || [],
+                filterBranches: data.filterBranches || [],
+                recipientType: data.recipientType,
+                recipientUserId: data.recipientUserId,
+                isActive: data.isActive ?? true,
             },
         });
 
@@ -125,7 +131,7 @@ export async function DELETE(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
     try {
         const body = await request.json();
-        const { ids, enabled } = body;
+        const { ids, isActive } = body;
 
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
             return NextResponse.json({ error: 'No notification IDs provided' }, { status: 400 });
@@ -133,7 +139,7 @@ export async function PATCH(request: NextRequest) {
 
         const result = await prisma.notification.updateMany({
             where: { id: { in: ids } },
-            data: { enabled: enabled ?? true },
+            data: { isActive: isActive ?? true },
         });
 
         return NextResponse.json({ success: true, updated: result.count });
