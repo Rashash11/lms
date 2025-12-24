@@ -16,6 +16,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import { useRouter, useParams } from 'next/navigation';
 import AddCourseModal from './components/AddCourseModal';
 import LearningPathOptionsPanel from './components/LearningPathOptionsPanel';
+import UsersPanel from './components/UsersPanel';
 
 interface Course {
     id: string;
@@ -64,6 +65,7 @@ export default function EditLearningPathPage() {
     const [saving, setSaving] = useState(false);
     const [showCourseDialog, setShowCourseDialog] = useState(false);
     const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+    const [showUsersDrawer, setShowUsersDrawer] = useState(false);
     const [selectedSection, setSelectedSection] = useState<string | null>(null);
     const [editingSection, setEditingSection] = useState<string | null>(null);
     const [editingSectionName, setEditingSectionName] = useState('');
@@ -524,6 +526,7 @@ export default function EditLearningPathPage() {
                     {/* Bottom Icons */}
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 8 }}>
                         <IconButton
+                            onClick={() => setShowUsersDrawer(true)}
                             sx={{
                                 border: '1px solid #e0e0e0',
                                 borderRadius: 1,
@@ -749,6 +752,13 @@ export default function EditLearningPathPage() {
                     await fetchPath();
                     setSnackbar({ open: true, message: 'Settings saved', severity: 'success' });
                 }}
+            />
+
+            {/* Users Panel */}
+            <UsersPanel
+                open={showUsersDrawer}
+                pathId={id}
+                onClose={() => setShowUsersDrawer(false)}
             />
 
             {/* Snackbar Notifications */}

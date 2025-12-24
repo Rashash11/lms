@@ -368,6 +368,25 @@ model LearningPathCourse {
   @@map("learning_path_courses")
 }
 
+// Learning Path Enrollments - Track users enrolled in learning paths
+model LearningPathEnrollment {
+  id              String           @id @default(uuid())
+  userId          String
+  pathId          String
+  role            RoleKey          @default(LEARNER) // ADMIN, INSTRUCTOR, LEARNER
+  status          String           @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, COMPLETED
+  progress        Int              @default(0) // 0-100
+  enrolledAt      DateTime         @default(now())
+  completedAt     DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  @@unique([userId, pathId])
+  @@map("learning_path_enrollments")
+}
+
+
 // 5. PREREQUISITES
 model Prerequisite {
   id                String @id @default(uuid())
