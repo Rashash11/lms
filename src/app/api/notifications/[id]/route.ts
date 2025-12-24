@@ -12,7 +12,7 @@ const updateNotificationSchema = z.object({
     smartTags: z.array(z.string()).optional(),
     isRecurring: z.boolean().optional(),
     recurringConfig: z.record(z.any()).nullable().optional(),
-    enabled: z.boolean().optional(),
+    isActive: z.boolean().optional(),
 });
 
 // GET single notification
@@ -65,7 +65,7 @@ export async function PUT(
                 ...(data.smartTags !== undefined && { smartTags: data.smartTags }),
                 ...(data.isRecurring !== undefined && { isRecurring: data.isRecurring }),
                 ...(data.recurringConfig !== undefined && { recurringConfig: data.recurringConfig === null ? Prisma.DbNull : data.recurringConfig }),
-                ...(data.enabled !== undefined && { enabled: data.enabled }),
+                ...(data.isActive !== undefined && { isActive: data.isActive }),
             },
         });
 
@@ -93,7 +93,7 @@ export async function DELETE(
     }
 }
 
-// PATCH toggle enabled or send preview
+// PATCH toggle isActive or send preview
 export async function PATCH(
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -113,7 +113,7 @@ export async function PATCH(
 
             const updated = await prisma.notification.update({
                 where: { id: params.id },
-                data: { enabled: !notification.enabled },
+                data: { isActive: !notification.isActive },
             });
 
             return NextResponse.json(updated);
