@@ -38,7 +38,7 @@ export async function GET(
         // Get course units
         const units = await prisma.courseUnit.findMany({
             where: { courseId: params.courseId },
-            orderBy: { order: 'asc' },
+            orderBy: { order_index: 'asc' },
         });
 
         // Update last accessed
@@ -53,7 +53,7 @@ export async function GET(
                 code: course.code,
                 title: course.title,
                 description: course.description,
-                image: course.image,
+                image: course.thumbnail_url,
                 introVideoUrl: course.introVideoUrl,
                 timeLimit: course.timeLimit,
             },
@@ -68,9 +68,9 @@ export async function GET(
                 id: u.id,
                 title: u.title,
                 type: u.type,
-                order: u.order,
+                order: u.order_index,
                 isSample: u.isSample,
-                content: u.content, // Full content for enrolled users
+                content: u.config, // Full config for enrolled users
                 isLocked: false, // TODO: Implement unit locking based on prerequisites
             })),
             totalUnits: units.length,

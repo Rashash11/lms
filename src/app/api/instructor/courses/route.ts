@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
                 id: true,
                 title: true,
                 code: true,
-                image: true,
+                thumbnail_url: true,
                 description: true,
                 status: true,
                 hiddenFromCatalog: true,

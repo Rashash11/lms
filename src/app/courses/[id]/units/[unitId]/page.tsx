@@ -391,7 +391,9 @@ function UnitEditorContent() {
                         onDeleteUnit={handleDeleteUnit}
                         onOptionsUnit={(id) => { setOptionsUnitId(id); setUnitOptionsDrawerOpen(true); }}
                         onMoveUnit={(id) => { setMoveUnitId(id); setMoveUnitDialogOpen(true); }}
-                        courseTitle={course?.title}
+                        courseTitle={course?.title || ''}
+                        onOpenSettings={() => { }}
+                        onOpenUsers={() => { }}
                         activeUnitId={unitId}
                     />
                 </Box>

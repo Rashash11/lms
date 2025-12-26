@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
                 code: courseCode,
                 title: data.title,
                 description: data.description,
-                image: data.image,
+                thumbnail_url: data.image,
                 status: data.status || 'DRAFT',
 
                 // Info tab - use provided values or defaults

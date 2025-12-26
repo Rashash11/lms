@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
                             code: true,
                             title: true,
                             description: true,
-                            image: true,
+                            thumbnail_url: true,
                             status: true,
                         }
                     }

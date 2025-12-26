@@ -51,7 +51,7 @@ export async function GET(
         const courseIds = group.courses.map(c => c.courseId);
         const courses = await prisma.course.findMany({
             where: { id: { in: courseIds } },
-            select: { id: true, title: true, code: true, status: true, image: true }
+            select: { id: true, title: true, code: true, status: true, thumbnail_url: true }
         });
 
         const courseMap = new Map(courses.map(c => [c.id, c]));

@@ -21,12 +21,12 @@ export async function GET(
         // Get course units for progress tracking
         const units = await prisma.courseUnit.findMany({
             where: { courseId: enrollment.courseId },
-            orderBy: { order: 'asc' },
+            orderBy: { order_index: 'asc' },
             select: {
                 id: true,
                 title: true,
                 type: true,
-                order: true,
+                order_index: true,
             }
         });
 
