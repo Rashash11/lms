@@ -237,6 +237,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Box>
     );
 
+    // If on the course editor page, render full screen without the admin shell
+    if (pathname?.startsWith('/admin/courses/new/edit')) {
+        return <>{children}</>;
+    }
+
     return (
         <Box sx={{ display: 'flex', bgcolor: '#f5f7fa', minHeight: '100vh' }}>
             <AppBar

@@ -2,18 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
+const unitTypes = ['TEXT', 'FILE', 'EMBED', 'VIDEO', 'TEST', 'SURVEY', 'ASSIGNMENT', 'ILT', 'SCORM', 'XAPI', 'CMI5', 'TALENTCRAFT', 'SECTION', 'WEB', 'AUDIO', 'DOCUMENT', 'IFRAME'] as const;
+
 const createUnitSchema = z.object({
-    type: z.enum(['TEXT', 'FILE', 'EMBED', 'VIDEO', 'TEST', 'SURVEY', 'ASSIGNMENT', 'ILT', 'SCORM', 'XAPI', 'CMI5', 'TALENTCRAFT', 'SECTION']),
+    type: z.enum(unitTypes),
     title: z.string().min(1, 'Title is required'),
-    content: z.any().optional().default({}),
+    sectionId: z.string().uuid().nullable().optional(),
+    config: z.any().optional().default({}),
     status: z.enum(['DRAFT', 'PUBLISHED', 'UNPUBLISHED_CHANGES']).optional().default('DRAFT'),
     isSample: z.boolean().optional().default(false),
 });
 
 const updateUnitSchema = z.object({
-    type: z.enum(['TEXT', 'FILE', 'EMBED', 'VIDEO', 'TEST', 'SURVEY', 'ASSIGNMENT', 'ILT', 'SCORM', 'XAPI', 'CMI5', 'TALENTCRAFT', 'SECTION']).optional(),
+    type: z.enum(unitTypes).optional(),
     title: z.string().min(1).optional(),
-    content: z.any().optional(),
+    sectionId: z.string().uuid().nullable().optional(),
+    config: z.any().optional(),
     status: z.enum(['DRAFT', 'PUBLISHED', 'UNPUBLISHED_CHANGES']).optional(),
     isSample: z.boolean().optional(),
 });
@@ -21,7 +25,7 @@ const updateUnitSchema = z.object({
 const reorderSchema = z.object({
     units: z.array(z.object({
         id: z.string().uuid(),
-        order: z.number().int().min(0),
+        order_index: z.number().int().min(0),
     })),
 });
 
@@ -33,7 +37,7 @@ export async function GET(
     try {
         const units = await prisma.courseUnit.findMany({
             where: { courseId: params.id },
-            orderBy: { order: 'asc' },
+            orderBy: { order_index: 'asc' },
         });
 
         return NextResponse.json({ units, count: units.length });
@@ -64,21 +68,21 @@ export async function POST(
         // Get the highest order number for this course
         const maxOrderUnit = await prisma.courseUnit.findFirst({
             where: { courseId: params.id },
-            orderBy: { order: 'desc' },
-            select: { order: true },
+            orderBy: { order_index: 'desc' },
+            select: { order_index: true },
         });
 
-        const nextOrder = (maxOrderUnit?.order ?? -1) + 1;
+        const nextOrder = (maxOrderUnit?.order_index ?? -1) + 1;
 
         const unit = await prisma.courseUnit.create({
             data: {
                 courseId: params.id,
                 type: data.type,
                 title: data.title,
-                content: data.content,
+                config: data.config,
                 status: data.status,
                 isSample: data.isSample,
-                order: nextOrder,
+                order_index: nextOrder,
             },
         });
 
@@ -112,7 +116,7 @@ export async function PATCH(
             units.map(unit =>
                 prisma.courseUnit.update({
                     where: { id: unit.id },
-                    data: { order: unit.order },
+                    data: { order_index: unit.order_index },
                 })
             )
         );

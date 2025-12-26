@@ -147,7 +147,27 @@ export default function CoursesPage() {
                 <Button
                     variant="contained"
                     startIcon={<AddIcon />}
-                    onClick={() => router.push('/admin/courses/new/edit')}
+                    onClick={async () => {
+                        try {
+                            const res = await fetch('/api/courses', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    code: `COURSE-${Date.now()}`,
+                                    title: 'New course',
+                                    description: '',
+                                    status: 'DRAFT',
+                                    hiddenFromCatalog: false
+                                })
+                            });
+                            if (res.ok) {
+                                const newCourse = await res.json();
+                                router.push(`/admin/courses/new/edit?id=${newCourse.id}`);
+                            }
+                        } catch (error) {
+                            console.error('Error creating course:', error);
+                        }
+                    }}
                     sx={{ bgcolor: '#1976d2' }}
                 >
                     Add course

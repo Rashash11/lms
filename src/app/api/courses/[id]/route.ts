@@ -5,9 +5,12 @@ import { z } from 'zod';
 const updateCourseSchema = z.object({
     code: z.string().min(1).optional(),
     title: z.string().min(1).optional(),
+    subtitle: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
-    image: z.string().nullable().optional(),
+    image: z.string().nullable().optional(), // backward compatibility if needed, but we use thumbnail_url
+    thumbnail_url: z.string().nullable().optional(),
     status: z.enum(['DRAFT', 'PUBLISHED']).optional(),
+    settings: z.any().optional(),
 
     // Info tab
     isActive: z.boolean().optional(),
@@ -40,7 +43,7 @@ const updateCourseSchema = z.object({
     expiration: z.string().datetime().nullable().optional(),
 }).passthrough(); // Allow extra fields from frontend
 
-// GET single course with units
+// GET single course with sections and units
 export async function GET(
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -48,22 +51,41 @@ export async function GET(
     try {
         const course = await prisma.course.findUnique({
             where: { id: params.id },
+            include: {
+                sections: {
+                    orderBy: { order_index: 'asc' },
+                    include: {
+                        units: {
+                            orderBy: { order_index: 'asc' }
+                        }
+                    }
+                },
+                files: {
+                    orderBy: { createdAt: 'desc' }
+                },
+                _count: {
+                    select: { enrollments: true }
+                }
+            }
         });
 
         if (!course) {
             return NextResponse.json({ error: 'Course not found' }, { status: 404 });
         }
 
-        // Get course units
-        const units = await prisma.courseUnit.findMany({
-            where: { courseId: params.id },
-            orderBy: { order: 'asc' },
+        // Get units not in any section
+        const unassignedUnits = await prisma.courseUnit.findMany({
+            where: {
+                courseId: params.id,
+                sectionId: null
+            },
+            orderBy: { order_index: 'asc' },
         });
 
         return NextResponse.json({
             ...course,
-            units,
-            unitCount: units.length,
+            unassignedUnits,
+            enrollmentCount: course._count.enrollments,
         });
     } catch (error) {
         console.error('Error fetching course:', error);
@@ -81,8 +103,6 @@ export async function PUT(
 
         const validation = updateCourseSchema.safeParse(body);
         if (!validation.success) {
-            console.error('Course update validation failed:', JSON.stringify(validation.error, null, 2));
-            console.error('Received body:', JSON.stringify(body, null, 2));
             return NextResponse.json(
                 { error: validation.error.errors[0].message, details: validation.error.errors },
                 { status: 400 }
@@ -91,7 +111,7 @@ export async function PUT(
 
         const data = validation.data;
 
-        // Check if code is unique (if changing)
+        // Check unique code
         if (data.code) {
             const existingCourse = await prisma.course.findFirst({
                 where: {
@@ -107,42 +127,18 @@ export async function PUT(
             }
         }
 
-        const updateData: any = {};
-        if (data.code !== undefined) updateData.code = data.code;
-        if (data.title !== undefined) updateData.title = data.title;
-        if (data.description !== undefined) updateData.description = data.description;
-        if (data.image !== undefined) updateData.image = data.image;
-        if (data.status !== undefined) updateData.status = data.status;
+        const updateData: any = { ...data };
+        if (data.expiration) updateData.expiration = new Date(data.expiration);
 
-        // Info tab
-        if (data.isActive !== undefined) updateData.isActive = data.isActive;
-        if (data.coachEnabled !== undefined) updateData.coachEnabled = data.coachEnabled;
-        if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
-        if (data.introVideoType !== undefined) updateData.introVideoType = data.introVideoType;
-        if (data.introVideoUrl !== undefined) updateData.introVideoUrl = data.introVideoUrl;
-        if (data.price !== undefined) updateData.price = data.price;
-        if (data.contentLocked !== undefined) updateData.contentLocked = data.contentLocked;
+        // Handle image vs thumbnail_url
+        if (data.image) updateData.thumbnail_url = data.image;
 
-        // Availability tab
-        if (data.hiddenFromCatalog !== undefined) updateData.hiddenFromCatalog = data.hiddenFromCatalog;
-        if (data.showInCatalog !== undefined) updateData.showInCatalog = data.showInCatalog;
-        if (data.capacity !== undefined) updateData.capacity = data.capacity;
-        if (data.publicSharingEnabled !== undefined) updateData.publicSharingEnabled = data.publicSharingEnabled;
-        if (data.enrollmentRequestEnabled !== undefined) updateData.enrollmentRequestEnabled = data.enrollmentRequestEnabled;
-
-        // Limits tab
-        if (data.timeLimitType !== undefined) updateData.timeLimitType = data.timeLimitType;
-        if (data.timeLimit !== undefined) updateData.timeLimit = data.timeLimit;
-        if (data.accessRetentionEnabled !== undefined) updateData.accessRetentionEnabled = data.accessRetentionEnabled;
-        if (data.requiredLevel !== undefined) updateData.requiredLevel = data.requiredLevel;
-
-        // Completion tab
-        if (data.unitsOrdering !== undefined) updateData.unitsOrdering = data.unitsOrdering;
-        if (data.completionRule !== undefined) updateData.completionRule = data.completionRule;
-        if (data.scoreCalculation !== undefined) updateData.scoreCalculation = data.scoreCalculation;
-        if (data.certificateTemplateId !== undefined) updateData.certificateTemplateId = data.certificateTemplateId;
-
-        if (data.expiration !== undefined) updateData.expiration = data.expiration ? new Date(data.expiration) : null;
+        // Remove nested/extra fields not in DB Course model but possibly in body
+        delete updateData.id;
+        delete updateData.sections;
+        delete updateData.units;
+        delete updateData.unassignedUnits;
+        delete updateData.image; // Using thumbnail_url now
 
         const course = await prisma.course.update({
             where: { id: params.id },
@@ -162,17 +158,7 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
-        // Delete units
-        await prisma.courseUnit.deleteMany({
-            where: { courseId: params.id },
-        });
-
-        // Delete group assignments
-        await prisma.groupCourse.deleteMany({
-            where: { courseId: params.id },
-        });
-
-        // Delete course
+        // Dependencies are handled by Cascade in schema
         await prisma.course.delete({
             where: { id: params.id },
         });
@@ -184,7 +170,7 @@ export async function DELETE(
     }
 }
 
-// PATCH for specific actions (publish, clone, etc.)
+// PATCH for specific actions (publish, clone)
 export async function PATCH(
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -194,52 +180,129 @@ export async function PATCH(
         const { action } = body;
 
         if (action === 'publish') {
-            const course = await prisma.course.update({
+            // Get current full course state
+            const course = await prisma.course.findUnique({
                 where: { id: params.id },
-                data: { status: 'PUBLISHED' },
+                include: {
+                    sections: {
+                        include: { units: true }
+                    }
+                }
+            });
+
+            if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+
+            // Create version snapshot
+            const version = await prisma.courseVersion.create({
+                data: {
+                    courseId: params.id,
+                    versionNumber: course.version,
+                    snapshot: JSON.parse(JSON.stringify(course)) // Simple deep clone
+                }
+            });
+
+            // Update course status and version
+            const updated = await prisma.course.update({
+                where: { id: params.id },
+                data: {
+                    status: 'PUBLISHED',
+                    version: { increment: 1 },
+                    lastPublishedAt: new Date(),
+                    publishedVersionId: version.id
+                }
             });
 
             await prisma.timelineEvent.create({
                 data: {
                     courseId: params.id,
                     eventType: 'COURSE_PUBLISHED',
-                    details: { title: course.title },
+                    details: { title: updated.title, version: version.versionNumber },
                 },
             });
 
-            return NextResponse.json(course);
-        }
-
-        if (action === 'unpublish') {
-            const course = await prisma.course.update({
-                where: { id: params.id },
-                data: { status: 'DRAFT' },
-            });
-            return NextResponse.json(course);
+            return NextResponse.json(updated);
         }
 
         if (action === 'clone') {
             const original = await prisma.course.findUnique({
                 where: { id: params.id },
+                include: {
+                    sections: {
+                        include: { units: true }
+                    }
+                }
             });
 
-            if (!original) {
-                return NextResponse.json({ error: 'Course not found' }, { status: 404 });
-            }
+            if (!original) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
 
-            const cloned = await prisma.course.create({
-                data: {
-                    code: `${original.code}-COPY-${Date.now()}`,
-                    title: `${original.title} (Copy)`,
-                    description: original.description,
-                    image: original.image,
-                    status: 'DRAFT',
-                    hiddenFromCatalog: true,
-                    introVideoType: original.introVideoType,
-                    introVideoUrl: original.introVideoUrl,
-                    capacity: original.capacity,
-                    timeLimit: original.timeLimit,
-                },
+            // Deep clone logic
+            const cloned = await prisma.$transaction(async (tx) => {
+                const newCourse = await tx.course.create({
+                    data: {
+                        code: `${original.code}-COPY-${Date.now()}`,
+                        title: `${original.title} (Copy)`,
+                        description: original.description,
+                        thumbnail_url: original.thumbnail_url,
+                        status: 'DRAFT',
+                        isActive: original.isActive,
+                        categoryId: original.categoryId,
+                        introVideoType: original.introVideoType,
+                        introVideoUrl: original.introVideoUrl,
+                        price: original.price,
+                        unitsOrdering: original.unitsOrdering,
+                        completionRule: original.completionRule,
+                        scoreCalculation: original.scoreCalculation,
+                        settings: original.settings as any,
+                    }
+                });
+
+                // Clone sections and units
+                for (const section of original.sections) {
+                    const newSection = await tx.courseSection.create({
+                        data: {
+                            courseId: newCourse.id,
+                            title: section.title,
+                            order_index: section.order_index,
+                            dripEnabled: section.dripEnabled,
+                            dripType: section.dripType,
+                            dripValue: section.dripValue,
+                        }
+                    });
+
+                    for (const unit of section.units) {
+                        await tx.courseUnit.create({
+                            data: {
+                                courseId: newCourse.id,
+                                sectionId: newSection.id,
+                                type: unit.type,
+                                title: unit.title,
+                                config: unit.config as any,
+                                order_index: unit.order_index,
+                                status: 'DRAFT',
+                            }
+                        });
+                    }
+                }
+
+                // Units not in sections
+                const unassigned = await tx.courseUnit.findMany({
+                    where: { courseId: original.id, sectionId: null }
+                });
+
+                for (const unit of unassigned) {
+                    await tx.courseUnit.create({
+                        data: {
+                            courseId: newCourse.id,
+                            type: unit.type,
+                            title: unit.title,
+                            config: unit.config as any,
+                            order_index: unit.order_index,
+                            status: 'DRAFT',
+                        }
+                    });
+                }
+
+                return newCourse;
             });
 
             return NextResponse.json(cloned, { status: 201 });

@@ -23,7 +23,7 @@ interface TextUnitModalProps {
 
 export default function TextUnitModal({ open, onClose, courseId, onSave, editUnit }: TextUnitModalProps) {
     const [title, setTitle] = useState(editUnit?.title || '');
-    const [content, setContent] = useState(editUnit?.content?.html || '');
+    const [config, setConfig] = useState(editUnit?.config || { html: '' });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -33,7 +33,7 @@ export default function TextUnitModal({ open, onClose, courseId, onSave, editUni
             return;
         }
 
-        if (!content.trim() || content === '<p></p>') {
+        if (!config.html?.trim() || config.html === '<p></p>') {
             setError('Content is required');
             return;
         }
@@ -54,7 +54,7 @@ export default function TextUnitModal({ open, onClose, courseId, onSave, editUni
                 body: JSON.stringify({
                     type: 'TEXT',
                     title: title.trim(),
-                    content: { html: content },
+                    config: config,
                 }),
             });
 
@@ -75,50 +75,72 @@ export default function TextUnitModal({ open, onClose, courseId, onSave, editUni
 
     const handleClose = () => {
         setTitle('');
-        setContent('');
+        setConfig({ html: '' });
         setError('');
         onClose();
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-            <DialogTitle>{editUnit ? 'Edit Text Unit' : 'Add Text Unit'}</DialogTitle>
-            <DialogContent>
-                <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+                sx: { borderRadius: '16px', p: 1 }
+            }}
+        >
+            <DialogTitle sx={{ fontWeight: 800, color: '#2d3748', borderBottom: '1px solid #edf2f7', pb: 2 }}>
+                {editUnit ? 'Edit Text Unit' : 'Add Text Unit'}
+            </DialogTitle>
+            <DialogContent sx={{ mt: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     <TextField
-                        label="Title"
+                        label="Unit Title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         fullWidth
                         required
                         autoFocus
                         error={!!error && !title.trim()}
+                        sx={{
+                            '& .MuiOutlinedInput-root': { borderRadius: '10px' },
+                            '& .MuiInputLabel-root': { fontWeight: 600 }
+                        }}
                     />
                     <Box>
                         <RichTextEditor
-                            content={content}
-                            onChange={setContent}
+                            content={config.html || ''}
+                            onChange={(html) => setConfig({ ...config, html })}
                             placeholder="Enter your content here..."
                         />
-                        {error && content.trim() === '' && (
-                            <Box sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>
+                        {error && (!config.html || config.html.trim() === '') && (
+                            <Box sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5, px: 1 }}>
                                 {error}
                             </Box>
                         )}
                     </Box>
                 </Box>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={handleClose} disabled={saving}>
+            <DialogActions sx={{ p: 3, borderTop: '1px solid #edf2f7' }}>
+                <Button onClick={handleClose} disabled={saving} sx={{ textTransform: 'none', fontWeight: 600, color: '#718096' }}>
                     Cancel
                 </Button>
                 <Button
                     variant="contained"
                     onClick={handleSave}
                     disabled={saving}
-                    startIcon={saving ? <CircularProgress size={20} /> : null}
+                    startIcon={saving ? <CircularProgress size={16} color="inherit" /> : null}
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        px: 4,
+                        borderRadius: '8px',
+                        bgcolor: '#3182ce',
+                        '&:hover': { bgcolor: '#2b6cb0' }
+                    }}
                 >
-                    {saving ? 'Saving...' : 'Save'}
+                    {saving ? 'Saving...' : 'Save Unit'}
                 </Button>
             </DialogActions>
         </Dialog>
