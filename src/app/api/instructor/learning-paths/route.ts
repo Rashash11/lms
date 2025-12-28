@@ -16,12 +16,7 @@ export async function GET(req: NextRequest) {
 
         // If we can't use instructorId yet, we just return all
         // In a real environment, this would be: where.instructorId = userId;
-        try {
-            // @ts-expect-error - instructorId might not be in the generated types yet
-            where.instructorId = userId;
-        } catch (e) {
-            console.warn('Prisma LearningPath model missing instructorId, returning all paths');
-        }
+        where.instructorId = userId;
 
         if (search) {
             where.OR = [
