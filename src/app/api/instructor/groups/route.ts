@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const session = await getSession();
+        if (!session?.userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const activeRole = (session as any).activeRole;
+        const activeRole = session.activeRole;
         if (activeRole !== 'INSTRUCTOR' && activeRole !== 'ADMIN') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
@@ -20,7 +19,7 @@ export async function GET(request: NextRequest) {
 
         const groups = await prisma.group.findMany({
             where: {
-                ...(activeRole === 'INSTRUCTOR' ? { instructorId: session.user.id } : {}),
+                ...(activeRole === 'INSTRUCTOR' ? { instructorId: session.userId } : {}),
                 ...(search ? {
                     OR: [
                         { name: { contains: search, mode: 'insensitive' } },
@@ -50,12 +49,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const session = await getSession();
+        if (!session?.userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const activeRole = (session as any).activeRole;
+        const activeRole = session.activeRole;
         if (activeRole !== 'INSTRUCTOR' && activeRole !== 'ADMIN') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
@@ -68,7 +67,7 @@ export async function POST(request: NextRequest) {
                 name,
                 description,
                 price: price ? parseFloat(price) : null,
-                instructorId: activeRole === 'INSTRUCTOR' ? session.user.id : null
+                instructorId: activeRole === 'INSTRUCTOR' ? session.userId : null
             }
         });
 

@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const session = await getSession();
+        if (!session?.userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const activeRole = (session as any).activeRole;
+        const activeRole = session.activeRole;
         if (activeRole !== 'INSTRUCTOR' && activeRole !== 'ADMIN') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
@@ -21,7 +20,7 @@ export async function GET(request: NextRequest) {
 
         const events = await prisma.calendarEvent.findMany({
             where: {
-                instructorId: session.user.id,
+                instructorId: session.userId,
                 ...(start ? { startTime: { gte: new Date(start) } } : {}),
                 ...(end ? { endTime: { lte: new Date(end) } } : {})
             },
@@ -39,12 +38,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const session = await getSession();
+        if (!session?.userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const activeRole = (session as any).activeRole;
+        const activeRole = session.activeRole;
         if (activeRole !== 'INSTRUCTOR' && activeRole !== 'ADMIN') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
@@ -59,7 +58,7 @@ export async function POST(request: NextRequest) {
                 startTime: new Date(startTime),
                 endTime: new Date(endTime),
                 type: type || 'custom',
-                instructorId: session.user.id
+                instructorId: session.userId
             }
         });
 

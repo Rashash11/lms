@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const session = await getSession();
+        if (!session?.userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const activeRole = (session as any).activeRole;
+        const activeRole = session.activeRole;
         if (activeRole !== 'INSTRUCTOR' && activeRole !== 'ADMIN') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
@@ -18,21 +17,21 @@ export async function GET(request: NextRequest) {
         // Get instructor's courses count
         const coursesCount = await prisma.course.count({
             where: {
-                instructorId: session.user.id
+                instructorId: session.userId
             }
         });
 
         // Get instructor's learning paths count
         const learningPathsCount = await prisma.learningPath.count({
             where: {
-                instructorId: session.user.id
+                instructorId: session.userId
             }
         });
 
         // Get total enrollments in instructor's courses
         const instructorCourses = await prisma.course.findMany({
             where: {
-                instructorId: session.user.id
+                instructorId: session.userId
             },
             select: {
                 id: true
