@@ -126,6 +126,13 @@ model User {
   updatedAt           DateTime   @updatedAt
   roles               UserRole[]
   userType            UserType?  @relation(fields: [userTypeId], references: [id])
+  userSkills          UserSkill[]
+  sentRecommendations SkillRecommendation[] @relation("SentRecommendations")
+  receivedRecommendations SkillRecommendation[] @relation("ReceivedRecommendations")
+  instructorLearningPaths LearningPath[]        @relation("InstructorLearningPaths")
+  instructorGroups        Group[]               @relation("InstructorGroups")
+  instructorConferences   Conference[]          @relation("InstructorConferences")
+  instructorEvents        CalendarEvent[]       @relation("InstructorEvents")
 
   @@map("users")
 }
@@ -178,6 +185,7 @@ model Course {
   thumbnail_url String?
   status        CourseStatus @default(DRAFT)
   instructorId  String? // Instructor assigned to this course
+  enrollmentKey String?      @unique // Unique key for self-enrollment link
 
   // Info tab fields
   isActive       Boolean  @default(false)
@@ -223,6 +231,7 @@ model Course {
   enrollmentRequests EnrollmentRequest[]
   learningPaths      LearningPathCourse[]
   assets             UnitAsset[]
+  skills             CourseSkill[]
 
   @@map("courses")
 }
@@ -402,11 +411,13 @@ model Group {
   autoEnroll  Boolean       @default(false)
   maxMembers  Int?
   branchId    String?
+  instructorId String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   members     GroupMember[]
   courses     GroupCourse[]
   branches    Branch[]      @relation("BranchDefaultGroup")
+  instructor   User?         @relation("InstructorGroups", fields: [instructorId], references: [id])
 
   @@map("groups")
 }
@@ -465,6 +476,8 @@ model LearningPath {
   category    String? // Direct category field instead of relation
   status      String  @default("inactive") // inactive, draft, published
   isActive    Boolean @default(false)
+  instructorId String? // Instructor assigned to this learning path
+  instructor   User?    @relation("InstructorLearningPaths", fields: [instructorId], references: [id])
 
   // Options - Limits tab
   completionDaysLimit    Int? // Time limit in days after enrollment
@@ -487,6 +500,7 @@ model LearningPath {
   updatedAt  DateTime              @updatedAt
   courses    LearningPathCourse[]
   sections   LearningPathSection[]
+  skills     LearningPathSkill[]
 
   @@map("learning_paths")
 }
@@ -557,18 +571,47 @@ model Prerequisite {
 }
 
 // 6. SKILLS
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
 model Skill {
   id                   String   @id @default(uuid())
   name                 String
   description          String?
-  image                String?
+  imageUrl             String?  // Renamed from image
   aiInstructions       String?
   numQuestionsRequired Int      @default(10)
   timerDuration        Int?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
+  userSkills      UserSkill[]
+  courseSkills    CourseSkill[]
+  learningPathSkills LearningPathSkill[]
+  roleSkills      RoleSkill[]
+  recommendations SkillRecommendation[]
+  questions       SkillQuestion[]
+  resources       SkillResource[]
+
   @@map("skills")
+}
+
+model UserSkill {
+  userId    String
+  skillId   String
+  level     SkillLevel @default(BEGINNER)
+  progress  Int        @default(0) // 0-100
+  evidence  Json?      // evidence_json
+  updatedAt DateTime   @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([userId, skillId])
+  @@map("user_skills")
 }
 
 model SkillQuestion {
@@ -580,16 +623,73 @@ model SkillQuestion {
   aiGenerated   Boolean @default(false)
   order         Int
 
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
   @@map("skill_questions")
 }
 
-model SkillCourse {
-  id       String @id @default(uuid())
-  skillId  String
+model CourseSkill {
   courseId String
+  skillId  String
+  weight   Int    @default(1)
 
-  @@unique([skillId, courseId])
-  @@map("skill_courses")
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  skill  Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, skillId])
+  @@map("course_skills")
+}
+
+model LearningPathSkill {
+  learningPathId String
+  skillId        String
+  weight         Int    @default(1)
+
+  learningPath LearningPath @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+  skill        Skill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([learningPathId, skillId])
+  @@map("learning_path_skills")
+}
+
+model JobRole {
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  skills RoleSkill[]
+
+  @@map("job_roles")
+}
+
+model RoleSkill {
+  roleId        String
+  skillId       String
+  requiredLevel SkillLevel @default(BEGINNER)
+  weight        Int        @default(1)
+
+  role  JobRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  skill Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, skillId])
+  @@map("role_skills")
+}
+
+model SkillRecommendation {
+  id         String   @id @default(uuid())
+  fromUserId String
+  toUserId   String
+  skillId    String
+  note       String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  fromUser User  @relation("SentRecommendations", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User  @relation("ReceivedRecommendations", fields: [toUserId], references: [id], onDelete: Cascade)
+  skill    Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@map("skill_recommendations")
 }
 
 model SkillResource {
@@ -598,6 +698,8 @@ model SkillResource {
   title   String
   url     String
   order   Int
+
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@map("skill_resources")
 }
@@ -612,28 +714,35 @@ enum AudienceType {
 }
 
 model CalendarEvent {
-  id           String       @id @default(uuid())
+  id           String   @id @default(uuid())
   title        String
-  description  String?
+  description  String?  @db.Text
   startTime    DateTime
   endTime      DateTime
-  audienceType AudienceType
-  audienceId   String?
-  createdAt    DateTime     @default(now())
+  type         String   // 'conference', 'ilt', 'deadline', 'custom'
+  instructorId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  instructor   User     @relation("InstructorEvents", fields: [instructorId], references: [id])
 
   @@map("calendar_events")
 }
 
 // 8. CONFERENCES
 model Conference {
-  id             String   @id @default(uuid())
-  name           String
-  welcomeMessage String?
-  startTime      DateTime
-  duration       Int
-  provider       String
-  providerData   Json
-  createdAt      DateTime @default(now())
+  id           String   @id @default(uuid())
+  title        String
+  description  String?  @db.Text
+  startTime    DateTime
+  endTime      DateTime
+  duration     Int      // in minutes
+  meetingUrl   String?
+  instructorId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  instructor   User     @relation("InstructorConferences", fields: [instructorId], references: [id])
 
   @@map("conferences")
 }

@@ -6,6 +6,7 @@ import {
     ListItemIcon, ListItemText, IconButton, Avatar, Menu, MenuItem, Divider,
     Chip, TextField, InputAdornment, Radio,
 } from '@mui/material';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
@@ -41,8 +42,25 @@ export default function LearnerLayout({ children }: { children: React.ReactNode 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedRole, setSelectedRole] = useState('Learner');
+    const [user, setUser] = useState<{ firstName: string; lastName: string; } | null>(null);
     const pathname = usePathname();
     const router = useRouter();
+
+    React.useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    setUser(data.user);
+                }
+            } catch (error) {
+                console.error('Error fetching user:', error);
+            }
+        };
+        fetchUser();
+    }, []);
+
 
     const handleRoleChange = (role: string) => {
         setSelectedRole(role);
@@ -55,16 +73,16 @@ export default function LearnerLayout({ children }: { children: React.ReactNode 
     const drawer = (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#1a2b4a' }}>
             {/* Logo at top of sidebar */}
-            <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Box sx={{
-                    width: 36, height: 36, borderRadius: '50%',
-                    bgcolor: '#ff6b00', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                    <Typography sx={{ color: 'white', fontWeight: 700, fontSize: 20 }}>t</Typography>
+            <Box sx={{ height: 70, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box sx={{ position: 'relative', width: 180, height: 50 }}>
+                    <Image
+                        src="/main-logo (1).svg"
+                        alt="Zedny Logo"
+                        width={180}
+                        height={50}
+                        style={{ objectFit: 'contain' }}
+                    />
                 </Box>
-                <Typography sx={{ color: 'white', fontWeight: 700, fontSize: 18 }}>
-                    talentlms
-                </Typography>
             </Box>
 
             <List sx={{ flex: 1, pt: 0 }}>
@@ -121,6 +139,19 @@ export default function LearnerLayout({ children }: { children: React.ReactNode 
                         <MenuIcon />
                     </IconButton>
 
+                    {/* Logo in header */}
+                    <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center' }}>
+                        <Box sx={{ position: 'relative', width: 120, height: 30 }}>
+                            <Image
+                                src="/main-logo (1).svg"
+                                alt="Zedny Logo"
+                                width={120}
+                                height={30}
+                                style={{ objectFit: 'contain' }}
+                            />
+                        </Box>
+                    </Box>
+
                     <TextField
                         placeholder="Search"
                         size="small"
@@ -144,9 +175,13 @@ export default function LearnerLayout({ children }: { children: React.ReactNode 
                         onClick={(e) => setAnchorEl(e.currentTarget)}
                         sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
                     >
-                        <Avatar sx={{ width: 36, height: 36, bgcolor: '#2196f3' }}>J</Avatar>
+                        <Avatar sx={{ width: 36, height: 36, bgcolor: '#2196f3' }}>
+                            {user?.firstName ? user.firstName[0] : 'U'}
+                        </Avatar>
                         <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                            <Typography variant="body2" fontWeight={600} lineHeight={1.2}>John Doe</Typography>
+                            <Typography variant="body2" fontWeight={600} lineHeight={1.2}>
+                                {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
+                            </Typography>
                             <Typography variant="caption" color="text.secondary">Learner</Typography>
                         </Box>
                         <KeyboardArrowDownIcon sx={{ color: 'grey.500' }} />

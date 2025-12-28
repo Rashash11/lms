@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Card, CardContent, CardActions, Button, LinearProgress,
-    Chip, TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem,
-    Tabs, Tab, Paper, IconButton,
+    Chip, TextField, InputAdornment, Tabs, Tab, Paper, CircularProgress
 } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import SearchIcon from '@mui/icons-material/Search';
@@ -12,40 +11,38 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SchoolIcon from '@mui/icons-material/School';
-import FilterListIcon from '@mui/icons-material/FilterList';
-
-interface Course {
-    id: string;
-    title: string;
-    instructor: string;
-    progress: number;
-    status: 'in_progress' | 'completed' | 'not_started';
-    lastAccessed: string;
-    totalUnits: number;
-    completedUnits: number;
-    category: string;
-}
-
-const myCourses: Course[] = [
-    { id: '1', title: 'Advanced JavaScript', instructor: 'Dr. Jane Smith', progress: 78, status: 'in_progress', lastAccessed: '2 hours ago', totalUnits: 12, completedUnits: 9, category: 'Programming' },
-    { id: '2', title: 'React Fundamentals', instructor: 'Prof. Bob Johnson', progress: 45, status: 'in_progress', lastAccessed: '1 day ago', totalUnits: 10, completedUnits: 4, category: 'Frontend' },
-    { id: '3', title: 'Node.js Backend', instructor: 'Dr. Jane Smith', progress: 100, status: 'completed', lastAccessed: '1 week ago', totalUnits: 15, completedUnits: 15, category: 'Backend' },
-    { id: '4', title: 'Python Basics', instructor: 'Alice Brown', progress: 100, status: 'completed', lastAccessed: '2 weeks ago', totalUnits: 8, completedUnits: 8, category: 'Programming' },
-    { id: '5', title: 'Docker & Kubernetes', instructor: 'Charlie Wilson', progress: 0, status: 'not_started', lastAccessed: 'Never', totalUnits: 14, completedUnits: 0, category: 'DevOps' },
-];
+import { useRouter } from 'next/navigation';
 
 export default function MyCoursesPage() {
+    const [loading, setLoading] = useState(true);
+    const [enrollments, setEnrollments] = useState<any[]>([]);
+    const [stats, setStats] = useState<any>(null);
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const router = useRouter();
 
-    const filteredCourses = myCourses.filter(course => {
-        const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter = filter === 'all' ||
-            (filter === 'in_progress' && course.status === 'in_progress') ||
-            (filter === 'completed' && course.status === 'completed') ||
-            (filter === 'not_started' && course.status === 'not_started');
-        return matchesSearch && matchesFilter;
-    });
+    const fetchEnrollments = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/enrollments?status=${filter}&search=${searchQuery}`);
+            if (res.ok) {
+                const data = await res.json();
+                setEnrollments(data.enrollments);
+                setStats(data.stats);
+            }
+        } catch (error) {
+            console.error('Error fetching enrollments:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchEnrollments();
+        }, 300); // Debounce search
+        return () => clearTimeout(timer);
+    }, [filter, searchQuery]);
 
     return (
         <Box>
@@ -54,9 +51,9 @@ export default function MyCoursesPage() {
             {/* Stats */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
                 {[
-                    { label: 'Total Enrolled', value: myCourses.length, color: 'primary', icon: <SchoolIcon /> },
-                    { label: 'In Progress', value: myCourses.filter(c => c.status === 'in_progress').length, color: 'warning', icon: <AccessTimeIcon /> },
-                    { label: 'Completed', value: myCourses.filter(c => c.status === 'completed').length, color: 'success', icon: <CheckCircleIcon /> },
+                    { label: 'Total Enrolled', value: stats?.total || 0, color: 'primary', icon: <SchoolIcon /> },
+                    { label: 'In Progress', value: stats?.inProgress || 0, color: 'warning', icon: <AccessTimeIcon /> },
+                    { label: 'Completed', value: stats?.completed || 0, color: 'success', icon: <CheckCircleIcon /> },
                 ].map((stat) => (
                     <Grid item xs={4} key={stat.label}>
                         <Paper sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -91,51 +88,64 @@ export default function MyCoursesPage() {
             </Paper>
 
             {/* Courses Grid */}
-            <Grid container spacing={3}>
-                {filteredCourses.map((course) => (
-                    <Grid item xs={12} sm={6} md={4} key={course.id}>
-                        <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <Box sx={{
-                                height: 100,
-                                bgcolor: course.status === 'completed' ? 'success.main' : course.status === 'in_progress' ? 'primary.main' : 'grey.400',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                position: 'relative'
-                            }}>
-                                {course.status === 'completed' && <CheckCircleIcon sx={{ fontSize: 48, color: 'white' }} />}
-                                {course.status === 'in_progress' && <Typography variant="h4" color="white">{course.progress}%</Typography>}
-                                {course.status === 'not_started' && <SchoolIcon sx={{ fontSize: 48, color: 'white' }} />}
-                            </Box>
-                            <CardContent sx={{ flex: 1 }}>
-                                <Typography variant="h6" gutterBottom>{course.title}</Typography>
-                                <Typography variant="body2" color="text.secondary" gutterBottom>by {course.instructor}</Typography>
-                                <Chip label={course.category} size="small" variant="outlined" sx={{ mb: 2 }} />
+            {loading && enrollments.length === 0 ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                    <CircularProgress />
+                </Box>
+            ) : (
+                <Grid container spacing={3}>
+                    {enrollments.map((enrollment) => (
+                        <Grid item xs={12} sm={6} md={4} key={enrollment.id}>
+                            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                <Box sx={{
+                                    height: 100,
+                                    bgcolor: enrollment.status === 'COMPLETED' ? 'success.main' : enrollment.status === 'IN_PROGRESS' ? 'primary.main' : 'grey.400',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    position: 'relative'
+                                }}>
+                                    {enrollment.status === 'COMPLETED' && <CheckCircleIcon sx={{ fontSize: 48, color: 'white' }} />}
+                                    {enrollment.status === 'IN_PROGRESS' && <Typography variant="h4" color="white">?</Typography>}
+                                    {enrollment.status === 'NOT_STARTED' && <SchoolIcon sx={{ fontSize: 48, color: 'white' }} />}
+                                </Box>
+                                <CardContent sx={{ flex: 1 }}>
+                                    <Typography variant="h6" gutterBottom>{enrollment.course.title}</Typography>
+                                    <Chip label={enrollment.status.replace('_', ' ')} size="small" variant="outlined" sx={{ mb: 2 }} />
 
-                                {course.status !== 'not_started' && (
                                     <Box sx={{ mb: 2 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                            <Typography variant="caption">Progress</Typography>
-                                            <Typography variant="caption" fontWeight={600}>{course.completedUnits}/{course.totalUnits} units</Typography>
-                                        </Box>
-                                        <LinearProgress variant="determinate" value={course.progress} sx={{ height: 8, borderRadius: 4 }} color={course.status === 'completed' ? 'success' : 'primary'} />
+                                        <LinearProgress
+                                            variant="determinate"
+                                            value={enrollment.status === 'COMPLETED' ? 100 : (enrollment.status === 'IN_PROGRESS' ? 50 : 0)}
+                                            sx={{ height: 8, borderRadius: 4 }}
+                                            color={enrollment.status === 'COMPLETED' ? 'success' : 'primary'}
+                                        />
                                     </Box>
-                                )}
 
-                                <Typography variant="caption" color="text.secondary">Last accessed: {course.lastAccessed}</Typography>
-                            </CardContent>
-                            <CardActions sx={{ p: 2, pt: 0 }}>
-                                <Button
-                                    variant="contained"
-                                    fullWidth
-                                    startIcon={course.status === 'completed' ? <CheckCircleIcon /> : <PlayArrowIcon />}
-                                    color={course.status === 'completed' ? 'success' : 'primary'}
-                                >
-                                    {course.status === 'completed' ? 'Review' : course.status === 'in_progress' ? 'Continue' : 'Start'}
-                                </Button>
-                            </CardActions>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
+                                    <Typography variant="caption" color="text.secondary">Course Code: {enrollment.course.code}</Typography>
+                                </CardContent>
+                                <CardActions sx={{ p: 2, pt: 0 }}>
+                                    <Button
+                                        variant="contained"
+                                        fullWidth
+                                        startIcon={enrollment.status === 'COMPLETED' ? <CheckCircleIcon /> : <PlayArrowIcon />}
+                                        color={enrollment.status === 'COMPLETED' ? 'success' : 'primary'}
+                                        onClick={() => router.push(`/learner/courses/${enrollment.courseId}`)}
+                                    >
+                                        {enrollment.status === 'COMPLETED' ? 'Review' : enrollment.status === 'IN_PROGRESS' ? 'Continue' : 'Start'}
+                                    </Button>
+                                </CardActions>
+                            </Card>
+                        </Grid>
+                    ))}
+
+                    {enrollments.length === 0 && !loading && (
+                        <Grid item xs={12}>
+                            <Box sx={{ py: 8, textAlign: 'center' }}>
+                                <Typography variant="h6" color="text.secondary">No courses found matching your criteria</Typography>
+                            </Box>
+                        </Grid>
+                    )}
+                </Grid>
+            )}
         </Box>
     );
 }

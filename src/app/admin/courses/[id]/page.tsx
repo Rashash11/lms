@@ -1,274 +1,354 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-    Box,
-    Typography,
-    Button,
-    Card,
-    CardContent,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
-    ListItemIcon,
-    CircularProgress,
-    Chip,
-    IconButton,
-    Divider,
+    Box, Typography, Button, TextField, InputAdornment, IconButton,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+    Paper, Checkbox, Tabs, Tab, Menu, MenuItem, Select, FormControl,
+    Snackbar, Alert, CircularProgress,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import EditIcon from '@mui/icons-material/Edit';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ArticleIcon from '@mui/icons-material/Article';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import PlayCircleIcon from '@mui/icons-material/PlayCircle';
-import CodeIcon from '@mui/icons-material/Code';
-import FolderIcon from '@mui/icons-material/Folder';
-import QuizIcon from '@mui/icons-material/Quiz';
-import PollIcon from '@mui/icons-material/Poll';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import UnitRenderer from '@/components/course-player/UnitRenderer';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import DownloadIcon from '@mui/icons-material/Download';
+import UserEnrollmentDialog from './UserEnrollmentDialog';
 
-interface CourseUnit {
+interface CourseUser {
     id: string;
-    type: string;
-    title: string;
-    content: any;
-    order: number;
+    userId: string;
+    user: {
+        firstName: string;
+        lastName: string;
+        email: string;
+    };
+    role: string;
+    progress: number;
+    enrolledAt: string;
+    completedAt: string | null;
+    expiresAt: string | null;
 }
 
-interface Course {
-    id: string;
-    title: string;
-    description?: string;
-    status: string;
-    units: CourseUnit[];
-}
-
-export default function CoursePlayerPage() {
+export default function CourseDetailsPage() {
     const params = useParams();
     const router = useRouter();
     const courseId = params.id as string;
 
-    const [course, setCourse] = useState<Course | null>(null);
+    const [course, setCourse] = useState<any>(null);
+    const [users, setUsers] = useState<CourseUser[]>([]);
     const [loading, setLoading] = useState(true);
-    const [currentUnitIndex, setCurrentUnitIndex] = useState(0);
-    const [completedUnits, setCompletedUnits] = useState<Set<string>>(new Set());
+    const [currentTab, setCurrentTab] = useState(0);
+    const [search, setSearch] = useState('');
+    const [selected, setSelected] = useState<string[]>([]);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-    const loadCourse = useCallback(async () => {
+    const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
+
+    const fetchUsers = async () => {
         try {
-            setLoading(true);
-            const response = await fetch(`/api/courses/${courseId}`);
-            if (!response.ok) throw new Error('Failed to load course');
-            const data = await response.json();
-            setCourse(data);
+            // Only set loading on initial fetch or full refresh if desired, 
+            // but for smooth UX maybe we don't need to unset/set loading every time if we just want to update data.
+            // However, existing logic used loading state for the whole page.
+            // Let's keep it simply reusing the logic but maybe guard loading state if needed.
+            // For now, simple refactoring.
+            const res = await fetch(`/api/courses/${courseId}/enrollments`);
+            if (res.ok) {
+                const data = await res.json();
+                // API returns { enrollments, total, page, limit }
+                const formattedUsers = (data.enrollments || []).map((e: any) => ({
+                    id: e.id,
+                    userId: e.userId,
+                    user: {
+                        firstName: e.user?.name?.split(' ')[0] || 'Unknown',
+                        lastName: e.user?.name?.split(' ').slice(1).join(' ') || '',
+                        email: e.user?.email || 'unknown@example.com'
+                    },
+                    role: 'LEARNER',
+                    progress: e.progress || 0,
+                    enrolledAt: e.enrolledAt,
+                    completedAt: e.completedAt,
+                    expiresAt: e.expiresAt
+                }));
+                setUsers(formattedUsers);
+            }
         } catch (error) {
-            console.error('Error loading course:', error);
+            console.error('Error fetching users:', error);
         } finally {
             setLoading(false);
         }
-    }, [courseId]);
+    };
 
     useEffect(() => {
-        loadCourse();
-    }, [loadCourse]);
+        const fetchCourse = async () => {
+            try {
+                const res = await fetch(`/api/courses/${courseId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setCourse(data);
+                }
+            } catch (error) {
+                console.error('Error fetching course:', error);
+            }
+        };
 
-    const handleUnitClick = (index: number) => {
-        setCurrentUnitIndex(index);
-        // Mark previous unit as completed
-        if (currentUnitIndex < course!.units.length) {
-            const prevUnitId = course!.units[currentUnitIndex].id;
-            setCompletedUnits(prev => new Set(prev).add(prevUnitId));
+        if (courseId) {
+            fetchCourse();
+            fetchUsers();
+        }
+    }, [courseId]);
+
+    const handleEnrollUsers = async (userIds: string[]) => {
+        try {
+            const res = await fetch(`/api/courses/${courseId}/enrollments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userIds }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setSnackbar({
+                    open: true,
+                    message: `Successfully enrolled ${data.enrolled} users` + (data.skipped ? ` (${data.skipped} skipped)` : ''),
+                    severity: 'success'
+                });
+                fetchUsers();
+            } else {
+                const error = await res.json();
+                setSnackbar({ open: true, message: error.error || 'Failed to enroll users', severity: 'error' });
+                throw new Error(error.error);
+            }
+        } catch (err) {
+            console.error(err);
+            setSnackbar({ open: true, message: 'Failed to enroll users', severity: 'error' });
+            throw err;
         }
     };
 
-    const handleNext = () => {
-        if (currentUnitIndex < (course?.units.length || 0) - 1) {
-            handleUnitClick(currentUnitIndex + 1);
+    const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            setSelected(users.map(u => u.id));
+        } else {
+            setSelected([]);
         }
     };
 
-    const handlePrevious = () => {
-        if (currentUnitIndex > 0) {
-            handleUnitClick(currentUnitIndex - 1);
+    const handleSelectOne = (id: string) => {
+        const selectedIndex = selected.indexOf(id);
+        let newSelected: string[] = [];
+
+        if (selectedIndex === -1) {
+            newSelected = newSelected.concat(selected, id);
+        } else if (selectedIndex === 0) {
+            newSelected = newSelected.concat(selected.slice(1));
+        } else if (selectedIndex === selected.length - 1) {
+            newSelected = newSelected.concat(selected.slice(0, -1));
+        } else if (selectedIndex > 0) {
+            newSelected = newSelected.concat(
+                selected.slice(0, selectedIndex),
+                selected.slice(selectedIndex + 1),
+            );
         }
+
+        setSelected(newSelected);
     };
 
-    const getUnitIcon = (type: string) => {
-        const iconProps = { fontSize: 'small' as const };
-        switch (type) {
-            case 'TEXT': return <ArticleIcon {...iconProps} />;
-            case 'FILE': return <AttachFileIcon {...iconProps} />;
-            case 'VIDEO': return <PlayCircleIcon {...iconProps} />;
-            case 'EMBED': return <CodeIcon {...iconProps} />;
-            case 'SECTION': return <FolderIcon {...iconProps} />;
-            case 'TEST': return <QuizIcon {...iconProps} />;
-            case 'SURVEY': return <PollIcon {...iconProps} />;
-            default: return <ArticleIcon {...iconProps} />;
-        }
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleDateString();
     };
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <CircularProgress />
             </Box>
         );
     }
 
-    if (!course) {
-        return (
-            <Box sx={{ textAlign: 'center', py: 8 }}>
-                <Typography variant="h5" gutterBottom>Course not found</Typography>
-                <Button onClick={() => router.back()}>Go Back</Button>
-            </Box>
-        );
-    }
-
-    const currentUnit = course.units[currentUnitIndex];
-    const progress = course.units.length > 0
-        ? Math.round((completedUnits.size / course.units.length) * 100)
-        : 0;
-
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+        <Box>
             {/* Header */}
-            <Box sx={{ bgcolor: 'white', borderBottom: '1px solid', borderColor: 'divider', py: 2, px: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                    <IconButton onClick={() => router.push('/admin/courses')} size="small">
-                        <ArrowBackIcon />
-                    </IconButton>
-                    <Typography variant="h5" fontWeight={600} sx={{ flex: 1 }}>
-                        {course.title}
-                    </Typography>
-                    <Chip label={course.status} color={course.status === 'PUBLISHED' ? 'success' : 'default'} size="small" />
+            <Box sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary">Courses</Typography>
+                        <Typography variant="h5" fontWeight={600}>{course?.title || 'New course'}</Typography>
+                    </Box>
                     <Button
-                        startIcon={<EditIcon />}
-                        onClick={() => router.push(`/admin/courses/new/edit?id=${course.id}`)}
-                        size="small"
+                        variant="contained"
+                        onClick={() => router.push(`/admin/courses/new/edit?id=${courseId}`)}
+                        sx={{ textTransform: 'none', fontWeight: 600 }}
                     >
-                        Edit
+                        Edit course
                     </Button>
                 </Box>
-                {course.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ ml: 6 }}>
-                        {course.description}
-                    </Typography>
-                )}
-                {course.units.length > 0 && (
-                    <Box sx={{ ml: 6, mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box sx={{ flex: 1, height: 8, bgcolor: '#e0e0e0', borderRadius: 1, overflow: 'hidden' }}>
-                            <Box
-                                sx={{
-                                    width: `${progress}%`,
-                                    height: '100%',
-                                    bgcolor: 'success.main',
-                                    transition: 'width 0.3s',
-                                }}
-                            />
-                        </Box>
-                        <Typography variant="caption" fontWeight={600} color="text.secondary">
-                            {progress}% complete
-                        </Typography>
-                    </Box>
-                )}
             </Box>
 
-            {/* Main Content */}
-            <Box sx={{ display: 'flex', height: 'calc(100vh - 140px)' }}>
-                {/* Sidebar - Units List */}
-                <Box
-                    sx={{
-                        width: 280,
-                        bgcolor: 'white',
-                        borderRight: '1px solid',
-                        borderColor: 'divider',
-                        overflowY: 'auto',
-                    }}
+            {/* Tabs */}
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                <Tabs value={currentTab} onChange={(e, v) => setCurrentTab(v)}>
+                    <Tab label="Users" sx={{ textTransform: 'none', fontWeight: 600 }} />
+                    <Tab label="Groups" sx={{ textTransform: 'none', fontWeight: 600 }} />
+                    <Tab label="Branches" sx={{ textTransform: 'none', fontWeight: 600 }} />
+                    <Tab label="Files" sx={{ textTransform: 'none', fontWeight: 600 }} />
+                </Tabs>
+            </Box>
+
+            {/* Search and Actions */}
+            <Box sx={{ mb: 2, display: 'flex', gap: 1, justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <TextField
+                        placeholder="Search"
+                        size="small"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        sx={{ width: 300 }}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon fontSize="small" />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
+                    <IconButton size="small" sx={{ border: '1px solid #e0e0e0' }}>
+                        <FilterListIcon fontSize="small" />
+                    </IconButton>
+                </Box>
+                <Button
+                    variant="outlined"
+                    startIcon={<PersonAddIcon />}
+                    sx={{ textTransform: 'none', fontWeight: 600 }}
+                    onClick={() => setEnrollDialogOpen(true)}
                 >
-                    {course.units.length === 0 ? (
-                        <Box sx={{ p: 3, textAlign: 'center' }}>
-                            <Typography variant="body2" color="text.secondary">
-                                No content available
-                            </Typography>
-                        </Box>
-                    ) : (
-                        <List sx={{ p: 1 }}>
-                            {course.units.map((unit, index) => (
-                                <ListItem key={unit.id} disablePadding>
-                                    <ListItemButton
-                                        selected={index === currentUnitIndex}
-                                        onClick={() => handleUnitClick(index)}
-                                        sx={{
-                                            borderRadius: 1,
-                                            mb: 0.5,
-                                            '&.Mui-selected': {
-                                                bgcolor: 'primary.50',
-                                                '&:hover': { bgcolor: 'primary.100' },
-                                            },
-                                        }}
-                                    >
-                                        <ListItemIcon sx={{ minWidth: 36 }}>
-                                            {completedUnits.has(unit.id) ? (
-                                                <CheckCircleIcon fontSize="small" color="success" />
-                                            ) : (
-                                                getUnitIcon(unit.type)
-                                            )}
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={unit.title}
-                                            primaryTypographyProps={{
-                                                variant: 'body2',
-                                                fontWeight: index === currentUnitIndex ? 600 : 400,
-                                            }}
-                                        />
-                                    </ListItemButton>
-                                </ListItem>
-                            ))}
-                        </List>
-                    )}
-                </Box>
-
-                {/* Content Area */}
-                <Box sx={{ flex: 1, overflowY: 'auto', p: 4 }}>
-                    {currentUnit ? (
-                        <Card sx={{ maxWidth: 900, mx: 'auto' }}>
-                            <CardContent sx={{ p: 4 }}>
-                                <UnitRenderer unit={currentUnit} />
-
-                                {/* Navigation Buttons */}
-                                <Divider sx={{ my: 4 }} />
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Button
-                                        startIcon={<ChevronLeftIcon />}
-                                        onClick={handlePrevious}
-                                        disabled={currentUnitIndex === 0}
-                                    >
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        endIcon={<ChevronRightIcon />}
-                                        onClick={handleNext}
-                                        disabled={currentUnitIndex === course.units.length - 1}
-                                        variant="contained"
-                                    >
-                                        Next
-                                    </Button>
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <Box sx={{ textAlign: 'center', py: 8 }}>
-                            <Typography variant="h6" color="text.secondary">
-                                Select a unit to begin
-                            </Typography>
-                        </Box>
-                    )}
-                </Box>
+                    Enroll to course
+                </Button>
             </Box>
+
+            {/* Users Table */}
+            {currentTab === 0 && (
+                <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+                    <Table>
+                        <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+                            <TableRow>
+                                <TableCell padding="checkbox">
+                                    <Checkbox
+                                        indeterminate={selected.length > 0 && selected.length < users.length}
+                                        checked={users.length > 0 && selected.length === users.length}
+                                        onChange={handleSelectAll}
+                                    />
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>User</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Role</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Progress status</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Enrollment date</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Completion date</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Expiration date</TableCell>
+                                <TableCell align="right"></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {users.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                                        <Typography color="text.secondary">No users enrolled yet</Typography>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                users.map((enrollment) => (
+                                    <TableRow
+                                        key={enrollment.id}
+                                        hover
+                                        selected={selected.indexOf(enrollment.id) !== -1}
+                                    >
+                                        <TableCell padding="checkbox">
+                                            <Checkbox
+                                                checked={selected.indexOf(enrollment.id) !== -1}
+                                                onChange={() => handleSelectOne(enrollment.id)}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" fontWeight={500}>
+                                                {enrollment.user.firstName} {enrollment.user.lastName}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <FormControl size="small" sx={{ minWidth: 120 }}>
+                                                <Select value={enrollment.role} displayEmpty>
+                                                    <MenuItem value="LEARNER">Learner</MenuItem>
+                                                    <MenuItem value="INSTRUCTOR">Instructor</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">-</Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {formatDate(enrollment.enrolledAt)}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {formatDate(enrollment.completedAt)}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {formatDate(enrollment.expiresAt)}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <IconButton size="small">
+                                                <MoreHorizIcon sx={{ fontSize: 18 }} />
+                                            </IconButton>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
+
+            {/* Other tabs placeholders */}
+            {currentTab === 1 && (
+                <Paper sx={{ p: 4, textAlign: 'center' }}>
+                    <Typography color="text.secondary">Groups tab - Coming soon</Typography>
+                </Paper>
+            )}
+            {currentTab === 2 && (
+                <Paper sx={{ p: 4, textAlign: 'center' }}>
+                    <Typography color="text.secondary">Branches tab - Coming soon</Typography>
+                </Paper>
+            )}
+            {currentTab === 3 && (
+                <Paper sx={{ p: 4, textAlign: 'center' }}>
+                    <Typography color="text.secondary">Files tab - Coming soon</Typography>
+                </Paper>
+            )}
+
+            {/* Snackbar */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+            >
+                <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
+
+            <UserEnrollmentDialog
+                open={enrollDialogOpen}
+                onClose={() => setEnrollDialogOpen(false)}
+                onEnroll={handleEnrollUsers}
+                enrolledUserIds={users.map(u => u.userId)}
+            />
         </Box>
     );
 }

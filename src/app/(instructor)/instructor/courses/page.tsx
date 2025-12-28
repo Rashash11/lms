@@ -3,18 +3,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    Box, Typography, Paper, Button, TextField, InputAdornment, Card,
-    CardContent, CardActions, Chip, IconButton, Menu, MenuItem, Dialog, DialogTitle,
-    DialogContent, DialogActions, FormControl, InputLabel, Select, Snackbar, Alert,
-    CircularProgress, Switch, FormControlLabel,
+    Box, Typography, Button, TextField, InputAdornment,
+    IconButton, Menu, MenuItem, Checkbox,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+    Paper, Chip, ButtonGroup, Skeleton, Tooltip, Snackbar, Alert,
+    CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions,
+    Switch, FormControlLabel, FormControl, InputLabel, Select
 } from '@mui/material';
-import Grid from '@mui/material/GridLegacy';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import PeopleIcon from '@mui/icons-material/People';
 
 interface Course {
     id: string;
@@ -23,8 +27,9 @@ interface Course {
     description: string;
     image: string | null;
     status: string;
-    hiddenFromCatalog: boolean;
-    createdAt: string;
+    category?: { name: string };
+    price?: number;
+    updatedAt: string;
 }
 
 export default function InstructorCoursesPage() {
@@ -32,34 +37,24 @@ export default function InstructorCoursesPage() {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
-
-    // Dialog states
-    const [editDialogOpen, setEditDialogOpen] = useState(false);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-
-    // Form states
-    const [formData, setFormData] = useState({
-        code: '',
-        title: '',
-        description: '',
-        status: 'DRAFT',
-        hiddenFromCatalog: false,
-    });
+    const [selected, setSelected] = useState<string[]>([]);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof Course, direction: 'asc' | 'desc' }>({ key: 'title', direction: 'asc' });
 
     // Menu state
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [menuCourseId, setMenuCourseId] = useState<string | null>(null);
+    const [menuCourse, setMenuCourse] = useState<Course | null>(null);
 
-    // Snackbar
+    // Split button state
+    const [splitAnchorEl, setSplitAnchorEl] = useState<null | HTMLElement>(null);
+
+    // Dialog & Feedback
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-    // Fetch instructor courses
     const fetchCourses = useCallback(async () => {
         setLoading(true);
         try {
-            const params = new URLSearchParams({ search, status: statusFilter });
+            const params = new URLSearchParams({ search });
             const res = await fetch(`/api/instructor/courses?${params}`);
             const data = await res.json();
             setCourses(data.courses || []);
@@ -69,286 +64,292 @@ export default function InstructorCoursesPage() {
         } finally {
             setLoading(false);
         }
-    }, [search, statusFilter]);
+    }, [search]);
 
     useEffect(() => {
         fetchCourses();
     }, [fetchCourses]);
 
-    // Handle edit course
-    const handleEditCourse = async () => {
-        if (!selectedCourse) return;
-        try {
-            const res = await fetch(`/api/courses/${selectedCourse.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            });
-
-            if (res.ok) {
-                setSnackbar({ open: true, message: 'Course updated successfully', severity: 'success' });
-                setEditDialogOpen(false);
-                fetchCourses();
-            } else {
-                setSnackbar({ open: true, message: 'Failed to update course', severity: 'error' });
-            }
-        } catch (error) {
-            setSnackbar({ open: true, message: 'Failed to update course', severity: 'error' });
+    const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            setSelected(courses.map(n => n.id));
+            return;
         }
+        setSelected([]);
     };
 
-    // Handle delete course
-    const handleDeleteCourse = async () => {
-        if (!selectedCourse) return;
-        try {
-            const res = await fetch(`/api/courses/${selectedCourse.id}`, { method: 'DELETE' });
+    const handleSelect = (id: string) => {
+        const selectedIndex = selected.indexOf(id);
+        let newSelected: string[] = [];
 
+        if (selectedIndex === -1) {
+            newSelected = [...selected, id];
+        } else {
+            newSelected = selected.filter(item => item !== id);
+        }
+        setSelected(newSelected);
+    };
+
+    const handleSort = (key: keyof Course) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedCourses = [...courses].sort((a, b) => {
+        const valA = a[sortConfig.key];
+        const valB = b[sortConfig.key];
+        if (!valA || !valB) return 0;
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const formatLastUpdated = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+        if (diffHours < 24) {
+            return diffHours === 0 ? 'Just now' : `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        }
+        if (diffHours < 48) return 'Yesterday';
+        return date.toLocaleDateString('en-GB'); // DD/MM/YYYY
+    };
+
+    const handleDelete = async () => {
+        if (!menuCourse) return;
+        try {
+            const res = await fetch(`/api/courses/${menuCourse.id}`, { method: 'DELETE' });
             if (res.ok) {
                 setSnackbar({ open: true, message: 'Course deleted successfully', severity: 'success' });
-                setDeleteDialogOpen(false);
                 fetchCourses();
             } else {
                 setSnackbar({ open: true, message: 'Failed to delete course', severity: 'error' });
             }
         } catch (error) {
             setSnackbar({ open: true, message: 'Failed to delete course', severity: 'error' });
+        } finally {
+            setDeleteDialogOpen(false);
+            setAnchorEl(null);
         }
     };
 
-    const openEditDialog = (course: Course) => {
-        setSelectedCourse(course);
-        setFormData({
-            code: course.code,
-            title: course.title,
-            description: course.description || '',
-            status: course.status,
-            hiddenFromCatalog: course.hiddenFromCatalog,
-        });
-        setEditDialogOpen(true);
-        setAnchorEl(null);
-    };
-
-    const openDeleteDialog = (course: Course) => {
-        setSelectedCourse(course);
-        setDeleteDialogOpen(true);
-        setAnchorEl(null);
-    };
-
-    const getDefaultImage = (title: string) => {
-        const colors = ['#1976d2', '#2e7d32', '#ed6c02', '#9c27b0', '#d32f2f'];
-        const index = title.charCodeAt(0) % colors.length;
-        return colors[index];
-    };
-
     return (
-        <Box>
+        <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
+            {/* Header */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight={600}>My Courses</Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => router.push('/instructor/courses/new/edit')}
-                    sx={{ bgcolor: '#1976d2' }}
-                >
-                    Add course
-                </Button>
+                <Typography variant="h5" fontWeight={700} color="#172B4D">Courses</Typography>
+                <ButtonGroup variant="contained" sx={{ boxShadow: 'none' }}>
+                    <Button
+                        onClick={() => router.push('/instructor/courses/new/edit')}
+                        sx={{
+                            bgcolor: '#0052CC',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            px: 3,
+                            '&:hover': { bgcolor: '#0747A6' }
+                        }}
+                    >
+                        Add course
+                    </Button>
+                    <Button
+                        size="small"
+                        sx={{ bgcolor: '#0052CC', p: 0, minWidth: 32, '&:hover': { bgcolor: '#0747A6' } }}
+                        onClick={(e) => setSplitAnchorEl(e.currentTarget)}
+                    >
+                        <ArrowDropDownIcon />
+                    </Button>
+                </ButtonGroup>
             </Box>
 
-            {/* Filters */}
-            <Paper sx={{ p: 2, mb: 3 }}>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <TextField
-                        placeholder="Search courses..."
-                        size="small"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        sx={{ flex: 1, maxWidth: 400 }}
-                        InputProps={{
-                            startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment>
-                        }}
-                    />
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
-                        <InputLabel>Status</InputLabel>
-                        <Select value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
-                            <MenuItem value="all">All</MenuItem>
-                            <MenuItem value="draft">Draft</MenuItem>
-                            <MenuItem value="published">Published</MenuItem>
-                        </Select>
-                    </FormControl>
-                </Box>
-            </Paper>
+            {/* Split Button Menu */}
+            <Menu anchorEl={splitAnchorEl} open={Boolean(splitAnchorEl)} onClose={() => setSplitAnchorEl(null)}>
+                <MenuItem onClick={() => router.push('/instructor/courses/new/edit')}>Create new</MenuItem>
+                <MenuItem onClick={() => setSplitAnchorEl(null)}>Import from CSV</MenuItem>
+            </Menu>
 
-            {/* Courses Grid */}
-            {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                    <CircularProgress />
-                </Box>
-            ) : courses.length === 0 ? (
-                <Paper sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography color="text.secondary">No courses found</Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        sx={{ mt: 2 }}
-                        onClick={() => router.push('/instructor/courses/new/edit')}
-                    >
-                        Create your first course
-                    </Button>
-                </Paper>
-            ) : (
-                <Grid container spacing={3}>
-                    {courses.map((course) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={course.id}>
-                            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                <Box
+            {/* Constraints / Controls */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
+                <TextField
+                    placeholder="Search"
+                    size="small"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    sx={{
+                        width: 250,
+                        '& .MuiOutlinedInput-root': {
+                            bgcolor: '#F4F5F7',
+                            border: 'none',
+                            borderRadius: 1,
+                            '& fieldset': { border: 'none' }
+                        }
+                    }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon sx={{ color: '#6B778C', fontSize: 20 }} />
+                            </InputAdornment>
+                        ),
+                    }}
+                />
+                <IconButton sx={{ color: '#6B778C' }}>
+                    <FilterListIcon />
+                </IconButton>
+            </Box>
+
+            {/* Table */}
+            <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #DFE1E6', borderRadius: 2 }}>
+                <Table>
+                    <TableHead sx={{ bgcolor: '#FAFBFC' }}>
+                        <TableRow>
+                            <TableCell padding="checkbox" sx={{ borderBottom: '1px solid #DFE1E6' }}>
+                                <Checkbox
+                                    size="small"
+                                    indeterminate={selected.length > 0 && selected.length < courses.length}
+                                    checked={courses.length > 0 && selected.length === courses.length}
+                                    onChange={handleSelectAll}
+                                />
+                            </TableCell>
+                            <TableCell
+                                sx={{ fontWeight: 700, color: '#172B4D', cursor: 'pointer', borderBottom: '1px solid #DFE1E6' }}
+                                onClick={() => handleSort('title')}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    Course
+                                    {sortConfig.key === 'title' && (
+                                        sortConfig.direction === 'asc' ? <ArrowUpwardIcon sx={{ fontSize: 14 }} /> : <ArrowDownwardIcon sx={{ fontSize: 14 }} />
+                                    )}
+                                </Box>
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 700, color: '#172B4D', borderBottom: '1px solid #DFE1E6' }}>Code</TableCell>
+                            <TableCell sx={{ fontWeight: 700, color: '#172B4D', borderBottom: '1px solid #DFE1E6' }}>Category</TableCell>
+                            <TableCell sx={{ fontWeight: 700, color: '#172B4D', borderBottom: '1px solid #DFE1E6' }}>Price</TableCell>
+                            <TableCell sx={{ fontWeight: 700, color: '#172B4D', borderBottom: '1px solid #DFE1E6' }}>Last updated on</TableCell>
+                            <TableCell align="right" sx={{ borderBottom: '1px solid #DFE1E6' }} />
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {loading ? (
+                            [1, 2, 3, 4, 5].map((i) => (
+                                <TableRow key={i}>
+                                    <TableCell padding="checkbox"><Skeleton variant="rectangular" width={20} height={20} /></TableCell>
+                                    <TableCell><Skeleton variant="text" width={150} /></TableCell>
+                                    <TableCell><Skeleton variant="text" width={50} /></TableCell>
+                                    <TableCell><Skeleton variant="text" width={80} /></TableCell>
+                                    <TableCell><Skeleton variant="text" width={40} /></TableCell>
+                                    <TableCell><Skeleton variant="text" width={100} /></TableCell>
+                                    <TableCell align="right"><Skeleton variant="circular" width={24} height={24} /></TableCell>
+                                </TableRow>
+                            ))
+                        ) : sortedCourses.length > 0 ? (
+                            sortedCourses.map((course, index) => (
+                                <TableRow
+                                    key={course.id}
+                                    hover
                                     sx={{
-                                        height: 140,
-                                        bgcolor: getDefaultImage(course.title),
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        position: 'relative',
+                                        '&:nth-of-type(even)': { bgcolor: '#FAFBFC' },
+                                        '&:hover': { bgcolor: '#F4F5F7 !important' }
                                     }}
                                 >
-                                    <Typography variant="h3" sx={{ color: 'white', opacity: 0.3 }}>
-                                        {course.title.charAt(0)}
-                                    </Typography>
-                                    <IconButton
-                                        sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'white' }}
-                                        size="small"
-                                        onClick={(e) => {
-                                            setAnchorEl(e.currentTarget);
-                                            setMenuCourseId(course.id);
-                                        }}
-                                    >
-                                        <MoreVertIcon fontSize="small" />
-                                    </IconButton>
-                                </Box>
-                                <CardContent sx={{ flex: 1 }}>
-                                    <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                                        <Chip
-                                            label={course.status}
+                                    <TableCell padding="checkbox">
+                                        <Checkbox
                                             size="small"
-                                            color={course.status === 'PUBLISHED' ? 'success' : 'default'}
+                                            checked={selected.indexOf(course.id) !== -1}
+                                            onChange={() => handleSelect(course.id)}
                                         />
-                                        {course.hiddenFromCatalog && (
-                                            <Chip label="Hidden" size="small" variant="outlined" />
-                                        )}
-                                    </Box>
-                                    <Typography variant="subtitle1" fontWeight={600} noWrap>
-                                        {course.title}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        {course.code}
-                                    </Typography>
-                                    {course.description && (
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{ mt: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="body2" fontWeight={600} color="#0052CC" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+                                                {course.title}
+                                            </Typography>
+                                            {course.status !== 'PUBLISHED' && (
+                                                <Chip
+                                                    label="Inactive"
+                                                    size="small"
+                                                    sx={{
+                                                        height: 20,
+                                                        fontSize: 10,
+                                                        fontWeight: 700,
+                                                        bgcolor: '#DFE1E6',
+                                                        color: '#172B4D',
+                                                        borderRadius: 1
+                                                    }}
+                                                />
+                                            )}
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell sx={{ color: '#42526E', fontSize: 13 }}>{course.code || '-'}</TableCell>
+                                    <TableCell sx={{ color: '#42526E', fontSize: 13 }}>{course.category?.name || '-'}</TableCell>
+                                    <TableCell sx={{ color: '#42526E', fontSize: 13 }}>{course.price ? `$${course.price}` : '-'}</TableCell>
+                                    <TableCell sx={{ color: '#42526E', fontSize: 13 }}>{formatLastUpdated(course.updatedAt)}</TableCell>
+                                    <TableCell align="right">
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                                setAnchorEl(e.currentTarget);
+                                                setMenuCourse(course);
+                                            }}
                                         >
-                                            {course.description}
-                                        </Typography>
-                                    )}
-                                </CardContent>
-                                <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                        <PeopleIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                                        <Typography variant="caption" color="text.secondary">0 enrolled</Typography>
-                                    </Box>
-                                    <Button size="small" onClick={() => openEditDialog(course)}>Edit</Button>
-                                </CardActions>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
-            )}
+                                            <MoreHorizIcon fontSize="small" sx={{ color: '#6B778C' }} />
+                                        </IconButton>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={7} sx={{ py: 6, textAlign: 'center' }}>
+                                    <Typography color="text.secondary">No courses found matching your criteria.</Typography>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
-            {/* Action Menu */}
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+            {/* Row Action Menu */}
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+                PaperProps={{ sx: { minWidth: 150, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' } }}
+            >
                 <MenuItem onClick={() => {
-                    const course = courses.find(c => c.id === menuCourseId);
-                    if (course) openEditDialog(course);
+                    if (menuCourse) router.push(`/instructor/courses/${menuCourse.id}`);
+                    setAnchorEl(null);
                 }}>
-                    <EditIcon sx={{ mr: 1, fontSize: 18 }} /> Edit
+                    <EditIcon sx={{ mr: 1, fontSize: 18, color: '#6B778C' }} /> Edit
                 </MenuItem>
-                <MenuItem onClick={() => {
-                    const course = courses.find(c => c.id === menuCourseId);
-                    if (course) openDeleteDialog(course);
-                }} sx={{ color: 'error.main' }}>
+                <MenuItem onClick={() => setDeleteDialogOpen(true)} sx={{ color: 'error.main' }}>
                     <DeleteIcon sx={{ mr: 1, fontSize: 18 }} /> Delete
                 </MenuItem>
             </Menu>
 
-            {/* Edit Course Dialog */}
-            <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Edit Course</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-                        <TextField
-                            label="Title"
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            fullWidth
-                        />
-                        <TextField
-                            label="Description"
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            fullWidth
-                            multiline
-                            rows={3}
-                        />
-                        <FormControl fullWidth>
-                            <InputLabel>Status</InputLabel>
-                            <Select
-                                value={formData.status}
-                                label="Status"
-                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            >
-                                <MenuItem value="DRAFT">Draft</MenuItem>
-                                <MenuItem value="PUBLISHED">Published</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={formData.hiddenFromCatalog}
-                                    onChange={(e) => setFormData({ ...formData, hiddenFromCatalog: e.target.checked })}
-                                />
-                            }
-                            label="Hide from catalog"
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleEditCourse} variant="contained">Save Changes</Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Delete Confirmation Dialog */}
+            {/* Delete Dialog */}
             <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-                <DialogTitle>Delete Course</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>Delete Course</DialogTitle>
                 <DialogContent>
-                    <Typography>
-                        Are you sure you want to delete "{selectedCourse?.title}"?
-                        This action cannot be undone.
+                    <Typography variant="body2" color="#172B4D">
+                        Are you sure you want to delete <strong>{menuCourse?.title}</strong>? This action cannot be undone.
                     </Typography>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleDeleteCourse} variant="contained" color="error">Delete</Button>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={() => setDeleteDialogOpen(false)} sx={{ textTransform: 'none', color: '#6B778C' }}>Cancel</Button>
+                    <Button onClick={handleDelete} variant="contained" color="error" sx={{ textTransform: 'none' }}>Delete</Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Snackbar */}
+            {/* Feedback */}
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={4000}
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
             >
-                <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                <Alert severity={snackbar.severity} sx={{ borderRadius: 2 }}>
                     {snackbar.message}
                 </Alert>
             </Snackbar>

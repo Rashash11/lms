@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
         const excludeCourseId = searchParams.get('excludeCourseId');
         const limit = parseInt(searchParams.get('limit') || '20');
 
+        console.log(`API User Search: query="${query}", excludeCourseId="${excludeCourseId}"`);
+
         // Base filter - search by name or email
         const whereClause: any = {};
 
@@ -29,12 +31,15 @@ export async function GET(request: NextRequest) {
                 select: { userId: true },
             });
             excludeUserIds = enrolled.map(e => e.userId);
+            console.log(`API User Search: found ${excludeUserIds.length} users to exclude`);
         }
 
         // Exclude already enrolled users
         if (excludeUserIds.length > 0) {
             whereClause.id = { notIn: excludeUserIds };
         }
+
+        console.log('API User Search: whereClause:', JSON.stringify(whereClause, null, 2));
 
         const users = await prisma.user.findMany({
             where: whereClause,
@@ -52,6 +57,8 @@ export async function GET(request: NextRequest) {
                 { lastName: 'asc' },
             ],
         });
+
+        console.log(`API User Search: found ${users.length} matching users`);
 
         // Format response
         const formattedUsers = users.map(user => ({
