@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
 
 // GET learner's enrolled courses (My Courses)
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
-        const userId = searchParams.get('userId');
+        let userId = searchParams.get('userId');
         const status = searchParams.get('status') || '';
         const search = searchParams.get('search') || '';
         const page = parseInt(searchParams.get('page') || '1');
@@ -13,7 +14,14 @@ export async function GET(request: NextRequest) {
         const skip = (page - 1) * limit;
 
         if (!userId) {
-            return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+            const session = await getSession();
+            if (session) {
+                userId = session.userId;
+            }
+        }
+
+        if (!userId) {
+            return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
 
         const where: any = { userId };

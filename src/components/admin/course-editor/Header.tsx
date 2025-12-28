@@ -29,8 +29,11 @@ interface HeaderProps {
     title: string;
     status: 'DRAFT' | 'PUBLISHED';
     description?: string;
+    courseImage?: string | null;
     onTitleChange: (newTitle: string) => void;
     onDescriptionChange: (newDescription: string) => void;
+    onImageUpload: (file: File) => void;
+    onImageGenerate: () => void;
     saveState: 'saving' | 'saved' | 'error';
     onPublish: () => void;
     onUnpublish: () => void;
@@ -45,9 +48,12 @@ export default function Header({
     courseId,
     title,
     description,
+    courseImage,
     status,
     onTitleChange,
     onDescriptionChange,
+    onImageUpload,
+    onImageGenerate,
     saveState,
     onPublish,
     onUnpublish,
@@ -96,6 +102,19 @@ export default function Header({
         setIsEditingDesc(false);
         if (localDescription !== description) {
             onDescriptionChange(localDescription);
+        }
+    };
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            onImageUpload(file);
+        }
+        // Reset input so the same file can be selected again
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
         }
     };
 
@@ -299,6 +318,173 @@ export default function Header({
                         <ListItemText>Delete course</ListItemText>
                     </MenuItem>
                 </Menu>
+
+                {/* Course Image */}
+                <Box
+                    sx={{
+                        width: 450,
+                        height: 250,
+                        bgcolor: '#94a3b8',
+                        borderRadius: 2,
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        border: '2px solid rgba(255,255,255,0.1)'
+                    }}
+                >
+                    {courseImage ? (
+                        <>
+                            <img
+                                src={courseImage}
+                                alt="Course"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                }}
+                            />
+                            {/* Overlay buttons on hover */}
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    bgcolor: 'rgba(0,0,0,0.4)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 2,
+                                    opacity: 0,
+                                    transition: 'opacity 0.2s',
+                                    '&:hover': {
+                                        opacity: 1
+                                    }
+                                }}
+                            >
+                                <Tooltip title="Upload image">
+                                    <IconButton
+                                        onClick={() => fileInputRef.current?.click()}
+                                        sx={{
+                                            bgcolor: '#1e40af',
+                                            color: '#fff',
+                                            '&:hover': { bgcolor: '#1e3a8a' }
+                                        }}
+                                    >
+                                        <CloudUploadIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Generate image using AI">
+                                    <IconButton
+                                        onClick={onImageGenerate}
+                                        sx={{
+                                            bgcolor: '#1e40af',
+                                            color: '#fff',
+                                            '&:hover': { bgcolor: '#1e3a8a' }
+                                        }}
+                                    >
+                                        <AutoAwesomeIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        </>
+                    ) : (
+                        <>
+                            {/* File and book icons in background */}
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    display: 'flex',
+                                    gap: 2,
+                                    opacity: 0.4
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 60,
+                                        height: 70,
+                                        bgcolor: '#1e40af',
+                                        borderRadius: 2,
+                                        position: 'relative',
+                                        '&::before': {
+                                            content: '""',
+                                            position: 'absolute',
+                                            top: 0,
+                                            right: 0,
+                                            width: 0,
+                                            height: 0,
+                                            borderStyle: 'solid',
+                                            borderWidth: '0 15px 15px 0',
+                                            borderColor: 'transparent #64748b transparent transparent'
+                                        }
+                                    }}
+                                />
+                                <Box
+                                    sx={{
+                                        width: 50,
+                                        height: 65,
+                                        bgcolor: '#c2410c',
+                                        borderRadius: 1,
+                                        border: '3px solid #ea580c',
+                                        borderLeft: '8px solid #ea580c'
+                                    }}
+                                />
+                            </Box>
+
+                            {/* Upload and Generate buttons */}
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    bottom: 12,
+                                    right: 12,
+                                    display: 'flex',
+                                    gap: 1
+                                }}
+                            >
+                                <Tooltip title="Upload image">
+                                    <IconButton
+                                        onClick={() => fileInputRef.current?.click()}
+                                        sx={{
+                                            bgcolor: '#1e40af',
+                                            color: '#fff',
+                                            '&:hover': { bgcolor: '#1e3a8a' },
+                                            width: 40,
+                                            height: 40
+                                        }}
+                                    >
+                                        <CloudUploadIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Generate image using AI">
+                                    <IconButton
+                                        onClick={onImageGenerate}
+                                        sx={{
+                                            bgcolor: '#1e40af',
+                                            color: '#fff',
+                                            '&:hover': { bgcolor: '#1e3a8a' },
+                                            width: 40,
+                                            height: 40
+                                        }}
+                                    >
+                                        <AutoAwesomeIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        </>
+                    )}
+
+                    {/* Hidden file input */}
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        style={{ display: 'none' }}
+                    />
+                </Box>
             </Box>
         </Box>
     );

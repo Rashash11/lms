@@ -554,6 +554,63 @@ function CourseEditorContent() {
         } catch (err) { }
     };
 
+    const handleImageUpload = async (file: File) => {
+        if (!courseId) return;
+        setSaveState('saving');
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch(`/api/courses/${courseId}/image`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setCourse((prev: any) => ({ ...prev, thumbnail_url: data.imageUrl }));
+                setSnackbar({ open: true, message: 'Course image uploaded successfully', severity: 'success' });
+                setSaveState('saved');
+            } else {
+                throw new Error('Upload failed');
+            }
+        } catch (err) {
+            setSnackbar({ open: true, message: 'Failed to upload image', severity: 'error' });
+            setSaveState('error');
+        }
+    };
+
+    const handleImageGenerate = async () => {
+        if (!courseId) return;
+        setSaveState('saving');
+
+        try {
+            const prompt = course.title ?
+                `Educational course cover image for: ${course.title}` :
+                'Generic educational course cover image';
+
+            const res = await fetch(`/api/courses/${courseId}/generate-image`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setCourse((prev: any) => ({ ...prev, thumbnail_url: data.imageUrl }));
+                setSnackbar({ open: true, message: 'Course image generated successfully', severity: 'success' });
+                setSaveState('saved');
+            } else {
+                throw new Error('Generation failed');
+            }
+        } catch (err) {
+            setSnackbar({ open: true, message: 'Failed to generate image', severity: 'error' });
+            setSaveState('error');
+        }
+    };
+
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
@@ -688,9 +745,12 @@ function CourseEditorContent() {
                                 courseId={courseId!}
                                 title={course.title}
                                 description={course.description}
+                                courseImage={course.thumbnail_url}
                                 status={course.status}
                                 onTitleChange={(title) => onFieldChange('title', title)}
                                 onDescriptionChange={(desc) => onFieldChange('description', desc)}
+                                onImageUpload={handleImageUpload}
+                                onImageGenerate={handleImageGenerate}
                                 saveState={saveState}
                                 onPublish={handlePublish}
                                 onUnpublish={handleUnpublish}

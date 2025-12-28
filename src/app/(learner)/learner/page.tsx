@@ -1,7 +1,10 @@
 'use client';
 
-import React from 'react';
-import { Box, Typography, Paper, Card, CardContent, CardMedia, CardActions, Button, LinearProgress, Chip, Avatar, AvatarGroup } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import {
+    Box, Typography, Paper, Card, CardContent, Button,
+    LinearProgress, Chip, CircularProgress, CardActions
+} from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import SchoolIcon from '@mui/icons-material/School';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -9,42 +12,68 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
-
-const stats = [
-    { label: 'Enrolled Courses', value: '5', icon: <SchoolIcon />, color: 'primary' },
-    { label: 'Completed', value: '3', icon: <CheckCircleIcon />, color: 'success' },
-    { label: 'In Progress', value: '2', icon: <AccessTimeIcon />, color: 'warning' },
-    { label: 'Certificates', value: '2', icon: <CardMembershipIcon />, color: 'info' },
-];
-
-const myCourses = [
-    { id: 1, title: 'Advanced JavaScript', instructor: 'Dr. Jane Smith', progress: 78, image: 'https://via.placeholder.com/300x150/3f51b5/ffffff?text=JavaScript' },
-    { id: 2, title: 'React Fundamentals', instructor: 'Prof. Bob Johnson', progress: 45, image: 'https://via.placeholder.com/300x150/00bcd4/ffffff?text=React' },
-    { id: 3, title: 'Node.js Backend', instructor: 'Dr. Jane Smith', progress: 100, image: 'https://via.placeholder.com/300x150/4caf50/ffffff?text=Node.js' },
-    { id: 4, title: 'Python Basics', instructor: 'Alice Brown', progress: 100, image: 'https://via.placeholder.com/300x150/ff9800/ffffff?text=Python' },
-];
-
-const upcomingILT = [
-    { title: 'JavaScript Workshop', date: 'Dec 20, 2024', time: '10:00 AM', instructor: 'Dr. Jane Smith' },
-    { title: 'React Q&A Session', date: 'Dec 22, 2024', time: '2:00 PM', instructor: 'Prof. Bob Johnson' },
-];
-
-const recentAchievements = [
-    { name: 'Quick Learner', description: 'Completed first course', icon: '🎓' },
-    { name: 'Code Master', description: 'Scored 90%+ on coding test', icon: '💻' },
-];
+import { useRouter } from 'next/navigation';
 
 export default function LearnerDashboard() {
+    const [loading, setLoading] = useState(true);
+    const [enrollments, setEnrollments] = useState<any[]>([]);
+    const [stats, setStats] = useState<any>(null);
+    const [user, setUser] = useState<any>(null);
+    const router = useRouter();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [enrollRes, userRes] = await Promise.all([
+                    fetch('/api/enrollments?limit=10'),
+                    fetch('/api/me')
+                ]);
+
+                if (enrollRes.ok) {
+                    const data = await enrollRes.json();
+                    setEnrollments(data.enrollments);
+                    setStats(data.stats);
+                }
+
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    setUser(userData.user);
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    const statCards = [
+        { label: 'Enrolled Courses', value: stats?.total || 0, icon: <SchoolIcon />, color: 'primary' },
+        { label: 'Completed', value: stats?.completed || 0, icon: <CheckCircleIcon />, color: 'success' },
+        { label: 'In Progress', value: stats?.inProgress || 0, icon: <AccessTimeIcon />, color: 'warning' },
+        { label: 'Certificates', value: '0', icon: <CardMembershipIcon />, color: 'info' },
+    ];
+
     return (
         <Box>
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight={700}>Welcome back, John!</Typography>
+                <Typography variant="h4" fontWeight={700}>Welcome back, {user?.firstName || 'Learner'}!</Typography>
                 <Typography variant="body2" color="text.secondary">Continue your learning journey. You're making great progress!</Typography>
             </Box>
 
             {/* Stats */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                {stats.map((stat) => (
+                {statCards.map((stat) => (
                     <Grid item xs={6} md={3} key={stat.label}>
                         <Paper sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: `${stat.color}.lighter`, color: `${stat.color}.main` }}>
@@ -62,61 +91,67 @@ export default function LearnerDashboard() {
             {/* Continue Learning */}
             <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Continue Learning</Typography>
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                {myCourses.filter(c => c.progress < 100).map((course) => (
-                    <Grid item xs={12} sm={6} md={4} key={course.id}>
+                {enrollments.filter(e => e.status !== 'COMPLETED').map((enrollment) => (
+                    <Grid item xs={12} sm={6} md={4} key={enrollment.id}>
                         <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <Box sx={{ height: 120, bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Typography variant="h5" color="white">{course.title.split(' ')[0]}</Typography>
+                            <Box sx={{ height: 120, bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                {enrollment.course.thumbnail_url ? (
+                                    <Box component="img" src={enrollment.course.thumbnail_url} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    <Typography variant="h5" color="white">{enrollment.course.title.split(' ')[0]}</Typography>
+                                )}
                             </Box>
                             <CardContent sx={{ flex: 1 }}>
-                                <Typography variant="h6" gutterBottom>{course.title}</Typography>
-                                <Typography variant="body2" color="text.secondary" gutterBottom>by {course.instructor}</Typography>
+                                <Typography variant="h6" gutterBottom>{enrollment.course.title}</Typography>
                                 <Box sx={{ mt: 2 }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                        <Typography variant="caption">Progress</Typography>
-                                        <Typography variant="caption" fontWeight={600}>{course.progress}%</Typography>
+                                        <Typography variant="caption">Status</Typography>
+                                        <Typography variant="caption" fontWeight={600}>{enrollment.status.replace('_', ' ')}</Typography>
                                     </Box>
-                                    <LinearProgress variant="determinate" value={course.progress} sx={{ height: 8, borderRadius: 4 }} />
+                                    <LinearProgress
+                                        variant="determinate"
+                                        value={enrollment.status === 'COMPLETED' ? 100 : (enrollment.status === 'IN_PROGRESS' ? 50 : 0)}
+                                        sx={{ height: 8, borderRadius: 4 }}
+                                    />
                                 </Box>
                             </CardContent>
-                            <CardActions sx={{ p: 2, pt: 0 }}>
-                                <Button variant="contained" fullWidth startIcon={<PlayArrowIcon />}>Continue</Button>
+                            <CardActions sx={{ p: 2, pt: 0, mt: 'auto' }}>
+                                <Button
+                                    variant="contained"
+                                    fullWidth
+                                    startIcon={<PlayArrowIcon />}
+                                    onClick={() => router.push(`/learner/courses/${enrollment.courseId}`)}
+                                >
+                                    Continue
+                                </Button>
                             </CardActions>
                         </Card>
                     </Grid>
                 ))}
-                <Grid item xs={12} sm={6} md={4}>
-                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.100', minHeight: 280 }}>
-                        <Typography variant="h6" color="text.secondary" gutterBottom>Discover More</Typography>
-                        <Button variant="outlined">Browse Catalog</Button>
-                    </Card>
-                </Grid>
+
+                {enrollments.filter(e => e.status !== 'COMPLETED').length === 0 && (
+                    <Grid item xs={12}>
+                        <Box sx={{ py: 8, textAlign: 'center', bgcolor: '#f7fafc', borderRadius: 4, border: '2px dashed #edf2f7' }}>
+                            <SchoolIcon sx={{ fontSize: 48, color: '#a0aec0', mb: 2 }} />
+                            <Typography variant="h6" color="#4a5568">No active courses</Typography>
+                            <Typography variant="body2" color="#718096" sx={{ mb: 3 }}>
+                                Explore our course catalog to start your learning journey.
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                onClick={() => router.push('/learner/catalog')}
+                                sx={{ bgcolor: '#3182ce' }}
+                            >
+                                Browse Catalog
+                            </Button>
+                        </Box>
+                    </Grid>
+                )}
             </Grid>
 
             <Grid container spacing={3}>
-                {/* Upcoming ILT */}
-                <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>Upcoming Sessions</Typography>
-                            {upcomingILT.map((session, i) => (
-                                <Box key={i} sx={{ py: 2, borderBottom: i < upcomingILT.length - 1 ? 1 : 0, borderColor: 'divider' }}>
-                                    <Typography fontWeight={500}>{session.title}</Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {session.date} at {session.time}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">by {session.instructor}</Typography>
-                                    <Box sx={{ mt: 1 }}>
-                                        <Button size="small" variant="outlined">Add to Calendar</Button>
-                                    </Box>
-                                </Box>
-                            ))}
-                        </CardContent>
-                    </Card>
-                </Grid>
-
                 {/* Achievements */}
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12}>
                     <Card>
                         <CardContent>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>

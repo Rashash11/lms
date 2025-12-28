@@ -30,10 +30,23 @@ export async function GET(
             }
         });
 
+        // Get completed unit IDs from TimelineEvents
+        const completions = await prisma.timelineEvent.findMany({
+            where: {
+                userId: enrollment.userId,
+                courseId: enrollment.courseId,
+                eventType: 'UNIT_COMPLETED',
+            },
+            select: { details: true }
+        });
+
+        const completedUnitIds = completions.map((c: any) => c.details.unitId);
+
         return NextResponse.json({
             ...enrollment,
             units,
             unitCount: units.length,
+            completedUnitIds,
         });
     } catch (error) {
         console.error('Error fetching enrollment:', error);
@@ -183,6 +196,60 @@ export async function PATCH(
                 },
             });
             return NextResponse.json(updated);
+        }
+
+        if (action === 'completeUnit' && unitId) {
+            // Check if already completed
+            const existing = await prisma.timelineEvent.findFirst({
+                where: {
+                    userId: enrollment.userId,
+                    courseId: enrollment.courseId,
+                    eventType: 'UNIT_COMPLETED',
+                    details: { path: ['unitId'], equals: unitId }
+                }
+            });
+
+            if (!existing) {
+                await prisma.timelineEvent.create({
+                    data: {
+                        userId: enrollment.userId,
+                        courseId: enrollment.courseId,
+                        eventType: 'UNIT_COMPLETED',
+                        details: { unitId },
+                    },
+                });
+            }
+
+            // Recalculate progress
+            const allUnits = await prisma.courseUnit.findMany({
+                where: { courseId: enrollment.courseId },
+                select: { id: true }
+            });
+
+            const allCompletions = await prisma.timelineEvent.findMany({
+                where: {
+                    userId: enrollment.userId,
+                    courseId: enrollment.courseId,
+                    eventType: 'UNIT_COMPLETED',
+                },
+                select: { details: true }
+            });
+
+            const completedIds = new Set(allCompletions.map((c: any) => c.details.unitId));
+            const totalUnits = allUnits.length || 1;
+            const completedCount = allUnits.filter(u => completedIds.has(u.id)).length;
+            const newProgress = Math.round((completedCount / totalUnits) * 100);
+
+            const updated = await prisma.enrollment.update({
+                where: { id: params.id },
+                data: {
+                    progress: newProgress,
+                    status: newProgress >= 100 ? 'COMPLETED' : 'IN_PROGRESS',
+                    lastAccessedAt: new Date(),
+                    ...(newProgress >= 100 && !enrollment.completedAt && { completedAt: new Date() }),
+                },
+            });
+            return NextResponse.json({ ...updated, completedUnitIds: Array.from(completedIds) });
         }
 
         if (action === 'incrementProgress' && progressIncrement) {

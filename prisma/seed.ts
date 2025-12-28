@@ -178,17 +178,111 @@ async function main() {
     });
 
     const courses = await prisma.course.findMany({ take: 3 });
-    for (const course of courses) {
-        await prisma.timelineEvent.create({
-            data: {
-                userId: admin.id,
-                courseId: course.id,
-                eventType: 'COURSE_CREATED',
-                details: { title: course.title },
-            },
+    await prisma.timelineEvent.create({
+        data: {
+            userId: admin.id,
+            courseId: courses[0]?.id,
+            eventType: 'COURSE_CREATED',
+            details: { title: courses[0]?.title },
+        },
+    });
+    console.log('✅ Created timeline events');
+
+    // ======= CREATE SKILLS =======
+    const skills = [
+        { name: 'JavaScript', description: 'Modern JavaScript (ES6+), patterns, and performance.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/5968/5968292.png' },
+        { name: 'React', description: 'Component-based UI development with hooks and state management.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/1126/1126012.png' },
+        { name: 'TypeScript', description: 'Statically typed JavaScript for large-scale applications.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/5968/5968381.png' },
+        { name: 'Node.js', description: 'Server-side runtime for building scalable network applications.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/919/919825.png' },
+        { name: 'Agile Mastery', description: 'Scrum, Kanban, and Lean project management methodologies.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/2808/2808451.png' },
+        { name: 'UI/UX Design', description: 'Principles of user interface and experience design.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/1228/1228633.png' },
+        { name: 'Cybersecurity', description: 'Protecting systems, networks, and programs from digital attacks.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/2569/2569176.png' },
+        { name: 'SQL & Databases', description: 'Relational database design and query optimization.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/2772/2772128.png' },
+    ];
+
+    const seededSkills = [];
+    for (const skillData of skills) {
+        const skill = await prisma.skill.upsert({
+            where: { id: `skill-${skillData.name.toLowerCase().replace(/ /g, '-')}` },
+            update: {},
+            create: {
+                id: `skill-${skillData.name.toLowerCase().replace(/ /g, '-')}`,
+                ...skillData
+            }
+        });
+        seededSkills.push(skill);
+    }
+    console.log('✅ Created', seededSkills.length, 'skills');
+
+    // ======= CREATE JOB ROLES =======
+    const roles = [
+        { name: 'Frontend Developer', description: 'Builds beautiful and responsive user interfaces.' },
+        { name: 'Backend Architect', description: 'Designs and implements scalable server-side systems.' },
+        { name: 'Fullstack Engineer', description: 'Masters both frontend and backend technologies.' },
+        { name: 'Security Consultant', description: 'Specializes in digital protection and risk assessment.' },
+    ];
+
+    for (const roleData of roles) {
+        const role = await prisma.jobRole.upsert({
+            where: { id: `role-${roleData.name.toLowerCase().replace(/ /g, '-')}` },
+            update: {},
+            create: {
+                id: `role-${roleData.name.toLowerCase().replace(/ /g, '-')}`,
+                ...roleData
+            }
+        });
+
+        // Assign some skills to roles
+        if (roleData.name === 'Frontend Developer') {
+            await prisma.roleSkill.upsert({
+                where: { roleId_skillId: { roleId: role.id, skillId: seededSkills[0].id } },
+                update: {},
+                create: { roleId: role.id, skillId: seededSkills[0].id, requiredLevel: 'ADVANCED' }
+            });
+            await prisma.roleSkill.upsert({
+                where: { roleId_skillId: { roleId: role.id, skillId: seededSkills[1].id } },
+                update: {},
+                create: { roleId: role.id, skillId: seededSkills[1].id, requiredLevel: 'ADVANCED' }
+            });
+        }
+    }
+    console.log('✅ Created job roles and linked skills');
+
+    // ======= ASSIGN SKILLS TO INSTRUCTOR (Jane Instructor) =======
+    // Using the instructor created earlier
+    const janeSkills = [
+        { skillId: seededSkills[0].id, level: 'ADVANCED' as const, progress: 95 },
+        { skillId: seededSkills[1].id, level: 'INTERMEDIATE' as const, progress: 70 },
+        { skillId: seededSkills[2].id, level: 'ADVANCED' as const, progress: 85 },
+    ];
+
+    for (const skillItem of janeSkills) {
+        await prisma.userSkill.upsert({
+            where: { userId_skillId: { userId: instructor.id, skillId: skillItem.skillId } },
+            update: { level: skillItem.level, progress: skillItem.progress },
+            create: { userId: instructor.id, ...skillItem }
         });
     }
-    console.log('✅ Created timeline events');
+    console.log('✅ Assigned skills to instructor');
+
+    // ======= CREATE LEARNING PATHS =======
+    const samplePaths = [
+        { name: 'Modern Fullstack Developer', code: 'PATH-FS-01', description: 'Complete path from zero to hero in fullstack JS', status: 'published', isActive: true },
+        { name: 'Frontend Excellence', code: 'PATH-FE-01', description: 'Deep dive into React and modern CSS', status: 'published', isActive: true },
+        { name: 'Backend Mastery', code: 'PATH-BE-01', description: 'Master Node.js, SQL and System Design', status: 'inactive', isActive: false },
+    ];
+
+    for (const pathData of samplePaths) {
+        await prisma.learningPath.upsert({
+            where: { code: pathData.code },
+            update: {},
+            create: {
+                ...pathData,
+                instructorId: instructor.id,
+            }
+        });
+    }
+    console.log('✅ Created', samplePaths.length, 'sample learning paths');
 
     console.log('');
     console.log('🎉 Database seeded successfully!');

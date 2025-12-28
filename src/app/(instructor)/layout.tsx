@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import {
     Box, Drawer, AppBar, Toolbar, Typography, List, ListItem, ListItemButton,
     ListItemIcon, ListItemText, IconButton, Avatar, Menu, MenuItem, Divider,
-    TextField, InputAdornment, Radio, CircularProgress,
+    TextField, InputAdornment, Radio, CircularProgress, Switch, Tooltip,
 } from '@mui/material';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -124,16 +125,16 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
     const drawer = (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: SIDEBAR_BG }}>
             {/* Logo at top of sidebar */}
-            <Box sx={{ height: 56, p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box sx={{
-                    width: 32, height: 32, borderRadius: '50%',
-                    bgcolor: LOGO_ORANGE, display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                    <Typography sx={{ color: 'white', fontWeight: 700, fontSize: 18 }}>t</Typography>
+            <Box sx={{ height: 70, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box sx={{ position: 'relative', width: 180, height: 50 }}>
+                    <Image
+                        src="/main-logo (1).svg"
+                        alt="Zedny Logo"
+                        width={180}
+                        height={50}
+                        style={{ objectFit: 'contain' }}
+                    />
                 </Box>
-                <Typography sx={{ color: TEXT_COLOR, fontWeight: 600, fontSize: 14 }}>
-                    talentlms
-                </Typography>
             </Box>
 
             <List sx={{ flex: 1, pt: 0, px: 1.5 }}>
@@ -173,14 +174,21 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
             </List>
 
             {/* Demo mode toggle at bottom */}
-            <Box sx={{ p: 1.5, borderTop: `1px solid ${DIVIDER}` }}>
+            <Box sx={{ p: 1.5, borderTop: `1px solid ${DIVIDER}`, mt: 'auto' }}>
                 <Box sx={{
                     display: 'flex', alignItems: 'center', gap: 1.5,
-                    cursor: 'pointer',
                 }}>
-                    <PlayCircleOutlineIcon sx={{ color: ICON_COLOR, fontSize: 18 }} />
-                    <Typography sx={{ color: TEXT_COLOR, fontSize: 13, flex: 1 }}>Demo mode</Typography>
-                    <InfoOutlinedIcon sx={{ color: MUTED_TEXT, fontSize: 16 }} />
+                    <Switch
+                        size="small"
+                        sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': { color: '#FFFFFF' },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#4caf50' }
+                        }}
+                    />
+                    <Typography sx={{ color: TEXT_COLOR, fontSize: 13, flex: 1, fontWeight: 500 }}>Demo mode</Typography>
+                    <Tooltip title="Switch to learner view">
+                        <InfoOutlinedIcon sx={{ color: MUTED_TEXT, fontSize: 16, cursor: 'pointer' }} />
+                    </Tooltip>
                 </Box>
             </Box>
 
@@ -189,9 +197,13 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
                 <Box sx={{
                     display: 'flex', alignItems: 'center', gap: 1.5,
                     cursor: 'pointer',
+                    '&:hover': { bgcolor: HOVER_BG, borderRadius: 1 }
                 }}>
                     <HelpOutlineIcon sx={{ color: ICON_COLOR, fontSize: 18 }} />
-                    <Typography sx={{ color: TEXT_COLOR, fontSize: 13 }}>Help Center</Typography>
+                    <Typography sx={{ color: TEXT_COLOR, fontSize: 13, fontWeight: 500 }}>Help Center</Typography>
+                    <Box sx={{ ml: 'auto' }}>
+                        <KeyboardArrowDownIcon sx={{ color: MUTED_TEXT, fontSize: 16, transform: 'rotate(-90deg)' }} />
+                    </Box>
                 </Box>
             </Box>
         </Box>
@@ -222,16 +234,16 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
                     </IconButton>
 
                     {/* Logo in header */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{
-                            width: 32, height: 32, borderRadius: '50%',
-                            bgcolor: LOGO_ORANGE, display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}>
-                            <Typography sx={{ color: 'white', fontWeight: 700, fontSize: 16 }}>t</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Box sx={{ position: 'relative', width: 140, height: 36 }}>
+                            <Image
+                                src="/main-logo (1).svg"
+                                alt="Zedny Logo"
+                                width={140}
+                                height={36}
+                                style={{ objectFit: 'contain' }}
+                            />
                         </Box>
-                        <Typography sx={{ color: '#1a2b4a', fontWeight: 600, fontSize: 15 }}>
-                            talentlms
-                        </Typography>
                     </Box>
 
                     {/* Search - TalentLMS pill style */}
