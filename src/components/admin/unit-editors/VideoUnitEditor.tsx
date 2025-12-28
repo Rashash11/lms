@@ -103,6 +103,7 @@ export default function VideoUnitEditor({
         if (youtubeUrl.trim()) {
             onConfigChange({
                 ...config,
+                url: youtubeUrl, // Add top-level url for player compatibility
                 videoUrl: youtubeUrl,
                 source: 'youtube',
                 content: { type: 'youtube', url: youtubeUrl }
@@ -116,6 +117,7 @@ export default function VideoUnitEditor({
             const objectUrl = URL.createObjectURL(file);
             onConfigChange({
                 ...config,
+                url: objectUrl, // Add top-level url for player compatibility
                 videoUrl: objectUrl,
                 fileName: file.name,
                 fileSize: file.size,
@@ -415,6 +417,7 @@ export default function VideoUnitEditor({
                     const url = URL.createObjectURL(blob);
                     onConfigChange({
                         ...config,
+                        url: url, // Add top-level url for player compatibility
                         videoUrl: url,
                         source: recorderMode === 'screen' ? 'screen' : 'record',
                         content: { type: recorderMode, url }

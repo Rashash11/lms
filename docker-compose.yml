@@ -1,4 +1,24 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lms_app
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://lms_user:password@postgres:5432/lms_db
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=development
+      - JWT_SECRET=your-secret-key-change-in-production
+      - BASE_URL=http://localhost:3000
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   postgres:
     image: postgres:15-alpine
     container_name: lms_postgres

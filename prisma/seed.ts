@@ -1,4 +1,4 @@
-import { PrismaClient, RoleKey } from '@prisma/client';
+import { PrismaClient, RoleKey, UnitType, UnitStatus, CourseStatus, EnrollmentStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -91,13 +91,14 @@ async function main() {
 
     // Learner users
     const learnerPassword = await bcrypt.hash('Learner123!', 12);
-    const learners = [
+    const learnerDataList = [
         { username: 'learner1', email: 'learner1@portal.com', firstName: 'John', lastName: 'Learner' },
         { username: 'learner2', email: 'learner2@portal.com', firstName: 'Jane', lastName: 'Student' },
         { username: 'learner3', email: 'learner3@portal.com', firstName: 'Bob', lastName: 'Trainee' },
     ];
 
-    for (const learnerData of learners) {
+    const learners = [];
+    for (const learnerData of learnerDataList) {
         const learner = await prisma.user.upsert({
             where: { email: learnerData.email },
             update: { passwordHash: learnerPassword },
@@ -114,31 +115,120 @@ async function main() {
             update: {},
             create: { userId: learner.id, roleKey: 'LEARNER' },
         });
+        learners.push(learner);
     }
     console.log('✅ Created 3 learner users: learner1/2/3@portal.com / Learner123!');
 
     // ======= CREATE COURSES =======
     const sampleCourses = [
-        { code: 'JS101', title: 'Advanced JavaScript', description: 'Master modern JavaScript features and best practices', status: 'PUBLISHED' as const },
-        { code: 'REACT101', title: 'React Fundamentals', description: 'Learn React from the ground up', status: 'PUBLISHED' as const },
-        { code: 'NODE101', title: 'Node.js Backend Development', description: 'Build scalable backend applications with Node.js', status: 'PUBLISHED' as const },
-        { code: 'PY101', title: 'Python Basics', description: 'Introduction to Python programming', status: 'DRAFT' as const },
-        { code: 'TS101', title: 'TypeScript Mastery', description: 'Type-safe JavaScript development', status: 'PUBLISHED' as const },
-        { code: 'SQL101', title: 'SQL Fundamentals', description: 'Database design and querying', status: 'DRAFT' as const },
-        { code: 'SEC101', title: 'Cybersecurity Basics', description: 'Essential security practices', status: 'PUBLISHED' as const },
-        { code: 'AGILE101', title: 'Agile Project Management', description: 'Scrum and Kanban methodologies', status: 'PUBLISHED' as const },
-        { code: 'LEAD101', title: 'Leadership Skills', description: 'Develop your leadership potential', status: 'PUBLISHED' as const },
-        { code: 'COMM101', title: 'Effective Communication', description: 'Master professional communication', status: 'PUBLISHED' as const },
+        { code: 'JS101', title: 'Advanced JavaScript', description: 'Master modern JavaScript features and best practices', status: CourseStatus.PUBLISHED },
+        { code: 'REACT101', title: 'React Fundamentals', description: 'Learn React from the ground up', status: CourseStatus.PUBLISHED },
+        { code: 'NODE101', title: 'Node.js Backend Development', description: 'Build scalable backend applications with Node.js', status: CourseStatus.PUBLISHED },
+        { code: 'PY101', title: 'Python Basics', description: 'Introduction to Python programming', status: CourseStatus.DRAFT },
+        { code: 'TS101', title: 'TypeScript Mastery', description: 'Type-safe JavaScript development', status: CourseStatus.PUBLISHED },
     ];
 
+    const createdCourses = [];
     for (const courseData of sampleCourses) {
-        await prisma.course.upsert({
+        const course = await prisma.course.upsert({
             where: { code: courseData.code },
             update: {},
             create: courseData,
         });
+        createdCourses.push(course);
     }
     console.log('✅ Created', sampleCourses.length, 'sample courses');
+
+    // ======= ADD CONTENT TO COURSES =======
+    for (const course of createdCourses) {
+        // Create a section
+        const section = await prisma.courseSection.create({
+            data: {
+                courseId: course.id,
+                title: 'Getting Started',
+                order_index: 0,
+            }
+        });
+
+        // Add units to section
+        await prisma.courseUnit.createMany({
+            data: [
+                {
+                    courseId: course.id,
+                    sectionId: section.id,
+                    title: 'Welcome to the Course',
+                    type: UnitType.TEXT,
+                    order_index: 0,
+                    status: UnitStatus.PUBLISHED,
+                    config: { content: `<p>Welcome to <strong>${course.title}</strong>! In this course, you will learn everything you need to know about ${course.description}.</p>` },
+                },
+                {
+                    courseId: course.id,
+                    sectionId: section.id,
+                    title: 'Course Objectives',
+                    type: UnitType.TEXT,
+                    order_index: 1,
+                    status: UnitStatus.PUBLISHED,
+                    config: { content: '<ul><li>Understand core concepts</li><li>Build practical projects</li><li>Master advanced techniques</li></ul>' },
+                },
+                {
+                    courseId: course.id,
+                    sectionId: section.id,
+                    title: 'Introduction Video',
+                    type: UnitType.VIDEO,
+                    order_index: 2,
+                    status: UnitStatus.PUBLISHED,
+                    config: {
+                        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                        provider: 'youtube'
+                    },
+                }
+            ]
+        });
+
+        // Add a second section
+        const section2 = await prisma.courseSection.create({
+            data: {
+                courseId: course.id,
+                title: 'Core Concepts',
+                order_index: 1,
+            }
+        });
+
+        await prisma.courseUnit.createMany({
+            data: [
+                {
+                    courseId: course.id,
+                    sectionId: section2.id,
+                    title: 'Lesson 1: The Basics',
+                    type: UnitType.TEXT,
+                    order_index: 0,
+                    status: UnitStatus.PUBLISHED,
+                    config: { content: '<p>Laying the foundation for your journey.</p>' },
+                }
+            ]
+        });
+    }
+    console.log('✅ Added sections and units to all courses');
+
+    // ======= ENROLL LEARNERS =======
+    for (const learner of learners) {
+        for (const course of createdCourses) {
+            if (course.status === CourseStatus.PUBLISHED) {
+                await prisma.enrollment.upsert({
+                    where: { userId_courseId: { userId: learner.id, courseId: course.id } },
+                    update: {},
+                    create: {
+                        userId: learner.id,
+                        courseId: course.id,
+                        status: EnrollmentStatus.IN_PROGRESS,
+                        progress: 0,
+                    }
+                });
+            }
+        }
+    }
+    console.log('✅ Enrolled learners in all published courses');
 
     // ======= CREATE CATEGORIES =======
     const rootCategory = await prisma.category.create({
@@ -161,31 +251,17 @@ async function main() {
     console.log('✅ Created sample categories');
 
     // ======= CREATE TIMELINE EVENTS =======
-    await prisma.timelineEvent.create({
-        data: {
-            userId: admin.id,
-            eventType: 'USER_LOGIN',
-            details: { email: admin.email },
-        },
-    });
-
-    await prisma.timelineEvent.create({
-        data: {
-            userId: instructor.id,
-            eventType: 'USER_LOGIN',
-            details: { email: instructor.email },
-        },
-    });
-
-    const courses = await prisma.course.findMany({ take: 3 });
-    await prisma.timelineEvent.create({
-        data: {
-            userId: admin.id,
-            courseId: courses[0]?.id,
-            eventType: 'COURSE_CREATED',
-            details: { title: courses[0]?.title },
-        },
-    });
+    const coursesForEvents = await prisma.course.findMany({ take: 3 });
+    for (const course of coursesForEvents) {
+        await prisma.timelineEvent.create({
+            data: {
+                userId: admin.id,
+                courseId: course.id,
+                eventType: 'COURSE_CREATED',
+                details: { title: course.title },
+            },
+        });
+    }
     console.log('✅ Created timeline events');
 
     // ======= CREATE SKILLS =======
@@ -194,10 +270,6 @@ async function main() {
         { name: 'React', description: 'Component-based UI development with hooks and state management.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/1126/1126012.png' },
         { name: 'TypeScript', description: 'Statically typed JavaScript for large-scale applications.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/5968/5968381.png' },
         { name: 'Node.js', description: 'Server-side runtime for building scalable network applications.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/919/919825.png' },
-        { name: 'Agile Mastery', description: 'Scrum, Kanban, and Lean project management methodologies.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/2808/2808451.png' },
-        { name: 'UI/UX Design', description: 'Principles of user interface and experience design.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/1228/1228633.png' },
-        { name: 'Cybersecurity', description: 'Protecting systems, networks, and programs from digital attacks.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/2569/2569176.png' },
-        { name: 'SQL & Databases', description: 'Relational database design and query optimization.', imageUrl: 'https://cdn-icons-png.flaticon.com/512/2772/2772128.png' },
     ];
 
     const seededSkills = [];
@@ -218,8 +290,6 @@ async function main() {
     const roles = [
         { name: 'Frontend Developer', description: 'Builds beautiful and responsive user interfaces.' },
         { name: 'Backend Architect', description: 'Designs and implements scalable server-side systems.' },
-        { name: 'Fullstack Engineer', description: 'Masters both frontend and backend technologies.' },
-        { name: 'Security Consultant', description: 'Specializes in digital protection and risk assessment.' },
     ];
 
     for (const roleData of roles) {
@@ -239,37 +309,14 @@ async function main() {
                 update: {},
                 create: { roleId: role.id, skillId: seededSkills[0].id, requiredLevel: 'ADVANCED' }
             });
-            await prisma.roleSkill.upsert({
-                where: { roleId_skillId: { roleId: role.id, skillId: seededSkills[1].id } },
-                update: {},
-                create: { roleId: role.id, skillId: seededSkills[1].id, requiredLevel: 'ADVANCED' }
-            });
         }
     }
     console.log('✅ Created job roles and linked skills');
-
-    // ======= ASSIGN SKILLS TO INSTRUCTOR (Jane Instructor) =======
-    // Using the instructor created earlier
-    const janeSkills = [
-        { skillId: seededSkills[0].id, level: 'ADVANCED' as const, progress: 95 },
-        { skillId: seededSkills[1].id, level: 'INTERMEDIATE' as const, progress: 70 },
-        { skillId: seededSkills[2].id, level: 'ADVANCED' as const, progress: 85 },
-    ];
-
-    for (const skillItem of janeSkills) {
-        await prisma.userSkill.upsert({
-            where: { userId_skillId: { userId: instructor.id, skillId: skillItem.skillId } },
-            update: { level: skillItem.level, progress: skillItem.progress },
-            create: { userId: instructor.id, ...skillItem }
-        });
-    }
-    console.log('✅ Assigned skills to instructor');
 
     // ======= CREATE LEARNING PATHS =======
     const samplePaths = [
         { name: 'Modern Fullstack Developer', code: 'PATH-FS-01', description: 'Complete path from zero to hero in fullstack JS', status: 'published', isActive: true },
         { name: 'Frontend Excellence', code: 'PATH-FE-01', description: 'Deep dive into React and modern CSS', status: 'published', isActive: true },
-        { name: 'Backend Mastery', code: 'PATH-BE-01', description: 'Master Node.js, SQL and System Design', status: 'inactive', isActive: false },
     ];
 
     for (const pathData of samplePaths) {
@@ -282,18 +329,16 @@ async function main() {
             }
         });
     }
-    console.log('✅ Created', samplePaths.length, 'sample learning paths');
+    console.log('✅ Created learning paths');
 
     console.log('');
-    console.log('🎉 Database seeded successfully!');
+    console.log('🎉 Database seeded successfully with content and enrollments!');
     console.log('');
     console.log('📝 Login credentials:');
     console.log('   Admin:      admin@portal.com / Admin123!');
     console.log('   Instructor: instructor@portal.com / Instructor123!');
     console.log('   Learners:   learner1@portal.com / Learner123!');
     console.log('');
-    console.log('💡 Admin has all roles, Instructor has Instructor+Learner, Learners have Learner only.');
-    console.log('   Use role switching in the user menu to switch between roles.');
 }
 
 main()

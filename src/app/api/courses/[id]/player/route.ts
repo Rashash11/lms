@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 // GET course player data (for learner taking a course)
 export async function GET(
     request: NextRequest,
-    { params }: { params: { courseId: string } }
+    { params }: { params: { id: string } }
 ) {
     try {
         const { searchParams } = new URL(request.url);
@@ -16,7 +16,7 @@ export async function GET(
 
         // Get course
         const course = await prisma.course.findUnique({
-            where: { id: params.courseId },
+            where: { id: params.id },
         });
 
         if (!course) {
@@ -25,7 +25,7 @@ export async function GET(
 
         // Get enrollment
         const enrollment = await prisma.enrollment.findUnique({
-            where: { userId_courseId: { userId, courseId: params.courseId } },
+            where: { userId_courseId: { userId, courseId: params.id } },
         });
 
         if (!enrollment) {
@@ -37,7 +37,7 @@ export async function GET(
 
         // Get course units
         const units = await prisma.courseUnit.findMany({
-            where: { courseId: params.courseId },
+            where: { courseId: params.id },
             orderBy: { order_index: 'asc' },
         });
 
@@ -84,7 +84,7 @@ export async function GET(
 // POST complete a unit or update progress
 export async function POST(
     request: NextRequest,
-    { params }: { params: { courseId: string } }
+    { params }: { params: { id: string } }
 ) {
     try {
         const body = await request.json();
@@ -96,7 +96,7 @@ export async function POST(
 
         // Get enrollment
         const enrollment = await prisma.enrollment.findUnique({
-            where: { userId_courseId: { userId, courseId: params.courseId } },
+            where: { userId_courseId: { userId, courseId: params.id } },
         });
 
         if (!enrollment) {
@@ -105,7 +105,7 @@ export async function POST(
 
         // Get total units
         const totalUnits = await prisma.courseUnit.count({
-            where: { courseId: params.courseId },
+            where: { courseId: params.id },
         });
 
         if (action === 'completeUnit' && unitId) {
@@ -129,13 +129,13 @@ export async function POST(
 
             if (isComplete) {
                 const course = await prisma.course.findUnique({
-                    where: { id: params.courseId },
+                    where: { id: params.id },
                 });
 
                 await prisma.timelineEvent.create({
                     data: {
                         userId,
-                        courseId: params.courseId,
+                        courseId: params.id,
                         eventType: 'COURSE_COMPLETED',
                         details: { courseTitle: course?.title },
                     },

@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Card, CardContent, CardActions, Button, LinearProgress,
-    Chip, TextField, InputAdornment, Tabs, Tab, Paper, CircularProgress
+    Chip, TextField, InputAdornment, Tabs, Tab, Paper, CircularProgress,
+    Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import SearchIcon from '@mui/icons-material/Search';
@@ -19,6 +20,7 @@ export default function MyCoursesPage() {
     const [stats, setStats] = useState<any>(null);
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCourse, setSelectedCourse] = useState<any>(null);
     const router = useRouter();
 
     const fetchEnrollments = async () => {
@@ -96,7 +98,17 @@ export default function MyCoursesPage() {
                 <Grid container spacing={3}>
                     {enrollments.map((enrollment) => (
                         <Grid item xs={12} sm={6} md={4} key={enrollment.id}>
-                            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                            <Card sx={{
+                                height: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                '&:hover .description-overlay': {
+                                    opacity: 1,
+                                    transform: 'translateY(0)',
+                                }
+                            }}>
                                 <Box sx={{
                                     height: 100,
                                     bgcolor: enrollment.status === 'COMPLETED' ? 'success.main' : enrollment.status === 'IN_PROGRESS' ? 'primary.main' : 'grey.400',
@@ -107,6 +119,57 @@ export default function MyCoursesPage() {
                                     {enrollment.status === 'IN_PROGRESS' && <Typography variant="h4" color="white">?</Typography>}
                                     {enrollment.status === 'NOT_STARTED' && <SchoolIcon sx={{ fontSize: 48, color: 'white' }} />}
                                 </Box>
+
+                                {/* Hover Overlay */}
+                                <Box
+                                    className="description-overlay"
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        bgcolor: 'rgba(0, 0, 0, 0.85)',
+                                        color: 'white',
+                                        p: 3,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'center',
+                                        opacity: 0,
+                                        transform: 'translateY(100%)',
+                                        transition: 'all 0.3s ease-in-out',
+                                        zIndex: 2,
+                                    }}
+                                >
+                                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ color: 'white' }}>
+                                        Description
+                                    </Typography>
+                                    <Typography variant="body2" sx={{
+                                        overflow: 'hidden',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 5,
+                                        WebkitBoxOrient: 'vertical',
+                                        color: 'rgba(255,255,255,0.9)',
+                                        lineHeight: 1.6,
+                                        mb: 1
+                                    }}>
+                                        {enrollment.course.description || 'No description available for this course.'}
+                                    </Typography>
+                                    {enrollment.course.description && enrollment.course.description.length > 200 && (
+                                        <Button
+                                            size="small"
+                                            variant="text"
+                                            sx={{ color: '#64b5f6', alignSelf: 'flex-start', p: 0, textTransform: 'none' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedCourse(enrollment.course);
+                                            }}
+                                        >
+                                            Show more...
+                                        </Button>
+                                    )}
+                                </Box>
+
                                 <CardContent sx={{ flex: 1 }}>
                                     <Typography variant="h6" gutterBottom>{enrollment.course.title}</Typography>
                                     <Chip label={enrollment.status.replace('_', ' ')} size="small" variant="outlined" sx={{ mb: 2 }} />
@@ -122,7 +185,7 @@ export default function MyCoursesPage() {
 
                                     <Typography variant="caption" color="text.secondary">Course Code: {enrollment.course.code}</Typography>
                                 </CardContent>
-                                <CardActions sx={{ p: 2, pt: 0 }}>
+                                <CardActions sx={{ p: 2, pt: 0, zIndex: 3 }}>
                                     <Button
                                         variant="contained"
                                         fullWidth
@@ -146,6 +209,29 @@ export default function MyCoursesPage() {
                     )}
                 </Grid>
             )}
+
+            {/* Description Dialog */}
+            <Dialog
+                open={Boolean(selectedCourse)}
+                onClose={() => setSelectedCourse(null)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" fontWeight="bold">{selectedCourse?.title}</Typography>
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Typography variant="subtitle2" color="primary" gutterBottom>Course Description</Typography>
+                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {selectedCourse?.description}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setSelectedCourse(null)} color="primary">
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

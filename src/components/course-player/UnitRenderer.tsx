@@ -18,17 +18,70 @@ interface UnitRendererProps {
 
 export default function UnitRenderer({ unit }: UnitRendererProps) {
     const renderContent = () => {
+        // Debug logs
+        console.log('🎬 UnitRenderer:', { type: unit.type, title: unit.title, content: unit.content });
+
+        // Helper to convert YouTube URL to embed URL
+        const getEmbedUrl = (url: string) => {
+            if (!url) return '';
+
+            // Extract video ID from various YouTube URL formats
+            let videoId = null;
+
+            // youtube.com/watch?v=VIDEO_ID
+            const watchMatch = url.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
+            if (watchMatch) videoId = watchMatch[1];
+
+            // youtu.be/VIDEO_ID
+            const shortMatch = url.match(/(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if (shortMatch) videoId = shortMatch[1];
+
+            // youtube.com/embed/VIDEO_ID (already embed)
+            const embedMatch = url.match(/(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+            if (embedMatch) return url; // Already an embed URL
+
+            // If we found a video ID, create proper embed URL
+            if (videoId) {
+                const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                console.log('🔄 URL Conversion:', url, '→', embedUrl);
+                return embedUrl;
+            }
+
+            // If it's not a YouTube URL, return as-is (might be uploaded video)
+            return url;
+        };
+
         switch (unit.type) {
             case 'TEXT':
                 return (
-                    <Box component="div" dangerouslySetInnerHTML={{ __html: unit.content?.body || unit.content?.text || '' }} />
+                    <Box
+                        component="div"
+                        className="tiptap-content"
+                        dangerouslySetInnerHTML={{
+                            __html: unit.content?.body || unit.content?.text || unit.content?.content || ''
+                        }}
+                    />
                 );
             case 'VIDEO':
+                // Support multiple config structures
+                const videoUrl = unit.content?.url || unit.content?.videoUrl || unit.content?.content?.url || '';
+                console.log('📹 VIDEO DEBUG:', { videoUrl, fullContent: unit.content });
+                const embedVideoUrl = getEmbedUrl(videoUrl);
+                console.log('🎯 Final Embed URL:', embedVideoUrl);
+
+                if (!videoUrl) {
+                    return (
+                        <Box sx={{ p: 4, textAlign: 'center', color: '#718096' }}>
+                            <Typography>No video configured</Typography>
+                        </Box>
+                    );
+                }
+
                 return (
-                    <Box sx={{ position: 'relative', pt: '56.25%', width: '100%' }}>
+                    <Box sx={{ position: 'relative', pt: '56.25%', width: '100%', bgcolor: '#000', borderRadius: 1, overflow: 'hidden' }}>
                         <iframe
                             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                            src={unit.content?.url}
+                            src={embedVideoUrl}
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
