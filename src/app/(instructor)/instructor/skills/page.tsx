@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import {
     Box, Typography, Tabs, Tab, TextField, InputAdornment,
     MenuItem, Select, IconButton, Card, CardContent,
@@ -50,7 +50,7 @@ interface Candidate {
     progress: number;
 }
 
-export default function SkillsPage() {
+function SkillsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -492,5 +492,25 @@ export default function SkillsPage() {
                 </Box>
             )}
         </Box>
+    );
+}
+
+export default function SkillsPage() {
+    return (
+        <Suspense fallback={
+            <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+                <Skeleton variant="rectangular" height={40} sx={{ mb: 3, width: 200 }} />
+                <Skeleton variant="rectangular" height={48} sx={{ mb: 3 }} />
+                <Grid container spacing={3}>
+                    {[1, 2, 3, 4].map(i => (
+                        <Grid item xs={12} sm={6} md={3} key={i}>
+                            <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
+        }>
+            <SkillsContent />
+        </Suspense>
     );
 }

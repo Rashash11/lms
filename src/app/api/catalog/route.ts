@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
             code: course.code,
             title: course.title,
             description: course.description,
-            image: course.image,
+            image: course.thumbnail_url,
             introVideoUrl: course.introVideoUrl,
             enrollmentCount: course._count.enrollments,
             capacity: course.capacity,

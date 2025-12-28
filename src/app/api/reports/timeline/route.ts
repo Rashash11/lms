@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { getTimelineEvents, TimelineFilters } from '@/lib/reports/timeline';
 
