@@ -338,17 +338,17 @@ export default function CourseOutlineSidebar({
                 }}>
                     {activeMenuUnitId && findUnit(activeMenuUnitId)?.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
                 </MenuItem>
-                <MenuItem onClick={() => { activeMenuUnitId && onOptionsUnit(activeMenuUnitId); handleMenuClose(); }}>
+                <MenuItem onClick={() => { if (activeMenuUnitId) onOptionsUnit(activeMenuUnitId); handleMenuClose(); }}>
                     Options
                 </MenuItem>
-                <MenuItem onClick={() => { activeMenuUnitId && onMoveUnit(activeMenuUnitId); handleMenuClose(); }}>
+                <MenuItem onClick={() => { if (activeMenuUnitId) onMoveUnit(activeMenuUnitId); handleMenuClose(); }}>
                     Move to...
                 </MenuItem>
-                <MenuItem onClick={() => { activeMenuUnitId && onDuplicateUnit(activeMenuUnitId); handleMenuClose(); }}>
+                <MenuItem onClick={() => { if (activeMenuUnitId) onDuplicateUnit(activeMenuUnitId); handleMenuClose(); }}>
                     Clone
                 </MenuItem>
                 <Divider />
-                <MenuItem onClick={() => { activeMenuUnitId && onDeleteUnit(activeMenuUnitId); handleMenuClose(); }} sx={{ color: 'error.main' }}>
+                <MenuItem onClick={() => { if (activeMenuUnitId) onDeleteUnit(activeMenuUnitId); handleMenuClose(); }} sx={{ color: 'error.main' }}>
                     Delete
                 </MenuItem>
             </Menu>

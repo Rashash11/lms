@@ -32,7 +32,7 @@ export default function LearnerCoursePage() {
                         }
                     }
 
-                    let allUnits: any[] = [];
+                    const allUnits: any[] = [];
                     if (course.sections) {
                         course.sections.forEach((s: any) => {
                             if (s.units) allUnits.push(...s.units);
