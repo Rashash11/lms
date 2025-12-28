@@ -7,7 +7,7 @@ import {
     CardMedia, Skeleton, Button, Stack, Chip, LinearProgress,
     Tooltip, CircularProgress, Dialog, DialogTitle, DialogContent,
     DialogActions, List, ListItem, ListItemAvatar, Avatar, ListItemText,
-    Autocomplete
+    ListItemButton, Autocomplete
 } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import SearchIcon from '@mui/icons-material/Search';
@@ -419,9 +419,8 @@ export default function SkillsPage() {
                                 ) : (
                                     <List sx={{ maxHeight: 300, overflow: 'auto', border: '1px solid #DFE1E6', borderRadius: 2 }}>
                                         {candidates.length > 0 ? candidates.map((user) => (
-                                            <ListItem
+                                            <ListItemButton
                                                 key={user.id}
-                                                button
                                                 selected={selectedUser?.id === user.id}
                                                 onClick={() => setSelectedUser(user)}
                                                 sx={{ '&.Mui-selected': { bgcolor: '#DEEBFF' } }}
@@ -437,7 +436,7 @@ export default function SkillsPage() {
                                                     primaryTypographyProps={{ fontWeight: 600, fontSize: 14 }}
                                                 />
                                                 {selectedUser?.id === user.id && <CheckCircleIcon sx={{ color: '#0052CC', fontSize: 20 }} />}
-                                            </ListItem>
+                                            </ListItemButton>
                                         )) : (
                                             <ListItem><Typography variant="body2" color="text.secondary">No candidates found for this skill.</Typography></ListItem>
                                         )}
