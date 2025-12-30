@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { hashPassword, validatePasswordPolicy, RoleKey } from '@/lib/auth';
+import { hashPassword, validatePasswordPolicy, RoleKey, requireAuth } from '@/lib/auth';
+import { can, checkSafetyConstraints } from '@/lib/permissions';
 import { z } from 'zod';
 
 const createUserSchema = z.object({
@@ -10,7 +11,7 @@ const createUserSchema = z.object({
     lastName: z.string().min(1, 'Last name is required'),
     password: z.string().optional(),
     status: z.enum(['ACTIVE', 'INACTIVE', 'DEACTIVATED']).optional(),
-    roles: z.array(z.enum(['ADMIN', 'INSTRUCTOR', 'LEARNER'])).optional(),
+    roles: z.array(z.enum(['ADMIN', 'INSTRUCTOR', 'LEARNER', 'SUPER_INSTRUCTOR'])).optional(),
     excludeFromEmails: z.boolean().optional(),
     bio: z.string().optional(),
     timezone: z.string().optional(),
@@ -22,6 +23,11 @@ const createUserSchema = z.object({
 // GET all users with roles
 export async function GET(request: NextRequest) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'user:read')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:read' }, { status: 403 });
+        }
+
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search') || '';
         const status = searchParams.get('status') || '';
@@ -103,6 +109,11 @@ export async function GET(request: NextRequest) {
 // POST create new user with roles
 export async function POST(request: NextRequest) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'user:create')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:create' }, { status: 403 });
+        }
+
         const body = await request.json();
 
         // Validate input
@@ -115,6 +126,11 @@ export async function POST(request: NextRequest) {
         }
 
         const { username, email, firstName, lastName, password, status, roles, excludeFromEmails } = validation.data;
+
+        // Safety constraint: Super Instructor cannot create ADMIN
+        if (session.activeRole !== 'ADMIN' && roles?.includes('ADMIN')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'You do not have permission to create Administrator accounts.' }, { status: 403 });
+        }
 
         // Check if user already exists
         const existingUser = await prisma.user.findFirst({
@@ -187,11 +203,33 @@ export async function POST(request: NextRequest) {
 // DELETE bulk delete users
 export async function DELETE(request: NextRequest) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'user:delete')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:delete' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { ids } = body;
 
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
             return NextResponse.json({ error: 'No user IDs provided' }, { status: 400 });
+        }
+
+        // Fetch targets to check safety constraints
+        const targets = await prisma.user.findMany({
+            where: { id: { in: ids } },
+            include: { roles: { select: { roleKey: true } } }
+        });
+
+        for (const target of targets) {
+            const safety = checkSafetyConstraints(session, {
+                userId: target.id,
+                activeRole: target.roles[0]?.roleKey as any
+            }, 'delete');
+
+            if (!safety.allowed) {
+                return NextResponse.json({ error: 'FORBIDDEN', reason: safety.reason }, { status: 403 });
+            }
         }
 
         // Delete user roles first
@@ -217,11 +255,30 @@ export async function DELETE(request: NextRequest) {
 // PATCH bulk update users (activate/deactivate)
 export async function PATCH(request: NextRequest) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'user:update')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:update' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { ids, action, status: newStatus } = body;
 
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
             return NextResponse.json({ error: 'No user IDs provided' }, { status: 400 });
+        }
+
+        // Fetch targets to check safety constraints if updating roles or sensitive fields
+        // For simplicity in bulk update, we block any action on ADMINS by non-ADMINS
+        if (session.activeRole !== 'ADMIN') {
+            const adminCount = await prisma.userRole.count({
+                where: {
+                    userId: { in: ids },
+                    roleKey: 'ADMIN'
+                }
+            });
+            if (adminCount > 0) {
+                return NextResponse.json({ error: 'FORBIDDEN', reason: 'You do not have permission to modify Administrator accounts.' }, { status: 403 });
+            }
         }
 
         let updateData: any = {};

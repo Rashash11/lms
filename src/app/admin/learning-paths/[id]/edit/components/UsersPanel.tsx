@@ -215,16 +215,16 @@ export default function UsersPanel({ open, pathId, onClose }: UsersPanelProps) {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         p: 2,
-                        borderBottom: '1px solid #e0e0e0',
+                        borderBottom: '1px solid rgba(141, 166, 166, 0.1)',
                     }}>
-                        <Typography variant="h6">Users</Typography>
-                        <IconButton onClick={onClose}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: 'hsl(var(--foreground))' }}>Users</Typography>
+                        <IconButton onClick={onClose} sx={{ color: 'hsl(var(--muted-foreground))' }}>
                             <CloseIcon />
                         </IconButton>
                     </Box>
 
                     {/* Search and Actions */}
-                    <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
+                    <Box sx={{ p: 2, borderBottom: '1px solid rgba(141, 166, 166, 0.1)' }}>
                         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                             <TextField
                                 placeholder="Search"
@@ -234,13 +234,13 @@ export default function UsersPanel({ open, pathId, onClose }: UsersPanelProps) {
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
-                                            <SearchIcon sx={{ color: 'text.secondary' }} />
+                                            <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
                                         </InputAdornment>
                                     ),
                                 }}
                                 sx={{ flex: 1 }}
                             />
-                            <IconButton size="small" sx={{ border: '1px solid #e0e0e0' }}>
+                            <IconButton size="small" sx={{ border: '1px solid rgba(141, 166, 166, 0.2)', color: 'hsl(var(--foreground))' }}>
                                 <FilterListIcon />
                             </IconButton>
                         </Box>
@@ -249,9 +249,10 @@ export default function UsersPanel({ open, pathId, onClose }: UsersPanelProps) {
                             startIcon={<PersonAddIcon />}
                             onClick={() => setShowEnrollDialog(true)}
                             sx={{
-                                color: '#1976d2',
+                                color: 'hsl(var(--primary))',
                                 textTransform: 'none',
-                                '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.04)' },
+                                fontWeight: 600,
+                                '&:hover': { bgcolor: 'rgba(26, 84, 85, 0.08)' },
                             }}
                         >
                             Enroll to learning path

@@ -403,11 +403,9 @@ export default function InstructorDashboard() {
                 </Grid>
             </Grid>
 
-            {/* Powered by */}
+            {/* Footer */}
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6, pb: 4 }}>
-                <Typography variant="caption" color="#6B778C">
-                    Powered by <strong>TalentLMS</strong>
-                </Typography>
+                {/* Removed Powered by TalentLMS */}
             </Box>
         </Box>
     );

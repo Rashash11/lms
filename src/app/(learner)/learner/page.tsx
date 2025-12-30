@@ -131,16 +131,15 @@ export default function LearnerDashboard() {
 
                 {enrollments.filter(e => e.status !== 'COMPLETED').length === 0 && (
                     <Grid item xs={12}>
-                        <Box sx={{ py: 8, textAlign: 'center', bgcolor: '#f7fafc', borderRadius: 4, border: '2px dashed #edf2f7' }}>
-                            <SchoolIcon sx={{ fontSize: 48, color: '#a0aec0', mb: 2 }} />
-                            <Typography variant="h6" color="#4a5568">No active courses</Typography>
-                            <Typography variant="body2" color="#718096" sx={{ mb: 3 }}>
+                        <Box sx={{ py: 8, textAlign: 'center', bgcolor: 'background.paper', borderRadius: 4, border: '1px dashed', borderColor: 'divider' }}>
+                            <SchoolIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
+                            <Typography variant="h6" color="text.primary">No active courses</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                                 Explore our course catalog to start your learning journey.
                             </Typography>
                             <Button
                                 variant="contained"
                                 onClick={() => router.push('/learner/catalog')}
-                                sx={{ bgcolor: '#3182ce' }}
                             >
                                 Browse Catalog
                             </Button>
@@ -158,10 +157,10 @@ export default function LearnerDashboard() {
                                 <Typography variant="h6">Recent Achievements</Typography>
                                 <Chip label="Coming Soon" size="small" />
                             </Box>
-                            <Box sx={{ textAlign: 'center', py: 4, bgcolor: 'grey.100', borderRadius: 2 }}>
-                                <EmojiEventsIcon sx={{ fontSize: 48, color: 'grey.400' }} />
+                            <Box sx={{ textAlign: 'center', py: 4, bgcolor: 'background.default', borderRadius: 2 }}>
+                                <EmojiEventsIcon sx={{ fontSize: 48, color: 'text.disabled' }} />
                                 <Typography color="text.secondary" sx={{ mt: 1 }}>Gamification feature is disabled</Typography>
-                                <Typography variant="caption" color="text.secondary">Contact your admin to enable</Typography>
+                                <Typography variant="caption" color="text.disabled">Contact your admin to enable</Typography>
                             </Box>
                         </CardContent>
                     </Card>

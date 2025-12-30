@@ -98,7 +98,7 @@ export default function TimelineTab() {
     return (
         <Box>
             {/* Filter Bar */}
-            <Paper sx={{ p: 2, mb: 3 }}>
+            <Paper className="glass-card" sx={{ p: 2, mb: 3, bgcolor: 'rgba(13, 20, 20, 0.4)', border: '1px solid rgba(141, 166, 166, 0.1)' }}>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                     <Box sx={{ flex: '1 1 150px' }}>
                         <TextField
@@ -163,7 +163,16 @@ export default function TimelineTab() {
                         </FormControl>
                     </Box>
                     <Box sx={{ flex: '0 0 auto' }}>
-                        <Button onClick={handleReset} fullWidth>
+                        <Button
+                            onClick={handleReset}
+                            fullWidth
+                            sx={{
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                color: 'hsl(var(--muted-foreground))',
+                                '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'rgba(141, 166, 166, 0.05)' }
+                            }}
+                        >
                             Reset
                         </Button>
                     </Box>
@@ -171,7 +180,7 @@ export default function TimelineTab() {
             </Paper>
 
             {/* Events List */}
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'hsl(var(--foreground))', mb: 2 }}>
                 Events
             </Typography>
 
@@ -180,28 +189,31 @@ export default function TimelineTab() {
                     <CircularProgress />
                 </Box>
             ) : (
-                <List>
+                <List sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {events.map((event) => (
                         <ListItem
                             key={event.id}
+                            className="glass-card"
                             sx={{
-                                bgcolor: 'background.paper',
-                                mb: 1,
-                                borderRadius: 1,
-                                border: 1,
-                                borderColor: 'divider',
+                                bgcolor: 'rgba(13, 20, 20, 0.4)',
+                                borderRadius: 2,
+                                border: '1px solid rgba(141, 166, 166, 0.1)',
+                                transition: 'transform 0.2s',
+                                '&:hover': { transform: 'translateX(4px)', bgcolor: 'rgba(13, 20, 20, 0.6)' }
                             }}
                         >
-                            <ListItemIcon>{getEventIcon(event.eventType)}</ListItemIcon>
+                            <ListItemIcon sx={{ minWidth: 40 }}>{getEventIcon(event.eventType)}</ListItemIcon>
                             <ListItemText
                                 primary={event.description}
                                 secondary={event.relativeTime}
+                                primaryTypographyProps={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}
+                                secondaryTypographyProps={{ color: 'hsl(var(--muted-foreground))' }}
                             />
                         </ListItem>
                     ))}
                     {events.length === 0 && (
                         <Box sx={{ textAlign: 'center', py: 4 }}>
-                            <Typography variant="body1" color="text.secondary">
+                            <Typography variant="body1" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                                 No events found
                             </Typography>
                         </Box>

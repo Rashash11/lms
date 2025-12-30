@@ -622,17 +622,19 @@ function CourseEditorContent() {
     if (!course) return <Box sx={{ p: 4 }}><Typography>Course not found</Typography></Box>;
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#f7f9fc', overflow: 'hidden' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
             {/* Top Navigation Bar */}
             <Box sx={{
                 height: 50,
-                bgcolor: '#002244', // Darker TalentLMS Navy
+                bgcolor: 'rgba(13, 20, 20, 0.8)', // Glassy dark navy
+                backdropFilter: 'blur(10px)',
                 display: 'flex',
                 alignItems: 'center',
                 px: 2,
                 justifyContent: 'space-between',
-                color: '#fff',
-                zIndex: 1200
+                color: 'hsl(var(--foreground))',
+                zIndex: 1200,
+                borderBottom: '1px solid rgba(141, 166, 166, 0.2)'
             }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <IconButton size="small" sx={{ color: '#fff' }}>
@@ -652,15 +654,15 @@ function CourseEditorContent() {
                             }
                         }}
                         sx={{
-                            bgcolor: '#fff',
-                            color: '#00264d',
+                            bgcolor: 'hsl(var(--primary))',
+                            color: 'hsl(var(--primary-foreground))',
                             textTransform: 'none',
                             fontWeight: 700,
                             borderRadius: '4px',
                             px: 2,
                             height: 32,
                             fontSize: '0.875rem',
-                            '&:hover': { bgcolor: '#f7fafc' }
+                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
                         }}
                     >
                         {editingUnitId ? (
@@ -686,13 +688,13 @@ function CourseEditorContent() {
 
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 {/* Sidebar Navigation - Full Height */}
-                <Box sx={{ width: 300, display: 'flex', flexDirection: 'column', borderRight: '1px solid #e2e8f0', bgcolor: '#fff' }}>
+                <Box sx={{ width: 300, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(141, 166, 166, 0.1)', bgcolor: 'rgba(13, 20, 20, 0.4)' }}>
                     <Box sx={{ px: 2, pt: 2, pb: 0 }}>
                         <Button
                             startIcon={<ArrowBackIcon sx={{ fontSize: '1rem' }} />}
                             sx={{
                                 textTransform: 'none',
-                                color: '#3182ce',
+                                color: 'hsl(var(--primary))',
                                 p: 0,
                                 minWidth: 0,
                                 fontWeight: 600,
@@ -761,19 +763,19 @@ function CourseEditorContent() {
                                 hidePublishButton={true}
                             />
 
-                            <Box sx={{ flex: 1, overflowY: 'auto', px: 4, pt: 2, bgcolor: '#f7f9fc', pb: 4 }}>
+                            <Box sx={{ flex: 1, overflowY: 'auto', px: 4, pt: 2, pb: 4 }}>
                                 <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
-                                    <Paper sx={{
+                                    <Paper className="glass-card" sx={{
                                         display: 'flex',
                                         flexDirection: 'column',
                                         borderRadius: '4px',
-                                        border: '1px solid #e2e8f0',
+                                        border: '1px solid rgba(141, 166, 166, 0.1)',
                                         boxShadow: 'none',
-                                        bgcolor: '#fff',
+                                        bgcolor: 'rgba(13, 20, 20, 0.4)',
                                         overflow: 'hidden'
                                     }}>
                                         {/* Internal Tabs Header */}
-                                        <Box sx={{ borderBottom: '1px solid #e2e8f0', px: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 48 }}>
+                                        <Box sx={{ borderBottom: '1px solid rgba(141, 166, 166, 0.1)', px: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 48 }}>
                                             <Tabs
                                                 value={currentTab}
                                                 onChange={(e, v) => setCurrentTab(v)}
@@ -785,10 +787,10 @@ function CourseEditorContent() {
                                                         fontSize: '0.85rem',
                                                         minWidth: 80,
                                                         height: 48,
-                                                        color: '#718096',
-                                                        '&.Mui-selected': { color: '#004282' }
+                                                        color: 'hsl(var(--muted-foreground))',
+                                                        '&.Mui-selected': { color: 'hsl(var(--primary))' }
                                                     },
-                                                    '& .MuiTabs-indicator': { bgcolor: '#004282', height: 3 }
+                                                    '& .MuiTabs-indicator': { bgcolor: 'hsl(var(--primary))', height: 3 }
                                                 }}
                                             >
                                                 <Tab label="Content" />

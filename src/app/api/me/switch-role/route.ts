@@ -9,7 +9,7 @@ import {
 import { z } from "zod";
 
 const switchRoleSchema = z.object({
-    role: z.enum(["ADMIN", "INSTRUCTOR", "LEARNER"]),
+    role: z.enum(["ADMIN", "INSTRUCTOR", "LEARNER", "SUPER_INSTRUCTOR"]),
 });
 
 export async function POST(request: NextRequest) {
@@ -34,6 +34,8 @@ export async function POST(request: NextRequest) {
             let redirectUrl = "/learner";
             if (role === "ADMIN") {
                 redirectUrl = "/admin";
+            } else if (role === "SUPER_INSTRUCTOR") {
+                redirectUrl = "/super-instructor";
             } else if (role === "INSTRUCTOR") {
                 redirectUrl = "/instructor";
             }
@@ -96,6 +98,8 @@ export async function POST(request: NextRequest) {
         let redirectUrl = "/learner";
         if (role === "ADMIN") {
             redirectUrl = "/admin";
+        } else if (role === "SUPER_INSTRUCTOR") {
+            redirectUrl = "/super-instructor";
         } else if (role === "INSTRUCTOR") {
             redirectUrl = "/instructor";
         }

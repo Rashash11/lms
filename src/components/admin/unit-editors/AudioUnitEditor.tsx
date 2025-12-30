@@ -59,15 +59,45 @@ export default function AudioUnitEditor({
     };
 
     const handleFileUpload = async (file: File) => {
-        const objectUrl = URL.createObjectURL(file);
-        onConfigChange({
-            ...config,
-            audioUrl: objectUrl,
-            fileName: file.name,
-            fileSize: file.size,
-            source: 'upload',
-            content: { type: 'upload', url: objectUrl, fileName: file.name }
-        });
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('courseId', courseId);
+            formData.append('unitId', unitId);
+            formData.append('kind', 'audio');
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!res.ok) throw new Error('Upload failed');
+
+            const data = await res.json();
+            const { url, name, size } = data.file;
+
+            onConfigChange({
+                ...config,
+                audioUrl: url,
+                fileName: name,
+                fileSize: size,
+                source: 'upload',
+                content: { type: 'upload', url: url, fileName: name }
+            });
+        } catch (error: any) {
+            console.error('Upload error:', error);
+            alert(`Upload failed: ${error.message}`);
+            // Fallback to blob if upload fails (though persistence will fail)
+            const objectUrl = URL.createObjectURL(file);
+            onConfigChange({
+                ...config,
+                audioUrl: objectUrl,
+                fileName: file.name,
+                fileSize: file.size,
+                source: 'upload',
+                content: { type: 'upload', url: objectUrl, fileName: file.name }
+            });
+        }
     };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -316,13 +346,8 @@ export default function AudioUnitEditor({
                 open={recorderOpen}
                 onClose={() => setRecorderOpen(false)}
                 onRecordingComplete={async (blob: Blob) => {
-                    const url = URL.createObjectURL(blob);
-                    onConfigChange({
-                        ...config,
-                        audioUrl: url,
-                        source: 'record',
-                        content: { type: 'record', url }
-                    });
+                    const file = new File([blob], `recorded-audio-${Date.now()}.webm`, { type: 'audio/webm' });
+                    await handleFileUpload(file);
                     setRecorderOpen(false);
                 }}
                 mode="audio"

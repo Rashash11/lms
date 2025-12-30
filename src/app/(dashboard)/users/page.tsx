@@ -128,9 +128,18 @@ export default function UsersPage() {
       </Box>
 
       {/* Users Table */}
-      <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e0e0e0' }}>
+      <TableContainer
+        component={Paper}
+        className="glass-card"
+        elevation={0}
+        sx={{
+          boxShadow: 'none',
+          border: '1px solid rgba(141, 166, 166, 0.1)',
+          background: 'rgba(13, 20, 20, 0.4)'
+        }}
+      >
         <Table>
-          <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+          <TableHead>
             <TableRow>
               <TableCell padding="checkbox">
                 <Checkbox

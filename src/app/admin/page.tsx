@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-    Box, Typography, Paper, Select, MenuItem, FormControl,
-    List, ListItem, ListItemIcon, ListItemText, CircularProgress, Link, Button,
+    Box, Typography, CircularProgress, Link, Button, IconButton,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
@@ -35,10 +34,10 @@ interface TimelineEvent {
     timestamp: string;
 }
 
-// Donut Chart Component
+// Donut Chart Component updated with NCOSH theme
 function DonutChart({ data, size = 180 }: { data: { label: string; value: number; color: string }[]; size?: number }) {
     const total = data.reduce((sum, item) => sum + item.value, 0);
-    const strokeWidth = 24;
+    const strokeWidth = 20;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
 
@@ -52,7 +51,7 @@ function DonutChart({ data, size = 180 }: { data: { label: string; value: number
                     cy={size / 2}
                     r={radius}
                     fill="none"
-                    stroke="#e0e0e0"
+                    stroke="hsl(var(--muted))"
                     strokeWidth={strokeWidth}
                 />
             </svg>
@@ -79,7 +78,7 @@ function DonutChart({ data, size = 180 }: { data: { label: string; value: number
                         strokeDasharray={strokeDasharray}
                         strokeDashoffset={strokeDashoffset}
                         transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                        style={{ transition: 'stroke-dasharray 0.5s ease' }}
+                        style={{ transition: 'stroke-dasharray 0.5s ease', strokeLinecap: 'round' }}
                     />
                 );
             })}
@@ -101,11 +100,11 @@ export default function AdminDashboard() {
     const [trainingTime, setTrainingTime] = useState('0h 0m');
     const [currentUser, setCurrentUser] = useState<{ firstName: string; username: string } | null>(null);
 
-    // User breakdown data - matching TalentLMS colors
+    // User breakdown data - NCOSH theme colors
     const userBreakdown = [
-        { label: 'Admins', value: 1, color: '#1976d2' },
-        { label: 'Instructors', value: 0, color: '#42a5f5' },
-        { label: 'Learners', value: Math.max(0, stats.totalUsers - 1), color: '#0d47a1' },
+        { label: 'Admins', value: 1, color: 'hsl(var(--primary))' },
+        { label: 'Instructors', value: 0, color: 'hsl(var(--secondary))' },
+        { label: 'Learners', value: Math.max(0, stats.totalUsers - 1), color: 'hsl(var(--tertiary, 200 80% 50%))' },
     ];
 
     useEffect(() => {
@@ -165,11 +164,11 @@ export default function AdminDashboard() {
             case 'signin': return 'You signed in';
             case 'course_created':
                 return (
-                    <>You created the course <Link sx={{ color: '#1976d2' }}>{event.details?.title || ''}</Link></>
+                    <>You created the course <Link sx={{ color: 'hsl(var(--primary))' }}>{event.details?.title || ''}</Link></>
                 );
             case 'course_enrolled':
                 return (
-                    <>You added yourself to the course <Link sx={{ color: '#1976d2' }}>{event.details?.title || ''}</Link></>
+                    <>You added yourself to the course <Link sx={{ color: 'hsl(var(--primary))' }}>{event.details?.title || ''}</Link></>
                 );
             default: return event.eventType;
         }
@@ -190,277 +189,203 @@ export default function AdminDashboard() {
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-                <CircularProgress />
+                <CircularProgress sx={{ color: 'hsl(var(--primary))' }} />
             </Box>
         );
     }
 
     return (
-        <Box>
-            {/* Header with Welcome message and Customize button */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#1a2b4a', fontWeight: 500 }}>
-                    <span style={{ fontSize: 24 }}>👋</span> Welcome, {currentUser?.firstName || currentUser?.username || 'User'}!
+        <Box className="animate-fade-in" sx={{ p: { xs: 2, md: 4 } }}>
+            {/* Hero Section */}
+            <Box className="hero-glass-card" sx={{ mb: 4, textAlign: 'center' }}>
+                <Typography variant="h4" className="gradient-text" sx={{ fontWeight: 800, mb: 1 }}>
+                    Welcome Back, {currentUser?.firstName || currentUser?.username || 'Admin'}
                 </Typography>
-                <Button
-                    variant="outlined"
-                    endIcon={<KeyboardArrowDownIcon />}
-                    sx={{
-                        borderColor: '#ddd',
-                        color: '#1a2b4a',
-                        textTransform: 'none',
-                        fontWeight: 400,
-                        '&:hover': { borderColor: '#bbb', bgcolor: 'transparent' }
-                    }}
-                >
-                    Customize
-                </Button>
+                <Typography variant="body1" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                    Here's what's happening in your portal today.
+                </Typography>
             </Box>
 
-            {/* Row 1: Portal Activity & Quick Actions */}
-            <Box sx={{ display: 'flex', gap: 2.5, mb: 2.5, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
-                {/* Portal Activity Chart */}
-                <Paper sx={{ p: 2.5, flex: { xs: '1 1 100%', md: '1 1 60%' }, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e8e8e8', borderRadius: 1.5 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-                        <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#1a1a1a', fontSize: '15px' }}>Portal activity</Typography>
-                        <FormControl size="small" sx={{ minWidth: 90 }}>
-                            <Select
-                                defaultValue="week"
-                                variant="outlined"
-                                sx={{
-                                    fontSize: 14,
-                                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#ddd' },
-                                }}
-                            >
-                                <MenuItem value="week">Week</MenuItem>
-                                <MenuItem value="month">Month</MenuItem>
-                                <MenuItem value="year">Year</MenuItem>
-                            </Select>
-                        </FormControl>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '8fr 4fr' }, gap: 3, mb: 3 }}>
+                {/* Column 1: Portal Activity */}
+                <Box className="glass-card" sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>Portal activity</Typography>
+                        <Button
+                            className="btn btn-outline"
+                            endIcon={<KeyboardArrowDownIcon />}
+                            sx={{ textTransform: 'none' }}
+                        >
+                            This Week
+                        </Button>
                     </Box>
 
-                    {/* Chart Area */}
-                    <Box sx={{ height: 180, position: 'relative', pl: 3 }}>
-                        {[1, 0.8, 0.6, 0.4, 0.2, 0].map((val, i) => (
-                            <Box key={val} sx={{
-                                position: 'absolute', left: 0,
-                                top: `${i * 20}%`,
-                                transform: 'translateY(-50%)',
-                            }}>
-                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>{val}</Typography>
-                            </Box>
-                        ))}
-
-                        {[0, 20, 40, 60, 80, 100].map((pos) => (
-                            <Box key={pos} sx={{
-                                position: 'absolute', left: 24, right: 0,
-                                top: `${pos}%`,
-                                borderTop: '1px dashed #e0e0e0',
+                    {/* Simple Chart Visualization */}
+                    <Box sx={{ height: 200, display: 'flex', alignItems: 'flex-end', gap: 2, px: 2, pb: 2, borderBottom: '1px solid hsl(var(--border))' }}>
+                        {[40, 70, 45, 90, 65, 85, 30].map((height, i) => (
+                            <Box key={i} sx={{
+                                flex: 1,
+                                height: `${height}%`,
+                                background: i === 3 ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.3)',
+                                borderRadius: '4px 4px 0 0',
+                                transition: 'all 0.3s ease',
+                                '&:hover': { background: 'hsl(var(--primary))', transform: 'scaleY(1.05)' }
                             }} />
                         ))}
-
-                        {/* Bar for Thursday */}
-                        <Box sx={{
-                            position: 'absolute',
-                            right: '8%',
-                            bottom: 0,
-                            width: 20,
-                            height: '100%',
-                            bgcolor: '#1976d2',
-                            borderRadius: '3px 3px 0 0',
-                        }} />
                     </Box>
-
-                    {/* X-axis labels */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', pl: 3, mt: 1, pr: 2 }}>
-                        <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>Friday</Typography>
-                            <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: 11 }}>December 12</Typography>
-                        </Box>
-                        <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>Monday</Typography>
-                            <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: 11 }}>December 15</Typography>
-                        </Box>
-                        <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>Thursday</Typography>
-                            <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: 11 }}>December 18</Typography>
-                        </Box>
-                    </Box>
-
-                    {/* Legend */}
-                    <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <CircleIcon sx={{ fontSize: 8, color: '#1976d2' }} />
-                            <Typography variant="caption" sx={{ fontSize: 12, color: '#1976d2' }}>Logins</Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <CircleIcon sx={{ fontSize: 8, color: '#4caf50' }} />
-                            <Typography variant="caption" sx={{ fontSize: 12, color: '#4caf50' }}>Course completions</Typography>
-                        </Box>
-                    </Box>
-                </Paper>
-
-                {/* Quick Actions */}
-                <Paper sx={{ p: 2.5, flex: { xs: '1 1 100%', md: '1 1 40%' }, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e8e8e8', borderRadius: 1.5 }}>
-                    <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, color: '#1a1a1a', fontSize: '15px' }}>Quick actions</Typography>
-                    <List disablePadding>
-                        {quickActions.map((action, i) => (
-                            <ListItem
-                                key={i}
-                                disablePadding
-                                sx={{
-                                    py: 1,
-                                    cursor: 'pointer',
-                                    '&:hover': { bgcolor: '#f5f7fa' },
-                                    borderRadius: 1,
-                                }}
-                                onClick={() => router.push(action.path)}
-                            >
-                                <ListItemIcon sx={{ minWidth: 40 }}>
-                                    {React.cloneElement(action.icon, { sx: { color: '#5c6b7a', fontSize: 20 } })}
-                                </ListItemIcon>
-                                <ListItemText
-                                    primary={action.label}
-                                    primaryTypographyProps={{
-                                        color: '#1976d2',
-                                        fontWeight: 400,
-                                        fontSize: 14,
-                                    }}
-                                />
-                            </ListItem>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, px: 2 }}>
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                            <Typography key={day} variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>{day}</Typography>
                         ))}
-                    </List>
-                </Paper>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 3, mt: 4 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CircleIcon sx={{ fontSize: 10, color: 'hsl(var(--primary))' }} />
+                            <Typography variant="caption">Logins</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CircleIcon sx={{ fontSize: 10, color: 'hsl(var(--secondary))' }} />
+                            <Typography variant="caption">Course completions</Typography>
+                        </Box>
+                    </Box>
+                </Box>
+
+                {/* Column 2: Quick Actions */}
+                <Box className="glass-card" sx={{ p: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>Quick actions</Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {quickActions.map((action, i) => (
+                            <Box
+                                key={i}
+                                onClick={() => router.push(action.path)}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                    p: 1.5,
+                                    borderRadius: 1,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    '&:hover': { bgcolor: 'hsl(var(--accent))', transform: 'translateX(4px)' }
+                                }}
+                            >
+                                <Box sx={{ color: 'hsl(var(--primary))', display: 'flex' }}>
+                                    {action.icon}
+                                </Box>
+                                <Typography variant="body2" sx={{ fontWeight: 500 }}>{action.label}</Typography>
+                                <ChevronRightIcon sx={{ ml: 'auto', fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
             </Box>
 
-            {/* Row 2: Overview & Timeline */}
-            <Box sx={{ display: 'flex', gap: 2.5, mb: 2.5, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 3 }}>
                 {/* Overview */}
-                <Paper sx={{ p: 2.5, flex: { xs: '1 1 100%', md: '1 1 50%' }, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e8e8e8', borderRadius: 1.5 }}>
-                    <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, color: '#1a1a1a', fontSize: '15px' }}>Overview</Typography>
-                    <List disablePadding>
+                <Box className="glass-card" sx={{ p: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>Overview</Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {overviewStats.map((stat, i) => (
-                            <ListItem
-                                key={i}
-                                disablePadding
-                                sx={{ py: 1.5, borderBottom: i < overviewStats.length - 1 ? '1px solid #f0f0f0' : 'none' }}
-                            >
-                                <ListItemIcon sx={{ minWidth: 40 }}>
-                                    {React.cloneElement(stat.icon, { sx: { color: '#5c6b7a', fontSize: 20 } })}
-                                </ListItemIcon>
-                                <ListItemText
-                                    primary={stat.label}
-                                    primaryTypographyProps={{ fontSize: 14, color: '#1976d2' }}
-                                />
-                                <Typography variant="body1" fontWeight={400} sx={{ color: '#1a2b4a' }}>{stat.value}</Typography>
-                            </ListItem>
+                            <Box key={i} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1, borderBottom: i < overviewStats.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Box sx={{ color: 'hsl(var(--primary) / 0.7)' }}>{stat.icon}</Box>
+                                    <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>{stat.label}</Typography>
+                                </Box>
+                                <Typography variant="h6" sx={{ fontWeight: 700, color: 'hsl(var(--primary))' }}>{stat.value}</Typography>
+                            </Box>
                         ))}
-                    </List>
-                </Paper>
+                    </Box>
+                </Box>
 
                 {/* Timeline */}
-                <Paper sx={{ p: 2.5, flex: { xs: '1 1 100%', md: '1 1 50%' }, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e8e8e8', borderRadius: 1.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, cursor: 'pointer' }}>
-                        <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#1a1a1a', fontSize: '15px' }}>Timeline</Typography>
-                        <ChevronRightIcon sx={{ ml: 0.5, color: '#1a2b4a', fontSize: 20 }} />
+                <Box className="glass-card" sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>Timeline</Typography>
+                        <IconButton size="small" sx={{ color: 'hsl(var(--primary))' }}>
+                            <ChevronRightIcon />
+                        </IconButton>
                     </Box>
-                    <List disablePadding sx={{ maxHeight: 220, overflow: 'auto' }}>
+                    <Box sx={{ maxHeight: 250, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {timeline.length === 0 ? (
-                            <ListItem disablePadding sx={{ py: 2 }}>
-                                <Typography variant="body2" color="text.secondary">No recent activity</Typography>
-                            </ListItem>
+                            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', textAlign: 'center', py: 4 }}>No recent activity</Typography>
                         ) : (
                             timeline.map((event) => (
-                                <ListItem
-                                    key={event.id}
-                                    disablePadding
-                                    alignItems="flex-start"
-                                    sx={{ py: 1 }}
-                                >
-                                    <ListItemIcon sx={{ minWidth: 20, mt: 0.75 }}>
-                                        <CircleIcon sx={{ fontSize: 8, color: event.eventType === 'course_created' ? '#4caf50' : '#1976d2' }} />
-                                    </ListItemIcon>
-                                    <ListItemText
-                                        primary={
-                                            <Typography component="span" fontSize={13} color="#333">
-                                                {getEventText(event)}
-                                            </Typography>
-                                        }
-                                    />
-                                    <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap', fontSize: 11, ml: 1 }}>
-                                        {formatTime(event.timestamp)}
-                                    </Typography>
-                                </ListItem>
+                                <Box key={event.id} sx={{ display: 'flex', gap: 2, p: 1 }}>
+                                    <Box sx={{ mt: 0.5 }}>
+                                        <CircleIcon sx={{ fontSize: 10, color: event.eventType === 'course_created' ? 'hsl(var(--secondary))' : 'hsl(var(--primary))' }} />
+                                    </Box>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="body2" sx={{ fontSize: 13 }}>{getEventText(event)}</Typography>
+                                        <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>{formatTime(event.timestamp)}</Typography>
+                                    </Box>
+                                </Box>
                             ))
                         )}
-                    </List>
-                </Paper>
+                    </Box>
+                </Box>
             </Box>
 
-            {/* Row 3: Users Donut Chart & Courses Progress Status */}
-            <Box sx={{ display: 'flex', gap: 2.5, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
-                {/* Users Donut Chart */}
-                <Paper sx={{ p: 2.5, flex: { xs: '1 1 100%', md: '1 1 50%' }, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e8e8e8', borderRadius: 1.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => router.push('/admin/users')}>
-                            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#1a1a1a', fontSize: '15px' }}>Users</Typography>
-                            <ChevronRightIcon sx={{ ml: 0.5, color: '#1a2b4a', fontSize: 20 }} />
-                        </Box>
-                        <Typography variant="subtitle1" fontWeight={400} sx={{ color: '#1a2b4a' }}>{stats.totalUsers}</Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                {/* Users Distribution */}
+                <Box className="glass-card" sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>Users Distribution</Typography>
+                        <Typography variant="h5" sx={{ fontWeight: 700 }}>{stats.totalUsers}</Typography>
                     </Box>
-
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
-                        <DonutChart data={userBreakdown} size={180} />
-
-                        {/* Legend */}
-                        <Box sx={{ display: 'flex', gap: 3, mt: 3 }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', gap: 4, py: 2 }}>
+                        <Box sx={{ position: 'relative' }}>
+                            <DonutChart data={userBreakdown} size={160} />
+                            <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>{stats.totalUsers}</Typography>
+                                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>Total</Typography>
+                            </Box>
+                        </Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1 }}>
                             {userBreakdown.map((item, i) => (
-                                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                     <CircleIcon sx={{ fontSize: 10, color: item.color }} />
-                                    <Typography variant="caption" sx={{ fontSize: 12, color: '#333' }}>{item.label}</Typography>
+                                    <Typography variant="body2" sx={{ flex: 1 }}>{item.label}</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{item.value}</Typography>
                                 </Box>
                             ))}
                         </Box>
                     </Box>
-                </Paper>
+                </Box>
 
-                {/* Courses Progress Status */}
-                <Paper sx={{ p: 2.5, flex: { xs: '1 1 100%', md: '1 1 50%' }, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e8e8e8', borderRadius: 1.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', mb: 2 }} onClick={() => router.push('/admin/courses')}>
-                        <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#1a2b4a' }}>Courses&apos; progress status</Typography>
-                        <ChevronRightIcon sx={{ ml: 0.5, color: '#1a2b4a', fontSize: 20 }} />
+                {/* Course Progress */}
+                <Box className="glass-card" sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>Courses Progress</Typography>
+                        <IconButton size="small" onClick={() => router.push('/admin/courses')} sx={{ color: 'hsl(var(--primary))' }}>
+                            <ChevronRightIcon />
+                        </IconButton>
                     </Box>
-
-                    <Box sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        py: 5,
-                    }}>
-                        <DescriptionOutlinedIcon sx={{ fontSize: 48, color: '#1976d2', mb: 2 }} />
-                        <Typography variant="body1" fontWeight={500} sx={{ color: '#1a2b4a', mb: 1 }}>
-                            No stats to show
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Create your first course now
-                        </Typography>
-                        <Link
-                            component="button"
-                            variant="body2"
-                            onClick={() => router.push('/admin/courses')}
-                            sx={{ color: '#1976d2', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 4, textAlign: 'center' }}>
+                        <Box sx={{
+                            width: 64, height: 64, borderRadius: '50%',
+                            bgcolor: 'hsl(var(--primary) / 0.1)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            mb: 2, color: 'hsl(var(--primary))'
+                        }}>
+                            <DescriptionOutlinedIcon fontSize="large" />
+                        </Box>
+                        <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>No stats to show</Typography>
+                        <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 2 }}>Create your first course now</Typography>
+                        <Button
+                            className="btn btn-primary"
+                            onClick={() => router.push('/admin/courses/new/edit')}
                         >
-                            Go to courses
-                        </Link>
+                            Create Course
+                        </Button>
                     </Box>
-                </Paper>
+                </Box>
             </Box>
 
             {/* Footer */}
-            <Box sx={{ textAlign: 'center', mt: 4, py: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                    Powered by <Typography component="span" fontWeight={600} color="#1a2b4a">TalentLMS</Typography>
+            <Box sx={{ mt: 6, pb: 4, textAlign: 'center', opacity: 0.6 }}>
+                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                    NCOSH Health Hub &copy; {new Date().getFullYear()} • Empowering Safety Excellence
                 </Typography>
             </Box>
         </Box>

@@ -3,9 +3,6 @@ import type { NextRequest } from 'next/server'
 import { decrypt, RoleKey } from '@/lib/auth'
 
 export async function middleware(request: NextRequest) {
-    // TEMPORARY: Skip auth for development preview
-    return NextResponse.next();
-
     const { pathname } = request.nextUrl;
 
     // Define public routes (no auth required)
@@ -17,6 +14,7 @@ export async function middleware(request: NextRequest) {
         pathname === '/' ||
         pathname.startsWith('/_next') ||
         pathname.startsWith('/favicon.ico') ||
+        pathname.startsWith('/files') ||
         pathname.includes('.');
 
     // Disabled routes (Candidate, SuperAdmin - not TalentLMS)
@@ -56,19 +54,32 @@ export async function middleware(request: NextRequest) {
 
         // Role-based route protection
         const isAdminRoute = pathname.startsWith('/admin');
+        const isSuperInstructorRoute = pathname.startsWith('/super-instructor');
         const isInstructorRoute = pathname.startsWith('/instructor');
         const isLearnerRoute = pathname.startsWith('/learner');
 
-        // Admin routes - only ADMIN role
-        if (isAdminRoute && activeRole !== 'ADMIN') {
-            if (activeRole === 'INSTRUCTOR') {
+        // Super Instructor routes - only SUPER_INSTRUCTOR role
+        if (isSuperInstructorRoute && activeRole !== 'SUPER_INSTRUCTOR') {
+            if (activeRole === 'ADMIN') {
+                return NextResponse.redirect(new URL('/admin', request.url));
+            } else if (activeRole === 'INSTRUCTOR') {
                 return NextResponse.redirect(new URL('/instructor', request.url));
             }
             return NextResponse.redirect(new URL('/learner', request.url));
         }
 
-        // Instructor routes - ADMIN or INSTRUCTOR
-        if (isInstructorRoute && !['ADMIN', 'INSTRUCTOR'].includes(activeRole)) {
+        // Admin routes - only ADMIN role (not SUPER_INSTRUCTOR anymore)
+        if (isAdminRoute && activeRole !== 'ADMIN') {
+            if (activeRole === 'SUPER_INSTRUCTOR') {
+                return NextResponse.redirect(new URL('/super-instructor', request.url));
+            } else if (activeRole === 'INSTRUCTOR') {
+                return NextResponse.redirect(new URL('/instructor', request.url));
+            }
+            return NextResponse.redirect(new URL('/learner', request.url));
+        }
+
+        // Instructor routes - ADMIN, SUPER_INSTRUCTOR or INSTRUCTOR
+        if (isInstructorRoute && !['ADMIN', 'SUPER_INSTRUCTOR', 'INSTRUCTOR'].includes(activeRole)) {
             return NextResponse.redirect(new URL('/learner', request.url));
         }
 
@@ -90,6 +101,6 @@ export const config = {
          * - favicon.ico (favicon file)
          * - public files (images, etc)
          */
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp3|wav|ogg|mp4|webm|pdf)$).*)',
     ],
 }

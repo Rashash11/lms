@@ -186,7 +186,17 @@ export default function AddCourseModal({
 
                     {/* Unlock Condition */}
                     <FormControl component="fieldset">
-                        <FormLabel component="legend">Unlock Condition</FormLabel>
+                        <FormLabel
+                            component="legend"
+                            sx={{
+                                color: 'hsl(var(--foreground))',
+                                fontWeight: 600,
+                                mb: 1,
+                                '&.Mui-focused': { color: 'hsl(var(--primary))' }
+                            }}
+                        >
+                            Unlock Condition
+                        </FormLabel>
                         <RadioGroup
                             value={unlockType}
                             onChange={(e) => {
@@ -196,19 +206,19 @@ export default function AddCourseModal({
                         >
                             <FormControlLabel
                                 value="NONE"
-                                control={<Radio />}
-                                label="Available immediately"
+                                control={<Radio sx={{ color: 'rgba(141, 166, 166, 0.4)', '&.Mui-checked': { color: 'hsl(var(--primary))' } }} />}
+                                label={<Typography sx={{ fontSize: '0.9rem', color: 'hsl(var(--foreground))' }}>Available immediately</Typography>}
                             />
                             <FormControlLabel
                                 value="AFTER_COURSE"
-                                control={<Radio />}
-                                label="Available after completing another course"
+                                control={<Radio sx={{ color: 'rgba(141, 166, 166, 0.4)', '&.Mui-checked': { color: 'hsl(var(--primary))' } }} />}
+                                label={<Typography sx={{ fontSize: '0.9rem', color: 'hsl(var(--foreground))' }}>Available after completing another course</Typography>}
                                 disabled={existingCourses.length === 0}
                             />
                             <FormControlLabel
                                 value="AFTER_SCORE"
-                                control={<Radio />}
-                                label="Available after passing another course with minimum score"
+                                control={<Radio sx={{ color: 'rgba(141, 166, 166, 0.4)', '&.Mui-checked': { color: 'hsl(var(--primary))' } }} />}
+                                label={<Typography sx={{ fontSize: '0.9rem', color: 'hsl(var(--foreground))' }}>Available after passing another course with minimum score</Typography>}
                                 disabled={existingCourses.length === 0}
                             />
                         </RadioGroup>
@@ -256,14 +266,32 @@ export default function AddCourseModal({
                     )}
                 </Box>
             </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 2 }}>
-                <Button onClick={handleClose} disabled={loading}>
+            <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+                <Button
+                    onClick={handleClose}
+                    disabled={loading}
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        color: 'hsl(var(--muted-foreground))',
+                        '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'rgba(141, 166, 166, 0.05)' }
+                    }}
+                >
                     Cancel
                 </Button>
                 <Button
                     onClick={handleAdd}
                     variant="contained"
                     disabled={loading || !selectedCourseId}
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        bgcolor: 'hsl(var(--primary))',
+                        color: 'hsl(var(--primary-foreground))',
+                        borderRadius: '6px',
+                        px: 3,
+                        '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
+                    }}
                 >
                     {loading ? 'Adding...' : 'Add to learning path'}
                 </Button>

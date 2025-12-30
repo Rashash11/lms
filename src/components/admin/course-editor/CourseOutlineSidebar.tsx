@@ -127,19 +127,20 @@ export default function CourseOutlineSidebar({
 
     return (
         <Paper
+            className="glass-card"
             sx={{
                 width: 300,
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                borderRight: '1px solid #e0e0e0',
-                bgcolor: '#fff',
+                borderRight: '1px solid rgba(141, 166, 166, 0.1)',
+                background: 'rgba(13, 20, 20, 0.4)',
                 borderRadius: 0
             }}
         >
             {/* Header: Title and Top Actions Row */}
             <Box sx={{ px: 2, pt: 1, pb: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Typography variant="subtitle1" noWrap sx={{ fontWeight: 800, color: '#2d3748', fontSize: '1rem', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <Typography variant="subtitle1" noWrap sx={{ fontWeight: 800, color: 'hsl(var(--foreground))', fontSize: '1rem', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {courseTitle || 'New course'}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -148,8 +149,8 @@ export default function CourseOutlineSidebar({
                             onClick={onOpenUsers}
                             size="small"
                             sx={{
-                                color: '#718096',
-                                '&:hover': { bgcolor: '#f7fafc' }
+                                color: 'hsl(var(--muted-foreground))',
+                                '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)' }
                             }}
                         >
                             <PeopleOutlineIcon fontSize="small" />
@@ -160,8 +161,8 @@ export default function CourseOutlineSidebar({
                             onClick={() => { }}
                             size="small"
                             sx={{
-                                color: '#718096',
-                                '&:hover': { bgcolor: '#f7fafc' }
+                                color: 'hsl(var(--muted-foreground))',
+                                '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)' }
                             }}
                         >
                             <ContentCopyIcon fontSize="small" />
@@ -172,8 +173,8 @@ export default function CourseOutlineSidebar({
                             onClick={onOpenSettings}
                             size="small"
                             sx={{
-                                color: '#718096',
-                                '&:hover': { bgcolor: '#f7fafc' }
+                                color: 'hsl(var(--muted-foreground))',
+                                '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)' }
                             }}
                         >
                             <SettingsIcon fontSize="small" />
@@ -183,7 +184,7 @@ export default function CourseOutlineSidebar({
             </Box>
 
             {/* Header: Add Button Row */}
-            <Box sx={{ px: 2, pb: 2, borderBottom: '1px solid #e2e8f0' }}>
+            <Box sx={{ px: 2, pb: 2, borderBottom: '1px solid rgba(141, 166, 166, 0.1)' }}>
                 <Button
                     variant="contained"
                     startIcon={<AddIcon />}
@@ -191,11 +192,12 @@ export default function CourseOutlineSidebar({
                     fullWidth
                     sx={{
                         textTransform: 'none',
-                        bgcolor: '#004282',
+                        bgcolor: 'hsl(var(--primary))',
+                        color: 'hsl(var(--primary-foreground))',
                         fontWeight: 700,
                         boxShadow: 'none',
                         fontSize: '0.875rem',
-                        '&:hover': { bgcolor: '#003366', boxShadow: 'none' }
+                        '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' }
                     }}
                 >
                     Add
@@ -211,13 +213,13 @@ export default function CourseOutlineSidebar({
                             disablePadding
                             key={unit.id}
                             secondaryAction={
-                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, unit.id)}>
+                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, unit.id)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
                                     <MoreVertIcon fontSize="small" />
                                 </IconButton>
                             }
                             sx={{
-                                borderBottom: '1px solid #f0f4f8',
-                                '&:hover': { bgcolor: '#f7fafc' }
+                                borderBottom: '1px solid rgba(141, 166, 166, 0.05)',
+                                '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.05)' }
                             }}
                         >
                             <ListItemButton
@@ -227,10 +229,10 @@ export default function CourseOutlineSidebar({
                                     py: 1.5,
                                     pl: 2,
                                     '&.Mui-selected': {
-                                        bgcolor: '#fff',
-                                        '& .MuiListItemText-primary': { color: '#004282', fontWeight: 700 },
-                                        '& .MuiListItemIcon-root': { color: '#004282' },
-                                        '&:hover': { bgcolor: '#fafafa' }
+                                        bgcolor: 'rgba(141, 166, 166, 0.1)',
+                                        '& .MuiListItemText-primary': { color: 'hsl(var(--primary))', fontWeight: 700 },
+                                        '& .MuiListItemIcon-root': { color: 'hsl(var(--primary))' },
+                                        '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.15)' }
                                     }
                                 }}
                             >
@@ -254,18 +256,18 @@ export default function CourseOutlineSidebar({
                             <React.Fragment key={section.id}>
                                 <ListItem
                                     sx={{
-                                        bgcolor: '#f5f5f5',
+                                        bgcolor: 'rgba(141, 166, 166, 0.05)',
                                         py: 1,
-                                        borderTop: '1px solid #e0e0e0',
-                                        borderBottom: '1px solid #e0e0e0'
+                                        borderTop: '1px solid rgba(141, 166, 166, 0.1)',
+                                        borderBottom: '1px solid rgba(141, 166, 166, 0.1)'
                                     }}
                                 >
-                                    <IconButton size="small" onClick={() => handleExpandClick(section.id)} sx={{ mr: 1, p: 0.5 }}>
+                                    <IconButton size="small" onClick={() => handleExpandClick(section.id)} sx={{ mr: 1, p: 0.5, color: 'hsl(var(--foreground))' }}>
                                         {isExpanded ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
                                     </IconButton>
                                     <ListItemText
                                         primary={section.title}
-                                        primaryTypographyProps={{ fontWeight: 700, fontSize: '0.9rem' }}
+                                        primaryTypographyProps={{ fontWeight: 700, fontSize: '0.9rem', color: 'hsl(var(--foreground))' }}
                                     />
                                 </ListItem>
                                 <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -275,13 +277,13 @@ export default function CourseOutlineSidebar({
                                                 disablePadding
                                                 key={unit.id}
                                                 secondaryAction={
-                                                    <IconButton size="small" onClick={(e) => handleMenuOpen(e, unit.id)}>
+                                                    <IconButton size="small" onClick={(e) => handleMenuOpen(e, unit.id)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
                                                         <MoreVertIcon fontSize="small" />
                                                     </IconButton>
                                                 }
                                                 sx={{
-                                                    borderBottom: '1px solid #f0f4f8',
-                                                    '&:hover': { bgcolor: '#f7fafc' }
+                                                    borderBottom: '1px solid rgba(141, 166, 166, 0.05)',
+                                                    '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.05)' }
                                                 }}
                                             >
                                                 <ListItemButton
@@ -291,10 +293,10 @@ export default function CourseOutlineSidebar({
                                                         py: 1.5,
                                                         pl: 4,
                                                         '&.Mui-selected': {
-                                                            bgcolor: '#fff',
-                                                            '& .MuiListItemText-primary': { color: '#004282', fontWeight: 700 },
-                                                            '& .MuiListItemIcon-root': { color: '#004282' },
-                                                            '&:hover': { bgcolor: '#fafafa' }
+                                                            bgcolor: 'rgba(141, 166, 166, 0.1)',
+                                                            '& .MuiListItemText-primary': { color: 'hsl(var(--primary))', fontWeight: 700 },
+                                                            '& .MuiListItemIcon-root': { color: 'hsl(var(--primary))' },
+                                                            '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.15)' }
                                                         }
                                                     }}
                                                 >

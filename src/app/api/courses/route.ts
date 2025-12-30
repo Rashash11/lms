@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 import { z } from 'zod';
 
 const createCourseSchema = z.object({
@@ -43,6 +45,11 @@ const createCourseSchema = z.object({
 // GET all courses with pagination and filters
 export async function GET(request: NextRequest) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'course:read')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:read' }, { status: 403 });
+        }
+
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search') || '';
         const status = searchParams.get('status') || '';
@@ -96,6 +103,11 @@ export async function GET(request: NextRequest) {
 // POST create new course
 export async function POST(request: NextRequest) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'course:create')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:create' }, { status: 403 });
+        }
+
         const body = await request.json();
 
         const validation = createCourseSchema.safeParse(body);
@@ -133,6 +145,7 @@ export async function POST(request: NextRequest) {
                 description: data.description,
                 thumbnail_url: data.image,
                 status: data.status || 'DRAFT',
+                instructorId: session.userId,
 
                 // Info tab - use provided values or defaults
                 isActive: data.isActive ?? false,
@@ -190,6 +203,11 @@ export async function POST(request: NextRequest) {
 // DELETE bulk delete courses
 export async function DELETE(request: NextRequest) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'course:delete_any')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:delete_any' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { ids } = body;
 
@@ -222,6 +240,11 @@ export async function DELETE(request: NextRequest) {
 // PATCH bulk update courses (publish/unpublish/hide)
 export async function PATCH(request: NextRequest) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'course:update_any') && !can(session, 'course:publish')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission to update or publish courses' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { ids, action } = body;
 

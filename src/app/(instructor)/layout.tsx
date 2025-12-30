@@ -24,22 +24,14 @@ import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined
 import EmojiObjectsOutlinedIcon from '@mui/icons-material/EmojiObjectsOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
-// TalentLMS Exact Color Palette (same as Admin)
-const SIDEBAR_BG = '#2560D8';
-const SIDEBAR_BG_DARK = '#1E4DB8';
-const ACTIVE_BG = '#1F5FBF';
-const HOVER_BG = 'rgba(255,255,255,0.08)';
-const TEXT_COLOR = '#FFFFFF';
-const MUTED_TEXT = 'rgba(255,255,255,0.75)';
-const ICON_COLOR = 'rgba(255,255,255,0.9)';
-const DIVIDER = 'rgba(255,255,255,0.12)';
-const LOGO_ORANGE = '#F58220';
-
+// NCOSH Design System Unified Palette
 const drawerWidth = 260;
 
 const menuItems = [
@@ -50,14 +42,16 @@ const menuItems = [
     { text: 'Grading Hub', icon: <GradingOutlinedIcon />, path: '/instructor/grading-hub' },
     { text: 'Conferences', icon: <VideocamOutlinedIcon />, path: '/instructor/conferences' },
     { text: 'Reports', icon: <AssessmentOutlinedIcon />, path: '/instructor/reports' },
+    { text: 'Assignments', icon: <AssignmentOutlinedIcon />, path: '/instructor/assignments' },
     { text: 'Calendar', icon: <CalendarTodayOutlinedIcon />, path: '/instructor/calendar' },
     { text: 'Skills', icon: <EmojiObjectsOutlinedIcon />, path: '/instructor/skills' },
 ];
 
-type RoleKey = 'ADMIN' | 'INSTRUCTOR' | 'LEARNER';
-const roleLabels: Record<RoleKey, string> = {
+type RoleKey = 'ADMIN' | 'INSTRUCTOR' | 'LEARNER' | 'SUPER_INSTRUCTOR';
+const roleLabels: Record<string, string> = {
     'ADMIN': 'Administrator',
     'INSTRUCTOR': 'Instructor',
+    'SUPER_INSTRUCTOR': 'Super instructor',
     'LEARNER': 'Learner'
 };
 
@@ -67,8 +61,8 @@ interface UserData {
     username: string;
     firstName: string;
     lastName: string;
-    roles: RoleKey[];
-    activeRole: RoleKey;
+    roles: string[];
+    activeRole: string;
     avatar?: string;
 }
 
@@ -80,19 +74,22 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
     const pathname = usePathname();
     const router = useRouter();
 
-    // Fetch current user on mount
     useEffect(() => {
-        fetch('/api/me')
-            .then(res => res.json())
-            .then(data => {
-                if (data.user) {
+        const fetchUser = async () => {
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) {
+                    const data = await res.json();
                     setUser(data.user);
                 }
-            })
-            .catch(err => console.error('Failed to fetch user:', err));
+            } catch (error) {
+                console.error('Error fetching user:', error);
+            }
+        };
+        fetchUser();
     }, []);
 
-    const handleRoleChange = async (role: RoleKey) => {
+    const handleRoleChange = async (role: string) => {
         if (switching || role === user?.activeRole) return;
 
         setSwitching(true);
@@ -122,11 +119,29 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
         router.push('/login');
     };
 
+    const drawerColors = {
+        bg: 'rgba(13, 20, 20, 0.4)',
+        active: 'rgba(26, 84, 85, 0.15)',
+        hover: 'rgba(141, 166, 166, 0.08)',
+        text: 'hsl(180 10% 95%)',
+        muted: 'hsl(180 10% 60%)',
+        icon: 'hsl(180.6 65.6% 60%)',
+        border: 'rgba(141, 166, 166, 0.1)',
+    };
+
     const drawer = (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: SIDEBAR_BG }}>
+        <Box sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: drawerColors.bg,
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            borderRight: `1px solid ${drawerColors.border}`
+        }}>
             {/* Logo at top of sidebar */}
             <Box sx={{ height: 70, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Box sx={{ position: 'relative', width: 180, height: 50 }}>
+                <Box sx={{ position: 'relative', width: 180, height: 50, filter: 'drop-shadow(0 0 8px rgba(26, 84, 85, 0.3))' }}>
                     <Image
                         src="/main-logo (1).svg"
                         alt="Zedny Logo"
@@ -149,23 +164,29 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
                                 selected={isSelected}
                                 onClick={() => setMobileOpen(false)}
                                 sx={{
-                                    height: 40,
+                                    height: 42,
                                     px: 1.5,
-                                    borderRadius: 2,
-                                    color: isSelected ? TEXT_COLOR : MUTED_TEXT,
+                                    borderRadius: '10px',
+                                    color: isSelected ? drawerColors.text : drawerColors.muted,
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                                     '&.Mui-selected': {
-                                        bgcolor: ACTIVE_BG,
-                                        '&:hover': { bgcolor: ACTIVE_BG },
+                                        bgcolor: drawerColors.active,
+                                        boxShadow: 'inset 0 0 0 1px rgba(26, 84, 85, 0.2)',
+                                        '&:hover': { bgcolor: drawerColors.active },
+                                        '& .MuiListItemIcon-root': { color: drawerColors.icon }
                                     },
-                                    '&:hover': { bgcolor: HOVER_BG },
+                                    '&:hover': {
+                                        bgcolor: drawerColors.hover,
+                                        transform: 'translateX(4px)'
+                                    },
                                 }}
                             >
-                                <ListItemIcon sx={{ minWidth: 28, color: isSelected ? ICON_COLOR : MUTED_TEXT }}>
-                                    {React.cloneElement(item.icon, { sx: { fontSize: 18 } })}
+                                <ListItemIcon sx={{ minWidth: 32, color: isSelected ? drawerColors.icon : drawerColors.muted }}>
+                                    {React.cloneElement(item.icon as React.ReactElement, { sx: { fontSize: 20 } })}
                                 </ListItemIcon>
                                 <ListItemText
                                     primary={item.text}
-                                    primaryTypographyProps={{ fontSize: 13, fontWeight: 500 }}
+                                    primaryTypographyProps={{ fontSize: 13, fontWeight: isSelected ? 600 : 500 }}
                                 />
                             </ListItemButton>
                         </ListItem>
@@ -174,35 +195,37 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
             </List>
 
             {/* Demo mode toggle at bottom */}
-            <Box sx={{ p: 1.5, borderTop: `1px solid ${DIVIDER}`, mt: 'auto' }}>
+            <Box sx={{ p: 1.5, borderTop: `1px solid ${drawerColors.border}`, mt: 'auto' }}>
                 <Box sx={{
                     display: 'flex', alignItems: 'center', gap: 1.5,
+                    p: 1, borderRadius: 2,
+                    '&:hover': { bgcolor: drawerColors.hover }
                 }}>
                     <Switch
                         size="small"
                         sx={{
-                            '& .MuiSwitch-switchBase.Mui-checked': { color: '#FFFFFF' },
-                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#4caf50' }
+                            '& .MuiSwitch-switchBase.Mui-checked': { color: drawerColors.icon },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: 'rgba(26, 84, 85, 0.5)' }
                         }}
                     />
-                    <Typography sx={{ color: TEXT_COLOR, fontSize: 13, flex: 1, fontWeight: 500 }}>Demo mode</Typography>
+                    <Typography sx={{ color: drawerColors.text, fontSize: 13, flex: 1, fontWeight: 500 }}>Demo mode</Typography>
                     <Tooltip title="Switch to learner view">
-                        <InfoOutlinedIcon sx={{ color: MUTED_TEXT, fontSize: 16, cursor: 'pointer' }} />
+                        <InfoOutlinedIcon sx={{ color: drawerColors.muted, fontSize: 16, cursor: 'pointer' }} />
                     </Tooltip>
                 </Box>
             </Box>
 
             {/* Help Center at very bottom */}
-            <Box sx={{ p: 1.5, borderTop: `1px solid ${DIVIDER}` }}>
+            <Box sx={{ p: 1.5, borderTop: `1px solid ${drawerColors.border}` }}>
                 <Box sx={{
                     display: 'flex', alignItems: 'center', gap: 1.5,
-                    cursor: 'pointer',
-                    '&:hover': { bgcolor: HOVER_BG, borderRadius: 1 }
+                    cursor: 'pointer', p: 1,
+                    '&:hover': { bgcolor: drawerColors.hover, borderRadius: 2 }
                 }}>
-                    <HelpOutlineIcon sx={{ color: ICON_COLOR, fontSize: 18 }} />
-                    <Typography sx={{ color: TEXT_COLOR, fontSize: 13, fontWeight: 500 }}>Help Center</Typography>
+                    <HelpOutlineIcon sx={{ color: drawerColors.icon, fontSize: 18 }} />
+                    <Typography sx={{ color: drawerColors.text, fontSize: 13, fontWeight: 500 }}>Help Center</Typography>
                     <Box sx={{ ml: 'auto' }}>
-                        <KeyboardArrowDownIcon sx={{ color: MUTED_TEXT, fontSize: 16, transform: 'rotate(-90deg)' }} />
+                        <KeyboardArrowDownIcon sx={{ color: drawerColors.muted, fontSize: 16, transform: 'rotate(-90deg)' }} />
                     </Box>
                 </Box>
             </Box>
@@ -210,154 +233,120 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
     );
 
     return (
-        <Box sx={{ display: 'flex', bgcolor: '#f5f7fa', minHeight: '100vh' }}>
-            {/* AppBar */}
+        <Box sx={{ display: 'flex', bgcolor: 'hsl(var(--background))', minHeight: '100vh' }}>
             <AppBar
                 position="fixed"
                 sx={{
                     width: { sm: `calc(100% - ${drawerWidth}px)` },
                     ml: { sm: `${drawerWidth}px` },
-                    bgcolor: '#F8F9FA',
-                    color: 'text.primary',
-                    borderBottom: '1px solid #E0E3E7',
+                    bgcolor: 'rgba(8, 12, 12, 0.8)',
+                    color: 'hsl(var(--foreground))',
+                    borderBottom: `1px solid ${drawerColors.border}`,
                     boxShadow: 'none',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
                 }}
             >
-                <Toolbar sx={{ px: 3, gap: 2, minHeight: '56px !important', height: 56 }}>
-                    <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ display: { sm: 'none' } }}>
+                <Toolbar sx={{ px: 3, gap: 2, minHeight: '64px !important', height: 64 }}>
+                    <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ display: { sm: 'none' }, color: drawerColors.icon }}>
                         <MenuIcon />
                     </IconButton>
 
-                    {/* Hamburger menu for desktop */}
-                    <IconButton sx={{ display: { xs: 'none', sm: 'flex' }, color: '#3C4852', p: 0.5 }}>
+                    <IconButton sx={{ display: { xs: 'none', sm: 'flex' }, color: drawerColors.icon, p: 0.5 }}>
                         <MenuIcon sx={{ fontSize: 22 }} />
                     </IconButton>
 
-                    {/* Logo in header */}
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box sx={{ position: 'relative', width: 140, height: 36 }}>
-                            <Image
-                                src="/main-logo (1).svg"
-                                alt="Zedny Logo"
-                                width={140}
-                                height={36}
-                                style={{ objectFit: 'contain' }}
-                            />
-                        </Box>
-                    </Box>
+                    <Box sx={{ flexGrow: 1 }} />
 
-                    {/* Search - TalentLMS pill style */}
                     <TextField
-                        placeholder="Search"
+                        placeholder="Search..."
                         size="small"
                         sx={{
-                            flex: 1, maxWidth: 500, ml: 3,
+                            width: '100%', maxWidth: 400,
                             '& .MuiOutlinedInput-root': {
-                                bgcolor: '#FFFFFF',
-                                height: 38,
-                                borderRadius: 19,
-                                border: '1px solid #DFE1E6',
+                                bgcolor: 'rgba(141, 166, 166, 0.05)',
+                                height: 40,
+                                borderRadius: 20,
+                                border: `1px solid ${drawerColors.border}`,
                                 '& fieldset': { border: 'none' },
-                                '&:hover': { borderColor: '#C1C7D0' },
-                            },
-                            '& .MuiInputBase-input': { fontSize: 14, py: 0.8, color: '#42526E' }
+                                '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.08)', borderColor: 'rgba(26, 84, 85, 0.3)' },
+                            }
                         }}
                         InputProps={{
-                            startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#6B778C', fontSize: 20 }} /></InputAdornment>
+                            startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: drawerColors.icon, fontSize: 20 }} /></InputAdornment>
                         }}
                     />
 
                     <Box sx={{ flexGrow: 1 }} />
 
-                    {/* Mail Icon */}
-                    <IconButton size="small" sx={{ p: 1 }}>
-                        <MailOutlineIcon sx={{ fontSize: 22, color: '#42526E' }} />
-                    </IconButton>
+                    <IconButton size="small" sx={{ color: drawerColors.muted }}><MailOutlineIcon sx={{ fontSize: 22 }} /></IconButton>
+                    <IconButton size="small" sx={{ color: drawerColors.muted }}><ChatBubbleOutlineIcon sx={{ fontSize: 22 }} /></IconButton>
 
-                    {/* Chat Icon */}
-                    <IconButton size="small" sx={{ p: 1 }}>
-                        <ChatBubbleOutlineIcon sx={{ fontSize: 22, color: '#42526E' }} />
-                    </IconButton>
-
-                    {/* User Menu */}
                     <Box
                         onClick={(e) => setAnchorEl(e.currentTarget)}
                         sx={{
                             display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer',
-                            bgcolor: '#FFFFFF', border: '1px solid #DFE1E6', borderRadius: 20,
-                            px: 1.5, py: 0.5, height: 36,
-                            '&:hover': { bgcolor: '#F4F5F7', borderColor: '#C1C7D0' }
+                            bgcolor: 'rgba(26, 84, 85, 0.1)', border: `1px solid ${drawerColors.border}`, borderRadius: 20,
+                            px: 1, py: 0.5, height: 40,
+                            transition: 'all 0.2s',
+                            '&:hover': { bgcolor: 'rgba(26, 84, 85, 0.15)', borderColor: 'rgba(26, 84, 85, 0.3)' }
                         }}
                     >
-                        <Avatar sx={{ width: 28, height: 28, bgcolor: '#4caf50', fontSize: 12 }}>
-                            {user?.firstName?.[0]?.toUpperCase() || 'M'}
+                        <Avatar sx={{ width: 30, height: 30, bgcolor: 'hsl(var(--primary))', fontSize: 13, fontWeight: 700 }}>
+                            {user?.firstName ? user.firstName[0] : 'I'}
                         </Avatar>
-                        <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                            <Typography variant="body2" fontWeight={600} lineHeight={1.2} fontSize={13}>
-                                {user ? `${user.firstName[0].toLowerCase()}. ${user.lastName.toLowerCase()}` : 'm. mostafa'}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" fontSize={11}>
-                                {user?.activeRole ? roleLabels[user.activeRole] : 'Instructor'}
+                        <Box sx={{ display: { xs: 'none', md: 'block' }, mx: 0.5 }}>
+                            <Typography variant="body2" fontWeight={700} fontSize={13} color={drawerColors.text}>
+                                {user ? `${user.firstName} ${user.lastName}` : 'Instructor'}
                             </Typography>
                         </Box>
-                        <KeyboardArrowDownIcon sx={{ color: '#8B98A5', fontSize: 16 }} />
+                        <KeyboardArrowDownIcon sx={{ color: drawerColors.muted, fontSize: 16 }} />
                     </Box>
 
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={() => setAnchorEl(null)}
-                        PaperProps={{ sx: { width: 220, mt: 1 } }}
-                    >
-                        <Box sx={{ px: 2, py: 1 }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={500}>Switch role</Typography>
+                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)} PaperProps={{
+                        sx: {
+                            width: 240,
+                            mt: 1.5,
+                            bgcolor: 'rgba(13, 20, 20, 0.9)',
+                            backdropFilter: 'blur(20px)',
+                            border: `1px solid ${drawerColors.border}`,
+                            borderRadius: 3,
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+                        }
+                    }}>
+                        <Box sx={{ px: 2, py: 1.5 }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>Switch role</Typography>
                         </Box>
                         {user?.roles?.map((roleKey) => (
-                            <MenuItem
-                                key={roleKey}
-                                onClick={() => handleRoleChange(roleKey)}
-                                sx={{ py: 0.5 }}
-                                disabled={switching}
-                            >
-                                <Radio
-                                    checked={user.activeRole === roleKey}
-                                    size="small"
-                                    sx={{ p: 0.5, mr: 1 }}
-                                />
-                                <Typography variant="body2" fontSize={13}>{roleLabels[roleKey]}</Typography>
-                                {switching && user.activeRole !== roleKey && (
-                                    <CircularProgress size={14} sx={{ ml: 'auto' }} />
-                                )}
+                            <MenuItem key={roleKey} onClick={() => handleRoleChange(roleKey)} sx={{ py: 1, mx: 1, borderRadius: 1.5 }}>
+                                <Radio checked={user.activeRole === roleKey} size="small" sx={{ p: 0.5, mr: 1, color: drawerColors.icon, '&.Mui-checked': { color: drawerColors.icon } }} />
+                                <Typography variant="body2" fontSize={13} fontWeight={500}>{roleLabels[roleKey] || roleKey}</Typography>
+                                {switching && user.activeRole !== roleKey && <CircularProgress size={14} sx={{ ml: 'auto', color: drawerColors.icon }} />}
                             </MenuItem>
                         ))}
-                        <Divider sx={{ my: 1 }} />
-                        <MenuItem><PersonOutlineIcon sx={{ mr: 1.5, fontSize: 18 }} /><Typography variant="body2" fontSize={13}>My profile</Typography></MenuItem>
-                        <MenuItem onClick={handleLogout}><LogoutIcon sx={{ mr: 1.5, fontSize: 18 }} /><Typography variant="body2" fontSize={13}>Log out</Typography></MenuItem>
+                        <Divider sx={{ my: 1, opacity: 0.5 }} />
+                        <MenuItem sx={{ py: 1, mx: 1, borderRadius: 1.5 }}><PersonOutlineIcon sx={{ mr: 1.5, fontSize: 18, color: drawerColors.icon }} /><Typography variant="body2" fontSize={13}>My profile</Typography></MenuItem>
+                        <MenuItem onClick={handleLogout} sx={{ py: 1, mx: 1, borderRadius: 1.5, color: 'hsl(0 72% 51%)' }}><LogoutIcon sx={{ mr: 1.5, fontSize: 18 }} /><Typography variant="body2" fontSize={13} fontWeight={600}>Log out</Typography></MenuItem>
                     </Menu>
                 </Toolbar>
             </AppBar>
 
-            {/* Sidebar */}
             <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
-                <Drawer
-                    variant="temporary"
-                    open={mobileOpen}
-                    onClose={() => setMobileOpen(false)}
-                    sx={{ display: { xs: 'block', sm: 'none' }, '& .MuiDrawer-paper': { width: drawerWidth, bgcolor: SIDEBAR_BG } }}
-                >
+                <Drawer variant="temporary" open={mobileOpen} onClose={() => setMobileOpen(false)} sx={{ display: { xs: 'block', sm: 'none' }, '& .MuiDrawer-paper': { width: drawerWidth, border: 'none' } }}>
                     {drawer}
                 </Drawer>
-                <Drawer
-                    variant="permanent"
-                    sx={{ display: { xs: 'none', sm: 'block' }, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', bgcolor: SIDEBAR_BG, border: 'none' } }}
-                    open
-                >
+                <Drawer variant="permanent" sx={{ display: { xs: 'none', sm: 'block' }, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', border: 'none', background: 'transparent' } }} open>
                     {drawer}
                 </Drawer>
             </Box>
 
-            {/* Main Content */}
-            <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3, md: 4 }, width: { sm: `calc(100% - ${drawerWidth}px)` }, mt: 7, maxWidth: '100%' }}>
+            <Box component="main" sx={{
+                flexGrow: 1,
+                p: { xs: 2, sm: 3, md: 4 },
+                width: { sm: `calc(100% - ${drawerWidth}px)` },
+                mt: 8,
+                position: 'relative'
+            }}>
                 {children}
             </Box>
         </Box>

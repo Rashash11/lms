@@ -119,17 +119,23 @@ export default function Header({
     };
 
     return (
-        <Box sx={{
-            minHeight: 180,
-            display: 'flex',
-            alignItems: 'flex-start',
-            px: 4,
-            py: 4,
-            bgcolor: '#00264d', // Darker blue like Zedny reference
-            color: '#fff',
-            position: 'relative',
-            zIndex: 1000
-        }}>
+        <Box
+            className="hero-glass-card"
+            sx={{
+                minHeight: 180,
+                display: 'flex',
+                alignItems: 'flex-start',
+                px: 4,
+                py: 4,
+                background: 'rgba(13, 20, 20, 0.4)',
+                border: '1px solid rgba(141, 166, 166, 0.2)',
+                color: 'hsl(var(--foreground))',
+                position: 'relative',
+                zIndex: 1000,
+                m: 2,
+                borderRadius: 2,
+            }}
+        >
             <Box sx={{ flex: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                     <Box sx={{ position: 'relative' }}>
@@ -147,12 +153,13 @@ export default function Header({
                                         fontSize: '2.5rem',
                                         fontWeight: 800,
                                         width: 500,
-                                        color: '#fff',
+                                        color: 'hsl(var(--foreground))',
                                         '&:before, &:after': { display: 'none' }
                                     },
                                     '& input': {
                                         padding: '4px 8px',
-                                        bgcolor: 'rgba(255,255,255,0.1)',
+                                        bgcolor: 'rgba(141, 166, 166, 0.1)',
+                                        border: '1px solid rgba(141, 166, 166, 0.2)',
                                         borderRadius: '4px'
                                     }
                                 }}
@@ -165,8 +172,8 @@ export default function Header({
                                     sx={{
                                         cursor: 'text',
                                         fontWeight: 500, // Matching TalentLMS slim but large bold font
-                                        color: '#fff',
-                                        '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+                                        color: 'hsl(var(--foreground))',
+                                        '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)' },
                                         px: 1,
                                         py: 0.5,
                                         borderRadius: 1,
@@ -202,13 +209,14 @@ export default function Header({
                             sx={{
                                 '& .MuiInput-root': {
                                     fontSize: '0.875rem',
-                                    color: '#fff',
+                                    color: 'hsl(var(--foreground))',
                                     width: 600,
                                     lineHeight: 1.5,
                                     '&:before, &:after': { display: 'none' }
                                 },
                                 '& .MuiInputBase-input': {
-                                    bgcolor: 'rgba(255,255,255,0.1)',
+                                    bgcolor: 'rgba(141, 166, 166, 0.1)',
+                                    border: '1px solid rgba(141, 166, 166, 0.1)',
                                     borderRadius: '4px',
                                     p: 1
                                 }
@@ -219,14 +227,14 @@ export default function Header({
                             variant="body2"
                             onClick={() => setIsEditingDesc(true)}
                             sx={{
-                                color: description ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)',
+                                color: description ? 'hsl(var(--foreground) / 0.9)' : 'hsl(var(--muted-foreground))',
                                 maxWidth: 600,
                                 cursor: 'text',
                                 minHeight: 24,
                                 p: 0.5,
                                 borderRadius: 1,
                                 whiteSpace: 'pre-wrap',
-                                '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' }
+                                '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)' }
                             }}
                         >
                             {localDescription || 'Add a course description up to 5000 characters'}
@@ -246,14 +254,14 @@ export default function Header({
                                 disabled={isPublishing || publishDisabled || saveState === 'saving'}
                                 sx={{
                                     textTransform: 'none',
-                                    bgcolor: '#3182ce',
-                                    color: '#fff',
+                                    bgcolor: 'hsl(var(--primary))',
+                                    color: 'hsl(var(--primary-foreground))',
                                     fontWeight: 700,
                                     borderRadius: '6px',
                                     px: 3,
                                     height: 36,
-                                    '&:hover': { bgcolor: '#2b6cb0' },
-                                    '&.Mui-disabled': { bgcolor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' }
+                                    '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+                                    '&.Mui-disabled': { bgcolor: 'rgba(141, 166, 166, 0.1)', color: 'rgba(141, 166, 166, 0.3)' }
                                 }}
                             >
                                 {isPublishing ? 'Publishing...' : 'Publish'}
@@ -265,13 +273,13 @@ export default function Header({
                                 disabled={isPublishing || saveState === 'saving'}
                                 sx={{
                                     textTransform: 'none',
-                                    borderColor: 'rgba(255,255,255,0.3)',
-                                    color: '#fff',
+                                    borderColor: 'rgba(141, 166, 166, 0.3)',
+                                    color: 'hsl(var(--foreground))',
                                     fontWeight: 700,
                                     borderRadius: '6px',
                                     px: 3,
                                     height: 36,
-                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: '#fff' }
+                                    '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)', borderColor: 'hsl(var(--foreground))' }
                                 }}
                             >
                                 Unpublish
@@ -283,7 +291,7 @@ export default function Header({
                         <IconButton
                             size="small"
                             onClick={() => window.open(`/courses/player/${courseId}`, '_blank')}
-                            sx={{ border: '1px solid rgba(255,255,255,0.3)', borderRadius: 1, color: '#fff' }}
+                            sx={{ border: '1px solid rgba(141, 166, 166, 0.3)', borderRadius: 1, color: 'hsl(var(--foreground))' }}
                         >
                             <VisibilityIcon fontSize="small" />
                         </IconButton>
@@ -292,7 +300,7 @@ export default function Header({
                     <IconButton
                         size="small"
                         onClick={(e) => setAnchorEl(e.currentTarget)}
-                        sx={{ border: '1px solid rgba(255,255,255,0.3)', borderRadius: 1, color: '#fff' }}
+                        sx={{ border: '1px solid rgba(141, 166, 166, 0.3)', borderRadius: 1, color: 'hsl(var(--foreground))' }}
                     >
                         <MoreVertIcon fontSize="small" />
                     </IconButton>
@@ -313,25 +321,26 @@ export default function Header({
                         <ListItemText>Duplicate course</ListItemText>
                     </MenuItem>
                     <Divider />
-                    <MenuItem onClick={() => { setAnchorEl(null); onDelete(); }} sx={{ color: '#e53e3e' }}>
-                        <ListItemIcon><DeleteIcon fontSize="small" sx={{ color: '#e53e3e' }} /></ListItemIcon>
+                    <MenuItem onClick={() => { setAnchorEl(null); onDelete(); }} sx={{ color: 'hsl(var(--destructive))' }}>
+                        <ListItemIcon><DeleteIcon fontSize="small" sx={{ color: 'hsl(var(--destructive))' }} /></ListItemIcon>
                         <ListItemText>Delete course</ListItemText>
                     </MenuItem>
                 </Menu>
 
                 {/* Course Image */}
                 <Box
+                    className="glass-card"
                     sx={{
                         width: 450,
                         height: 250,
-                        bgcolor: '#94a3b8',
+                        bgcolor: 'rgba(13, 20, 20, 0.6)',
                         borderRadius: 2,
                         position: 'relative',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         overflow: 'hidden',
-                        border: '2px solid rgba(255,255,255,0.1)'
+                        border: '1px solid rgba(141, 166, 166, 0.2)'
                     }}
                 >
                     {courseImage ? (
@@ -369,9 +378,9 @@ export default function Header({
                                     <IconButton
                                         onClick={() => fileInputRef.current?.click()}
                                         sx={{
-                                            bgcolor: '#1e40af',
-                                            color: '#fff',
-                                            '&:hover': { bgcolor: '#1e3a8a' }
+                                            bgcolor: 'hsl(var(--primary))',
+                                            color: 'hsl(var(--primary-foreground))',
+                                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.8)' }
                                         }}
                                     >
                                         <CloudUploadIcon />
@@ -381,9 +390,9 @@ export default function Header({
                                     <IconButton
                                         onClick={onImageGenerate}
                                         sx={{
-                                            bgcolor: '#1e40af',
-                                            color: '#fff',
-                                            '&:hover': { bgcolor: '#1e3a8a' }
+                                            bgcolor: 'hsl(var(--primary))',
+                                            color: 'hsl(var(--primary-foreground))',
+                                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.8)' }
                                         }}
                                     >
                                         <AutoAwesomeIcon />
@@ -406,7 +415,7 @@ export default function Header({
                                     sx={{
                                         width: 60,
                                         height: 70,
-                                        bgcolor: '#1e40af',
+                                        bgcolor: 'hsl(var(--primary))',
                                         borderRadius: 2,
                                         position: 'relative',
                                         '&::before': {
@@ -418,7 +427,7 @@ export default function Header({
                                             height: 0,
                                             borderStyle: 'solid',
                                             borderWidth: '0 15px 15px 0',
-                                            borderColor: 'transparent #64748b transparent transparent'
+                                            borderColor: 'transparent rgba(141, 166, 166, 0.5) transparent transparent'
                                         }
                                     }}
                                 />
@@ -426,10 +435,10 @@ export default function Header({
                                     sx={{
                                         width: 50,
                                         height: 65,
-                                        bgcolor: '#c2410c',
+                                        bgcolor: 'hsl(var(--secondary))',
                                         borderRadius: 1,
-                                        border: '3px solid #ea580c',
-                                        borderLeft: '8px solid #ea580c'
+                                        border: '3px solid hsl(var(--secondary) / 0.8)',
+                                        borderLeft: '8px solid hsl(var(--secondary) / 0.8)'
                                     }}
                                 />
                             </Box>
@@ -448,9 +457,9 @@ export default function Header({
                                     <IconButton
                                         onClick={() => fileInputRef.current?.click()}
                                         sx={{
-                                            bgcolor: '#1e40af',
-                                            color: '#fff',
-                                            '&:hover': { bgcolor: '#1e3a8a' },
+                                            bgcolor: 'hsl(var(--primary))',
+                                            color: 'hsl(var(--primary-foreground))',
+                                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.8)' },
                                             width: 40,
                                             height: 40
                                         }}
@@ -462,9 +471,9 @@ export default function Header({
                                     <IconButton
                                         onClick={onImageGenerate}
                                         sx={{
-                                            bgcolor: '#1e40af',
-                                            color: '#fff',
-                                            '&:hover': { bgcolor: '#1e3a8a' },
+                                            bgcolor: 'hsl(var(--primary))',
+                                            color: 'hsl(var(--primary-foreground))',
+                                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.8)' },
                                             width: 40,
                                             height: 40
                                         }}

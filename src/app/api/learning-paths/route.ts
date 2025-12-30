@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 
 // GET /api/learning-paths - List all learning paths with search, filter, sort
 export async function GET(request: NextRequest) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'learning_path:read')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: learning_path:read' }, { status: 403 });
+        }
+
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search') || '';
         const status = searchParams.get('status') || 'all';
@@ -82,6 +87,11 @@ export async function GET(request: NextRequest) {
 // POST /api/learning-paths - Create new learning path
 export async function POST(request: NextRequest) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'learning_path:create')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: learning_path:create' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { name, code, category, description, status } = body;
 

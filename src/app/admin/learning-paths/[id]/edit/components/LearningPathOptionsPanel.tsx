@@ -165,6 +165,7 @@ export default function LearningPathOptionsPanel({ open, pathId, onClose, onSave
                     width: 480,
                     display: 'flex',
                     flexDirection: 'column',
+                    bgcolor: 'rgba(13, 20, 20, 0.95)',
                 },
             }}
         >
@@ -179,20 +180,32 @@ export default function LearningPathOptionsPanel({ open, pathId, onClose, onSave
                     alignItems: 'center',
                 }}
             >
-                <Typography variant="h6" fontWeight={600}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: 'hsl(var(--foreground))' }}>
                     Learning path options
                 </Typography>
-                <IconButton onClick={handleCancel} size="small">
+                <IconButton onClick={handleCancel} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                     <CloseIcon />
                 </IconButton>
             </Box>
 
             {/* Tabs */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
-                    <Tab label="Info" sx={{ textTransform: 'none', fontWeight: 500 }} />
-                    <Tab label="Limits" sx={{ textTransform: 'none', fontWeight: 500 }} />
-                    <Tab label="Completion" sx={{ textTransform: 'none', fontWeight: 500 }} />
+                <Tabs
+                    value={activeTab}
+                    onChange={(e, newValue) => setActiveTab(newValue)}
+                    sx={{
+                        '& .MuiTab-root': {
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            color: 'hsl(var(--muted-foreground))',
+                            '&.Mui-selected': { color: 'hsl(var(--primary))' }
+                        },
+                        '& .MuiTabs-indicator': { bgcolor: 'hsl(var(--primary))' }
+                    }}
+                >
+                    <Tab label="Info" />
+                    <Tab label="Limits" />
+                    <Tab label="Completion" />
                 </Tabs>
             </Box>
 

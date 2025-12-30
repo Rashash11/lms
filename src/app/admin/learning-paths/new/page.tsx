@@ -16,17 +16,20 @@ export default function NewLearningPathPage() {
 
     return (
         <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-            {/* Header Section - Dark Blue */}
+            {/* Header Section */}
             <Box
+                className="hero-glass-card"
                 sx={{
-                    bgcolor: '#1565c0',
-                    color: 'white',
                     py: 4,
                     px: 4,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     minHeight: 200,
+                    m: 2,
+                    borderRadius: 2,
+                    border: '1px solid rgba(141, 166, 166, 0.2)',
+                    background: 'rgba(13, 20, 20, 0.4)',
                 }}
             >
                 {/* Left Side: Back button and Title */}
@@ -34,9 +37,10 @@ export default function NewLearningPathPage() {
                     <IconButton
                         onClick={() => router.push('/admin/learning-paths')}
                         sx={{
-                            color: 'white',
+                            color: 'hsl(var(--foreground))',
                             mb: 2,
-                            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                            border: '1px solid rgba(141, 166, 166, 0.2)',
+                            '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)' }
                         }}
                     >
                         <ArrowBackIcon />
@@ -48,10 +52,11 @@ export default function NewLearningPathPage() {
                         <Chip
                             label="Inactive"
                             sx={{
-                                bgcolor: 'rgba(255,255,255,0.2)',
-                                color: 'white',
-                                fontWeight: 500,
+                                bgcolor: 'rgba(141, 166, 166, 0.1)',
+                                color: 'hsl(var(--muted-foreground))',
+                                fontWeight: 600,
                                 borderRadius: 1,
+                                border: '1px solid rgba(141, 166, 166, 0.2)'
                             }}
                         />
                     </Box>
@@ -62,7 +67,8 @@ export default function NewLearningPathPage() {
                     sx={{
                         width: 280,
                         height: 180,
-                        bgcolor: 'rgba(255,255,255,0.15)',
+                        bgcolor: 'rgba(13, 20, 20, 0.4)',
+                        border: '1px solid rgba(141, 166, 166, 0.1)',
                         borderRadius: 2,
                         display: 'flex',
                         alignItems: 'center',
@@ -82,7 +88,7 @@ export default function NewLearningPathPage() {
                             justifyContent: 'center',
                         }}
                     >
-                        {/* Left blue circle */}
+                        {/* Left primary circle */}
                         <Box
                             sx={{
                                 position: 'absolute',
@@ -90,30 +96,34 @@ export default function NewLearningPathPage() {
                                 width: 80,
                                 height: 80,
                                 borderRadius: '50%',
-                                bgcolor: '#1976d2',
+                                bgcolor: 'hsl(var(--primary))',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 zIndex: 2,
+                                border: '1px solid rgba(141, 166, 166, 0.3)',
+                                boxShadow: '0 0 20px hsl(var(--primary) / 0.3)'
                             }}
                         >
-                            <AddIcon sx={{ color: 'white', fontSize: 32 }} />
+                            <AddIcon sx={{ color: 'hsl(var(--primary-foreground))', fontSize: 32 }} />
                         </Box>
 
-                        {/* Center orange/brown shape */}
+                        {/* Center secondary shape */}
                         <Box
                             sx={{
                                 position: 'absolute',
                                 width: 60,
                                 height: 100,
-                                bgcolor: '#d84315',
+                                bgcolor: 'hsl(var(--secondary))',
                                 transform: 'rotate(15deg)',
                                 borderRadius: 2,
                                 zIndex: 1,
+                                opacity: 0.8,
+                                boxShadow: '0 0 20px hsl(var(--secondary) / 0.2)'
                             }}
                         />
 
-                        {/* Right blue circle */}
+                        {/* Right primary circle */}
                         <Box
                             sx={{
                                 position: 'absolute',
@@ -121,24 +131,26 @@ export default function NewLearningPathPage() {
                                 width: 80,
                                 height: 80,
                                 borderRadius: '50%',
-                                bgcolor: '#1976d2',
+                                bgcolor: 'hsl(var(--primary))',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 zIndex: 2,
+                                border: '1px solid rgba(141, 166, 166, 0.3)',
+                                boxShadow: '0 0 20px hsl(var(--primary) / 0.3)'
                             }}
                         >
-                            <SettingsOutlinedIcon sx={{ color: 'white', fontSize: 28 }} />
+                            <SettingsOutlinedIcon sx={{ color: 'hsl(var(--primary-foreground))', fontSize: 28 }} />
                         </Box>
                     </Box>
                 </Box>
             </Box>
 
             {/* Main Content */}
-            <Box sx={{ flex: 1, bgcolor: '#f5f5f5', py: 4, px: 4 }}>
+            <Box sx={{ flex: 1, py: 4, px: 4 }}>
                 <Box sx={{ maxWidth: 900, mx: 'auto' }}>
                     {/* Description Section */}
-                    <Paper sx={{ p: 3, mb: 3 }}>
+                    <Paper className="glass-card" sx={{ p: 3, mb: 3 }}>
                         <TextField
                             fullWidth
                             multiline
@@ -178,6 +190,7 @@ export default function NewLearningPathPage() {
             {/* Bottom Action Bar */}
             <Paper
                 elevation={3}
+                className="glass-card"
                 sx={{
                     position: 'fixed',
                     bottom: 0,
@@ -188,23 +201,28 @@ export default function NewLearningPathPage() {
                     display: 'flex',
                     justifyContent: 'center',
                     gap: 3,
-                    bgcolor: 'white',
-                    borderTop: '1px solid #e0e0e0',
+                    borderTop: '1px solid rgba(141, 166, 166, 0.1)',
+                    bgcolor: 'rgba(13, 20, 20, 0.9)',
+                    backdropFilter: 'blur(20px)',
                     zIndex: 1000,
+                    borderRadius: '24px 24px 0 0',
+                    boxShadow: '0 -10px 40px rgba(0,0,0,0.5)'
                 }}
             >
                 <IconButton
                     sx={{
-                        color: 'text.secondary',
-                        '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' }
+                        color: 'hsl(var(--muted-foreground))',
+                        border: '1px solid rgba(141, 166, 166, 0.1)',
+                        '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)', color: 'hsl(var(--primary))' }
                     }}
                 >
                     <PeopleOutlineIcon />
                 </IconButton>
                 <IconButton
                     sx={{
-                        color: 'text.secondary',
-                        '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' }
+                        color: 'hsl(var(--muted-foreground))',
+                        border: '1px solid rgba(141, 166, 166, 0.1)',
+                        '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)', color: 'hsl(var(--primary))' }
                     }}
                 >
                     <SettingsOutlinedIcon />

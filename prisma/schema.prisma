@@ -99,6 +99,7 @@ enum UserStatus {
 enum RoleKey {
   ADMIN
   INSTRUCTOR
+  SUPER_INSTRUCTOR
   LEARNER
 }
 
@@ -133,6 +134,9 @@ model User {
   instructorGroups        Group[]               @relation("InstructorGroups")
   instructorConferences   Conference[]          @relation("InstructorConferences")
   instructorEvents        CalendarEvent[]       @relation("InstructorEvents")
+  assignmentSubmissions   AssignmentSubmission[]
+  enrollments             Enrollment[]
+  assignedAssignments     AssignmentLearner[]
 
   @@map("users")
 }
@@ -232,6 +236,8 @@ model Course {
   learningPaths      LearningPathCourse[]
   assets             UnitAsset[]
   skills             CourseSkill[]
+  assignments        Assignment[]
+  assignmentSubmissions AssignmentSubmission[]
 
   @@map("courses")
 }
@@ -320,6 +326,7 @@ model Enrollment {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
   @@map("enrollments")
@@ -720,6 +727,7 @@ model CalendarEvent {
   startTime    DateTime
   endTime      DateTime
   type         String   // 'conference', 'ilt', 'deadline', 'custom'
+  color        String?  // Optional hex color for UI
   instructorId String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -738,6 +746,7 @@ model Conference {
   endTime      DateTime
   duration     Int      // in minutes
   meetingUrl   String?
+  color        String?  // Optional hex color for UI
   instructorId String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -1294,12 +1303,11 @@ model FileVisibility {
 // 23. GRADING
 model AssignmentSubmission {
   id               String    @id @default(uuid())
-  assignmentUnitId String
+  assignmentId     String    // Changed from assignmentUnitId
   userId           String
-  courseId         String
-  submissionType   String
+  courseId         String?   // Made nullable for non-course assignments
   content          String?   @db.Text
-  fileId           String?
+  attachments      Json?     // Changed from fileId to support multiple files
   submittedAt      DateTime  @default(now())
   gradedAt         DateTime?
   gradedBy         String?
@@ -1307,6 +1315,11 @@ model AssignmentSubmission {
   maxScore         Int       @default(100)
   status           String
   comment          String?   @db.Text
+  learnerComment   String?   @db.Text
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course?    @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@map("assignment_submissions")
 }
@@ -1453,4 +1466,107 @@ model PortalFeatureFlags {
   tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("portal_feature_flags")
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  title       String
+  description String?  @db.Text
+  courseId    String?
+  dueAt       DateTime?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  attachments Json?
+
+  // Type & Grading
+  type          AssignmentType @default(HOMEWORK)
+  gradingMethod GradingMethod  @default(NUMERIC)
+  rubric        Json?
+
+  // Time & Availability
+  availableFrom DateTime?
+  closeAt       DateTime?
+  allowLate     Boolean   @default(false)
+  latePenalty   Float?
+  maxLateDays   Int?
+
+  // Submission Settings
+  maxFiles         Int?
+  maxSizeMb        Int?
+  maxAttempts      Int?
+  allowedFileTypes Json?
+  allowText        Boolean @default(true)
+  allowFile        Boolean @default(true)
+
+  // Integrity
+  plagiarismCheck      Boolean @default(false)
+  similarityThreshold  Float?
+  requireAIDeclaration Boolean @default(false)
+  lockAfterView        Boolean @default(false)
+
+  // Visibility & Groups
+  visibility        AssignmentVisibility @default(ALL)
+  isGroupAssignment Boolean              @default(false)
+
+  // Notifications
+  notifyOnPublish    Boolean @default(true)
+  notifyOnDueDate    Boolean @default(true)
+  notifyOnSubmission Boolean @default(true)
+
+  // Metadata
+  difficulty        AssignmentDifficulty @default(MEDIUM)
+  estimatedDuration Int?
+  
+  // Assigned instructor for grading
+  assignedInstructorId String?
+
+  // Relations
+  assignedLearners AssignmentLearner[]
+  submissions      AssignmentSubmission[]
+
+  @@map("assignments")
+}
+
+model AssignmentLearner {
+  id           String     @id @default(uuid())
+  assignmentId String
+  userId       String
+  assignedAt   DateTime   @default(now())
+  
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, userId])
+  @@map("assignment_learners")
+}
+
+enum AssignmentType {
+  HOMEWORK
+  QUIZ
+  PROJECT
+  LAB
+  RESEARCH
+  PRESENTATION
+}
+
+enum GradingMethod {
+  NUMERIC
+  PASS_FAIL
+  RUBRIC
+  WEIGHTED
+}
+
+enum AssignmentVisibility {
+  ALL
+  GROUPS
+  DRAFT
+}
+
+enum AssignmentDifficulty {
+  EASY
+  MEDIUM
+  HARD
 }

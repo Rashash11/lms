@@ -334,17 +334,20 @@ export default function EditLearningPathPage() {
 
     return (
         <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-            {/* Header Section - TalentLMS Royal Blue */}
+            {/* Header Section */}
             <Box
+                className="hero-glass-card"
                 sx={{
-                    bgcolor: '#004A99',
-                    color: 'white',
                     py: 4,
                     px: 4,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     minHeight: 200,
+                    m: 2,
+                    borderRadius: 2,
+                    border: '1px solid rgba(141, 166, 166, 0.2)',
+                    background: 'rgba(13, 20, 20, 0.4)',
                 }}
             >
                 {/* Left Side: Back button and Title */}
@@ -352,9 +355,10 @@ export default function EditLearningPathPage() {
                     <IconButton
                         onClick={() => router.push('/admin/learning-paths')}
                         sx={{
-                            color: 'white',
+                            color: 'hsl(var(--foreground))',
                             mb: 2,
-                            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                            border: '1px solid rgba(141, 166, 166, 0.2)',
+                            '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)' }
                         }}
                     >
                         <ArrowBackIcon />
@@ -369,9 +373,10 @@ export default function EditLearningPathPage() {
                         InputProps={{
                             disableUnderline: true,
                             sx: {
-                                color: 'white',
-                                fontSize: '2rem',
-                                fontWeight: 600,
+                                color: 'hsl(var(--foreground))',
+                                fontSize: '2.5rem',
+                                fontWeight: 800,
+                                bgcolor: 'transparent !important',
                                 '& input': {
                                     padding: 0,
                                 },
@@ -385,16 +390,17 @@ export default function EditLearningPathPage() {
                         onClick={toggleStatus}
                         sx={{
                             display: 'inline-block',
-                            border: '1px solid rgba(255,255,255,0.4)',
-                            color: 'white',
+                            border: '1px solid rgba(141, 166, 166, 0.2)',
+                            color: 'hsl(var(--foreground))',
                             px: 1.5,
                             py: 0.5,
                             borderRadius: 1,
                             fontSize: '0.75rem',
-                            fontWeight: 400,
+                            fontWeight: 600,
                             cursor: 'pointer',
+                            bgcolor: 'rgba(141, 166, 166, 0.1)',
                             '&:hover': {
-                                bgcolor: 'rgba(255,255,255,0.1)',
+                                bgcolor: 'rgba(141, 166, 166, 0.2)',
                             },
                         }}
                     >
@@ -415,7 +421,7 @@ export default function EditLearningPathPage() {
                     sx={{
                         width: 280,
                         height: 180,
-                        bgcolor: '#f5e6d3',
+                        bgcolor: 'rgba(141, 166, 166, 0.1)',
                         borderRadius: 2,
                         display: 'flex',
                         flexDirection: 'column',
@@ -424,8 +430,9 @@ export default function EditLearningPathPage() {
                         position: 'relative',
                         cursor: 'pointer',
                         overflow: 'hidden',
+                        border: '1px solid rgba(141, 166, 166, 0.2)',
                         '&:hover': {
-                            bgcolor: '#eddcc4',
+                            bgcolor: 'rgba(141, 166, 166, 0.15)',
                         },
                     }}
                 >
@@ -441,8 +448,8 @@ export default function EditLearningPathPage() {
                     ) : (
                         <Box sx={{ width: 100, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="80" height="80" viewBox="0 0 100 100">
-                                <path d="M20,50 L50,20 L50,50 L70,30 L70,70 L50,50 L50,80 Z" fill="#004A99" />
-                                <path d="M50,50 L80,50 L80,80 L50,80 Z" fill="#ff9933" />
+                                <path d="M20,50 L50,20 L50,50 L70,30 L70,70 L50,50 L50,80 Z" fill="hsl(var(--primary))" />
+                                <path d="M50,50 L80,50 L80,80 L50,80 Z" fill="hsl(var(--secondary))" />
                             </svg>
                         </Box>
                     )}
@@ -450,10 +457,10 @@ export default function EditLearningPathPage() {
             </Box>
 
             {/* Main Content */}
-            <Box sx={{ flex: 1, bgcolor: 'white', py: 4, px: 4 }}>
+            <Box sx={{ flex: 1, py: 4, px: 4 }}>
                 <Box sx={{ maxWidth: 900, mx: 'auto' }}>
                     {/* Description Section */}
-                    <Box sx={{ mb: 3, textAlign: 'center' }}>
+                    <Box sx={{ mb: 3, textAlign: 'center', p: 2, borderRadius: 2, bgcolor: 'rgba(13, 20, 20, 0.4)', border: '1px solid rgba(141, 166, 166, 0.1)' }}>
                         <TextField
                             fullWidth
                             multiline
@@ -467,8 +474,12 @@ export default function EditLearningPathPage() {
                                 disableUnderline: true,
                                 sx: {
                                     fontSize: '0.875rem',
-                                    color: '#999',
+                                    color: 'hsl(var(--muted-foreground))',
                                     textAlign: 'center',
+                                    bgcolor: 'transparent !important',
+                                    '& textarea': {
+                                        textAlign: 'center',
+                                    }
                                 },
                             }}
                         />
@@ -502,11 +513,12 @@ export default function EditLearningPathPage() {
                             }}
                             disabled={courseCount >= maxCourses}
                             sx={{
-                                bgcolor: '#1976d2',
+                                bgcolor: 'hsl(var(--primary))',
+                                color: 'hsl(var(--primary-foreground))',
                                 textTransform: 'none',
                                 px: 3,
                                 '&:hover': {
-                                    bgcolor: '#1565c0',
+                                    bgcolor: 'hsl(var(--primary) / 0.9)',
                                 },
                             }}
                         >
@@ -525,26 +537,38 @@ export default function EditLearningPathPage() {
 
                     {/* Bottom Icons */}
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 8 }}>
-                        <IconButton
-                            onClick={() => setShowUsersDrawer(true)}
-                            sx={{
-                                border: '1px solid #e0e0e0',
-                                borderRadius: 1,
-                                p: 1.5,
-                            }}
-                        >
-                            <PersonOutlineIcon />
-                        </IconButton>
-                        <IconButton
-                            onClick={() => setShowSettingsDrawer(true)}
-                            sx={{
-                                border: '1px solid #e0e0e0',
-                                borderRadius: 1,
-                                p: 1.5,
-                            }}
-                        >
-                            <SettingsOutlinedIcon />
-                        </IconButton>
+                        <Tooltip title="Manage Users">
+                            <IconButton
+                                onClick={() => setShowUsersDrawer(true)}
+                                sx={{
+                                    border: '1px solid rgba(141, 166, 166, 0.2)',
+                                    borderRadius: 2,
+                                    width: 48,
+                                    height: 48,
+                                    color: 'hsl(var(--foreground))',
+                                    bgcolor: 'rgba(13, 20, 20, 0.4)',
+                                    '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)', transform: 'translateY(-2px)' }
+                                }}
+                            >
+                                <PersonOutlineIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="General Settings">
+                            <IconButton
+                                onClick={() => setShowSettingsDrawer(true)}
+                                sx={{
+                                    border: '1px solid rgba(141, 166, 166, 0.2)',
+                                    borderRadius: 2,
+                                    width: 48,
+                                    height: 48,
+                                    color: 'hsl(var(--foreground))',
+                                    bgcolor: 'rgba(13, 20, 20, 0.4)',
+                                    '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.1)', transform: 'translateY(-2px)' }
+                                }}
+                            >
+                                <SettingsOutlinedIcon />
+                            </IconButton>
+                        </Tooltip>
                     </Box>
 
                     {/* Sections and Courses */}
@@ -555,7 +579,7 @@ export default function EditLearningPathPage() {
                                 <Box key={section.id} sx={{ mb: 4 }}>
                                     {/* Section Header */}
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                                        <Typography variant="body1" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                                             ❝
                                         </Typography>
                                         {editingSection === section.id ? (
@@ -575,7 +599,10 @@ export default function EditLearningPathPage() {
                                                 }}
                                                 size="small"
                                                 variant="standard"
-                                                sx={{ flex: 1 }}
+                                                sx={{
+                                                    flex: 1,
+                                                    '& .MuiInput-root': { color: 'hsl(var(--foreground))' }
+                                                }}
                                             />
                                         ) : (
                                             <Typography
@@ -587,7 +614,8 @@ export default function EditLearningPathPage() {
                                                 sx={{
                                                     flex: 1,
                                                     cursor: 'pointer',
-                                                    '&:hover': { color: 'primary.main' }
+                                                    color: 'hsl(var(--foreground))',
+                                                    '&:hover': { color: 'hsl(var(--primary))' }
                                                 }}
                                             >
                                                 {section.name}
@@ -596,18 +624,17 @@ export default function EditLearningPathPage() {
                                         <IconButton
                                             size="small"
                                             onClick={() => handleDeleteSection(section.id)}
-                                            sx={{ color: 'error.main' }}
+                                            sx={{ color: 'hsl(var(--destructive))' }}
                                         >
                                             <DeleteOutlineIcon fontSize="small" />
                                         </IconButton>
                                     </Box>
 
                                     {/* Courses in section */}
-                                    <Box sx={{
-                                        border: '1px solid #e0e0e0',
-                                        borderRadius: 1,
+                                    <Box className="glass-card" sx={{
                                         p: 2,
-                                        bgcolor: '#fafafa'
+                                        bgcolor: 'rgba(13, 20, 20, 0.4)',
+                                        border: '1px solid rgba(141, 166, 166, 0.1)'
                                     }}>
                                         {section.courses.length > 0 ? (
                                             <List sx={{ p: 0 }}>
@@ -616,17 +643,18 @@ export default function EditLearningPathPage() {
                                                     .map((pc, index) => (
                                                         <ListItem
                                                             key={pc.id}
+                                                            className="glass-card"
                                                             sx={{
-                                                                bgcolor: 'white',
+                                                                bgcolor: 'rgba(13, 20, 20, 0.2)',
                                                                 mb: index < section.courses.length - 1 ? 1 : 0,
                                                                 borderRadius: 1,
-                                                                border: '1px solid #e0e0e0',
+                                                                border: '1px solid rgba(141, 166, 166, 0.1)',
                                                             }}
                                                             secondaryAction={
                                                                 <IconButton
                                                                     edge="end"
                                                                     onClick={() => handleRemoveCourse(pc.courseId)}
-                                                                    sx={{ color: 'error.main' }}
+                                                                    sx={{ color: 'hsl(var(--destructive))' }}
                                                                 >
                                                                     <DeleteOutlineIcon />
                                                                 </IconButton>
@@ -672,17 +700,18 @@ export default function EditLearningPathPage() {
                                             .map((pc) => (
                                                 <ListItem
                                                     key={pc.id}
+                                                    className="glass-card"
                                                     sx={{
-                                                        border: '1px solid #e0e0e0',
+                                                        border: '1px solid rgba(141, 166, 166, 0.1)',
                                                         borderRadius: 1,
                                                         mb: 1,
-                                                        bgcolor: 'white',
+                                                        bgcolor: 'rgba(13, 20, 20, 0.4)',
                                                     }}
                                                     secondaryAction={
                                                         <IconButton
                                                             edge="end"
                                                             onClick={() => handleRemoveCourse(pc.courseId)}
-                                                            sx={{ color: 'error.main' }}
+                                                            sx={{ color: 'hsl(var(--destructive))' }}
                                                         >
                                                             <DeleteOutlineIcon />
                                                         </IconButton>
@@ -716,11 +745,12 @@ export default function EditLearningPathPage() {
                                     onClick={handleAddSection}
                                     sx={{
                                         textTransform: 'none',
-                                        borderColor: '#e0e0e0',
-                                        color: 'text.secondary',
+                                        borderColor: 'rgba(141, 166, 166, 0.2)',
+                                        color: 'hsl(var(--muted-foreground))',
                                         '&:hover': {
-                                            borderColor: 'primary.main',
-                                            color: 'primary.main',
+                                            borderColor: 'hsl(var(--primary))',
+                                            color: 'hsl(var(--primary))',
+                                            bgcolor: 'rgba(141, 166, 166, 0.1)',
                                         },
                                     }}
                                 >

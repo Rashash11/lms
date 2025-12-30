@@ -89,6 +89,31 @@ async function main() {
     }
     console.log('✅ Created instructor user: instructor@portal.com / Instructor123!');
 
+    // Super Instructor user (has SUPER_INSTRUCTOR and LEARNER roles)
+    const superInstructorPassword = await bcrypt.hash('Super123!', 12);
+    const superInstructor = await prisma.user.upsert({
+        where: { email: 'superinstructor@portal.com' },
+        update: { passwordHash: superInstructorPassword },
+        create: {
+            username: 'superinstructor',
+            email: 'superinstructor@portal.com',
+            firstName: 'Sarah',
+            lastName: 'Super',
+            passwordHash: superInstructorPassword,
+            status: 'ACTIVE',
+            activeRole: 'SUPER_INSTRUCTOR',
+        },
+    });
+
+    for (const roleKey of ['SUPER_INSTRUCTOR', 'LEARNER'] as RoleKey[]) {
+        await prisma.userRole.upsert({
+            where: { userId_roleKey: { userId: superInstructor.id, roleKey } },
+            update: {},
+            create: { userId: superInstructor.id, roleKey },
+        });
+    }
+    console.log('✅ Created super instructor user: superinstructor@portal.com / Super123!');
+
     // Learner users
     const learnerPassword = await bcrypt.hash('Learner123!', 12);
     const learnerDataList = [
@@ -331,13 +356,31 @@ async function main() {
     }
     console.log('✅ Created learning paths');
 
+    // ======= CREATE STANDALONE ASSIGNMENTS =======
+    const sampleAssignments = [
+        { title: 'Project Proposal', description: 'Submit your final project proposal for review.', courseId: createdCourses[0].id },
+        { title: 'Peer Review', description: 'Review two of your peers projects.', courseId: createdCourses[1].id },
+        { title: 'Final Reflection', description: 'What are your key takeaways from this course?', courseId: null },
+    ];
+
+    for (const assigData of sampleAssignments) {
+        await prisma.assignment.create({
+            data: {
+                ...assigData,
+                createdBy: admin.id,
+            }
+        });
+    }
+    console.log('✅ Created sample assignments');
+
     console.log('');
     console.log('🎉 Database seeded successfully with content and enrollments!');
     console.log('');
     console.log('📝 Login credentials:');
-    console.log('   Admin:      admin@portal.com / Admin123!');
-    console.log('   Instructor: instructor@portal.com / Instructor123!');
-    console.log('   Learners:   learner1@portal.com / Learner123!');
+    console.log('   Admin:            admin@portal.com / Admin123!');
+    console.log('   Super Instructor: superinstructor@portal.com / Super123!');
+    console.log('   Instructor:       instructor@portal.com / Instructor123!');
+    console.log('   Learners:         learner1@portal.com / Learner123!');
     console.log('');
 }
 

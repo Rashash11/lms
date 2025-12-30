@@ -183,14 +183,21 @@ export default function CoursesPage() {
     return (
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight={600}>Courses</Typography>
+                <Typography variant="h5" sx={{ fontWeight: 800, color: 'hsl(var(--foreground))' }}>Courses</Typography>
                 <Box>
                     <Button
                         variant="contained"
                         startIcon={<AddIcon />}
                         endIcon={<ArrowDropDownIcon />}
                         onClick={(e) => setAddMenuAnchor(e.currentTarget)}
-                        sx={{ bgcolor: '#1976d2', textTransform: 'none', fontWeight: 600 }}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            bgcolor: 'hsl(var(--primary))',
+                            color: 'hsl(var(--primary-foreground))',
+                            borderRadius: '6px',
+                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
+                        }}
                     >
                         Add course
                     </Button>
@@ -221,7 +228,7 @@ export default function CoursesPage() {
                         ),
                     }}
                 />
-                <IconButton size="small" sx={{ border: '1px solid #e0e0e0' }}>
+                <IconButton size="small" sx={{ border: '1px solid rgba(141, 166, 166, 0.2)' }}>
                     <FilterListIcon fontSize="small" />
                 </IconButton>
                 {selected.length > 0 && (
@@ -244,9 +251,17 @@ export default function CoursesPage() {
                     <CircularProgress />
                 </Box>
             ) : (
-                <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+                <TableContainer
+                    component={Paper}
+                    className="glass-card"
+                    sx={{
+                        boxShadow: 'none',
+                        border: '1px solid rgba(141, 166, 166, 0.1)',
+                        background: 'rgba(13, 20, 20, 0.4)'
+                    }}
+                >
                     <Table>
-                        <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+                        <TableHead>
                             <TableRow>
                                 <TableCell padding="checkbox">
                                     <Checkbox
@@ -278,7 +293,7 @@ export default function CoursesPage() {
                                         selected={selected.indexOf(course.id) !== -1}
                                         sx={{
                                             '&.Mui-selected': {
-                                                bgcolor: '#e3f2fd',
+                                                bgcolor: 'rgba(26, 84, 85, 0.1)',
                                             }
                                         }}
                                     >
@@ -292,44 +307,46 @@ export default function CoursesPage() {
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <Typography
                                                     sx={{
-                                                        fontWeight: 500,
-                                                        color: '#1976d2',
+                                                        fontWeight: 700,
+                                                        color: 'hsl(var(--primary))',
                                                         cursor: 'pointer',
+                                                        fontSize: '0.9rem',
                                                         '&:hover': { textDecoration: 'underline' }
                                                     }}
                                                     onClick={() => router.push(`/admin/courses/new/edit?id=${course.id}`)}
                                                 >
                                                     {course.title}
                                                 </Typography>
-                                                <IconButton size="small" sx={{ padding: 0.5 }}>
-                                                    <LinkIcon sx={{ fontSize: 16, color: '#666' }} />
+                                                <IconButton size="small" sx={{ padding: 0.5, color: 'hsl(var(--muted-foreground))' }}>
+                                                    <LinkIcon sx={{ fontSize: 16 }} />
                                                 </IconButton>
                                                 <Chip
                                                     label={course.status === 'PUBLISHED' ? 'Active' : 'Inactive'}
                                                     size="small"
                                                     sx={{
-                                                        bgcolor: course.status === 'PUBLISHED' ? '#e8f5e9' : '#f5f5f5',
-                                                        color: course.status === 'PUBLISHED' ? '#2e7d32' : '#666',
-                                                        fontWeight: 500,
-                                                        fontSize: '0.75rem',
-                                                        height: 24
+                                                        bgcolor: course.status === 'PUBLISHED' ? 'rgba(46, 125, 50, 0.1)' : 'rgba(141, 166, 166, 0.1)',
+                                                        color: course.status === 'PUBLISHED' ? '#4caf50' : 'hsl(var(--muted-foreground))',
+                                                        fontWeight: 600,
+                                                        fontSize: '0.7rem',
+                                                        height: 20,
+                                                        border: `1px solid ${course.status === 'PUBLISHED' ? 'rgba(46, 125, 50, 0.2)' : 'rgba(141, 166, 166, 0.2)'}`
                                                     }}
                                                 />
                                             </Box>
                                         </TableCell>
                                         <TableCell>
-                                            <Typography variant="body2" color="text.secondary">
+                                            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                                                 {course.code || '-'}
                                             </Typography>
                                         </TableCell>
                                         <TableCell>
-                                            <Typography variant="body2" color="text.secondary">-</Typography>
+                                            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>-</Typography>
                                         </TableCell>
                                         <TableCell>
-                                            <Typography variant="body2" color="text.secondary">-</Typography>
+                                            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>-</Typography>
                                         </TableCell>
                                         <TableCell>
-                                            <Typography variant="body2" color="text.secondary">
+                                            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                                                 {getTimeAgo(course.updatedAt)}
                                             </Typography>
                                         </TableCell>
@@ -343,26 +360,28 @@ export default function CoursesPage() {
                                                 }}
                                             >
                                                 <Tooltip title="View">
-                                                    <IconButton size="small">
+                                                    <IconButton size="small" sx={{ color: 'hsl(var(--foreground))' }}>
                                                         <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />
                                                     </IconButton>
                                                 </Tooltip>
                                                 <Tooltip title="Preview">
                                                     <IconButton
                                                         size="small"
+                                                        sx={{ color: 'hsl(var(--foreground))' }}
                                                         onClick={() => router.push(`/admin/courses/${course.id}`)}
                                                     >
                                                         <PreviewIcon sx={{ fontSize: 18 }} />
                                                     </IconButton>
                                                 </Tooltip>
                                                 <Tooltip title="Duplicate">
-                                                    <IconButton size="small">
+                                                    <IconButton size="small" sx={{ color: 'hsl(var(--foreground))' }}>
                                                         <ContentCopyIcon sx={{ fontSize: 18 }} />
                                                     </IconButton>
                                                 </Tooltip>
                                                 <Tooltip title="Edit">
                                                     <IconButton
                                                         size="small"
+                                                        sx={{ color: 'hsl(var(--foreground))' }}
                                                         onClick={() => router.push(`/admin/courses/new/edit?id=${course.id}`)}
                                                     >
                                                         <EditIcon sx={{ fontSize: 18 }} />
@@ -372,12 +391,14 @@ export default function CoursesPage() {
                                                     <IconButton
                                                         size="small"
                                                         onClick={() => handleDeleteClick(course.id)}
+                                                        sx={{ color: 'hsl(var(--destructive))' }}
                                                     >
-                                                        <DeleteIcon sx={{ fontSize: 18, color: '#d32f2f' }} />
+                                                        <DeleteIcon sx={{ fontSize: 18 }} />
                                                     </IconButton>
                                                 </Tooltip>
                                                 <IconButton
                                                     size="small"
+                                                    sx={{ color: 'hsl(var(--foreground))' }}
                                                     onClick={(e) => {
                                                         setAnchorEl(e.currentTarget);
                                                         setMenuCourseId(course.id);

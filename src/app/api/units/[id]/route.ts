@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 import { z } from 'zod';
 
 const unitTypes = ['TEXT', 'FILE', 'EMBED', 'VIDEO', 'TEST', 'SURVEY', 'ASSIGNMENT', 'ILT', 'SCORM', 'XAPI', 'CMI5', 'TALENTCRAFT', 'SECTION', 'WEB', 'AUDIO', 'DOCUMENT', 'IFRAME'] as const;
@@ -18,6 +20,11 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'unit:update_any') && !can(session, 'unit:publish')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission to update or publish units' }, { status: 403 });
+        }
+
         const body = await request.json();
         const validation = updateUnitSchema.safeParse(body);
 
@@ -42,6 +49,10 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'unit:delete_any')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: unit:delete_any' }, { status: 403 });
+        }
         await prisma.courseUnit.delete({
             where: { id: params.id }
         });

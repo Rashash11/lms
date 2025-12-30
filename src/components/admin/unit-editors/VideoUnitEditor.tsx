@@ -114,17 +114,48 @@ export default function VideoUnitEditor({
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            onConfigChange({
-                ...config,
-                url: objectUrl, // Add top-level url for player compatibility
-                videoUrl: objectUrl,
-                fileName: file.name,
-                fileSize: file.size,
-                source: 'upload',
-                content: { type: 'upload', url: objectUrl, fileName: file.name }
-            });
-            setSelectedSource('upload');
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('courseId', courseId);
+                formData.append('unitId', unitId);
+                formData.append('kind', 'video');
+
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!res.ok) throw new Error('Upload failed');
+
+                const data = await res.json();
+                const { url, name, size } = data.file;
+
+                onConfigChange({
+                    ...config,
+                    url: url,
+                    videoUrl: url,
+                    fileName: name,
+                    fileSize: size,
+                    source: 'upload',
+                    content: { type: 'upload', url: url, fileName: name }
+                });
+                setSelectedSource('upload');
+            } catch (error) {
+                console.error('Upload error:', error);
+                // Fallback
+                const objectUrl = URL.createObjectURL(file);
+                onConfigChange({
+                    ...config,
+                    url: objectUrl,
+                    videoUrl: objectUrl,
+                    fileName: file.name,
+                    fileSize: file.size,
+                    source: 'upload',
+                    content: { type: 'upload', url: objectUrl, fileName: file.name }
+                });
+                setSelectedSource('upload');
+            }
         }
     };
 
@@ -414,14 +445,43 @@ export default function VideoUnitEditor({
                 open={recorderOpen}
                 onClose={() => setRecorderOpen(false)}
                 onRecordingComplete={async (blob: Blob) => {
-                    const url = URL.createObjectURL(blob);
-                    onConfigChange({
-                        ...config,
-                        url: url, // Add top-level url for player compatibility
-                        videoUrl: url,
-                        source: recorderMode === 'screen' ? 'screen' : 'record',
-                        content: { type: recorderMode, url }
-                    });
+                    const ext = 'webm'; // Browser recordings are usually webm
+                    const file = new File([blob], `recorded-${recorderMode}-${Date.now()}.${ext}`, { type: `video/${ext}` });
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('courseId', courseId);
+                        formData.append('unitId', unitId);
+                        formData.append('kind', 'video');
+
+                        const res = await fetch('/api/upload', {
+                            method: 'POST',
+                            body: formData,
+                        });
+
+                        if (!res.ok) throw new Error('Upload failed');
+
+                        const data = await res.json();
+                        const { url, name, size } = data.file;
+
+                        onConfigChange({
+                            ...config,
+                            url: url,
+                            videoUrl: url,
+                            source: recorderMode === 'screen' ? 'screen' : 'record',
+                            content: { type: recorderMode, url }
+                        });
+                    } catch (error) { // Fallback
+                        const url = URL.createObjectURL(blob);
+                        onConfigChange({
+                            ...config,
+                            url: url,
+                            videoUrl: url,
+                            source: recorderMode === 'screen' ? 'screen' : 'record',
+                            content: { type: recorderMode, url }
+                        });
+                    }
                     setRecorderOpen(false);
                 }}
                 mode={recorderMode}

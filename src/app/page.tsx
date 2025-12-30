@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Container, Typography, Button, Paper, Stack } from '@mui/material';
+import { Box, Container, Typography, Button, Stack } from '@mui/material';
 import { School, Login as LoginIcon, PersonAdd } from '@mui/icons-material';
 import Link from 'next/link';
 
@@ -9,7 +9,8 @@ export default function HomePage() {
         <Box
             sx={{
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                bgcolor: 'hsl(var(--background))',
+                backgroundImage: 'radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.1) 0%, transparent 50%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -17,56 +18,53 @@ export default function HomePage() {
             }}
         >
             <Container maxWidth="md">
-                <Paper
-                    elevation={24}
+                <Box
+                    className="hero-glass-card animate-slide-up"
                     sx={{
                         p: { xs: 4, md: 8 },
-                        borderRadius: 4,
                         textAlign: 'center',
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(10px)',
                     }}
                 >
                     <Box sx={{ mb: 4 }}>
                         <School
                             sx={{
                                 fontSize: 80,
-                                color: 'primary.main',
+                                color: 'hsl(var(--accent-foreground))',
                                 mb: 2,
                             }}
                         />
                         <Typography
-                            variant="h2"
-                            component="h1"
-                            gutterBottom
+                            variant="h1"
                             sx={{
                                 fontWeight: 700,
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                backgroundClip: 'text',
+                                className: 'gradient-text',
+                                // Since MUI Typography might not handle class for gradient-text well if it's strictly enforced, we'll use SX
+                                background: 'linear-gradient(135deg, hsl(180 60% 55%), hsl(29.5 80% 60%))',
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent',
                                 mb: 2,
+                                fontSize: { xs: '2.5rem', md: '4rem' }
                             }}
                         >
                             Zedny LMS
                         </Typography>
                         <Typography
                             variant="h5"
-                            color="text.secondary"
                             sx={{
                                 mb: 4,
-                                fontWeight: 400,
+                                fontWeight: 500,
+                                color: 'hsl(var(--foreground))',
+                                opacity: 0.9
                             }}
                         >
-                            Full-featured Learning Management System
+                            Premium Health Hub & Learning Management
                         </Typography>
                         <Typography
                             variant="body1"
-                            color="text.secondary"
-                            sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}
+                            sx={{ mb: 4, maxWidth: 600, mx: 'auto', color: 'hsl(var(--muted-foreground))' }}
                         >
-                            Empower your organization with a comprehensive LMS solution.
-                            Create courses, manage users, track progress, and deliver exceptional learning experiences.
+                            Empower your organization with a state-of-the-art solution.
+                            Experience glassmorphism, fluid animations, and a world-class design system.
                         </Typography>
                     </Box>
 
@@ -87,11 +85,11 @@ export default function HomePage() {
                                 py: 1.5,
                                 fontSize: '1.1rem',
                                 fontWeight: 600,
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                bgcolor: 'hsl(var(--primary))',
                                 '&:hover': {
-                                    background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                                    bgcolor: 'hsl(var(--primary) / 0.9)',
                                     transform: 'translateY(-2px)',
-                                    boxShadow: 6,
+                                    boxShadow: '0 0 20px hsl(var(--primary) / 0.4)',
                                 },
                                 transition: 'all 0.3s ease',
                             }}
@@ -109,15 +107,13 @@ export default function HomePage() {
                                 py: 1.5,
                                 fontSize: '1.1rem',
                                 fontWeight: 600,
-                                borderWidth: 2,
-                                borderColor: 'primary.main',
-                                color: 'primary.main',
+                                borderColor: 'hsl(var(--border))',
+                                color: 'hsl(var(--foreground))',
+                                backdropFilter: 'blur(5px)',
                                 '&:hover': {
-                                    borderWidth: 2,
-                                    borderColor: 'primary.dark',
-                                    backgroundColor: 'primary.50',
+                                    borderColor: 'hsl(var(--primary))',
+                                    bgcolor: 'hsl(var(--accent))',
                                     transform: 'translateY(-2px)',
-                                    boxShadow: 4,
                                 },
                                 transition: 'all 0.3s ease',
                             }}
@@ -130,14 +126,14 @@ export default function HomePage() {
                         sx={{
                             pt: 4,
                             borderTop: '1px solid',
-                            borderColor: 'divider',
+                            borderColor: 'hsl(var(--border))',
                         }}
                     >
-                        <Typography variant="body2" color="text.secondary">
-                            🎓 Courses • 📊 Analytics • 🏆 Gamification • 💬 Discussions • 📜 Certificates
+                        <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                            🏥 Medical Hub • 🎓 Courses • 📊 Analytics • 📜 Certificates
                         </Typography>
                     </Box>
-                </Paper>
+                </Box>
             </Container>
         </Box>
     );

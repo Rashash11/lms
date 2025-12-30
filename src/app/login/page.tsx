@@ -5,7 +5,6 @@ import { useFormState, useFormStatus } from 'react-dom';
 import {
     Box,
     Button,
-    Card,
     Container,
     TextField,
     Typography,
@@ -33,10 +32,9 @@ function SubmitButton() {
                 height: 48,
                 fontSize: '1rem',
                 textTransform: 'none',
-                boxShadow: 'none',
+                bgcolor: 'hsl(var(--primary))',
                 '&:hover': {
-                    boxShadow: 'none',
-                    bgcolor: 'primary.dark',
+                    bgcolor: 'hsl(var(--primary) / 0.9)',
                 }
             }}
         >
@@ -56,34 +54,52 @@ export default function LoginPage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: '#f4f6f8',
+                bgcolor: 'hsl(var(--background))',
+                backgroundImage: 'radial-gradient(circle at 10% 10%, hsl(var(--primary) / 0.05) 0%, transparent 40%), radial-gradient(circle at 90% 90%, hsl(var(--secondary) / 0.05) 0%, transparent 40%)',
                 p: 2,
             }}
         >
             <Container maxWidth="xs">
-                <Card
-                    elevation={0}
+                <Box
+                    className="glass-card animate-fade-in"
                     sx={{
                         p: 4,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        border: '1px solid #e0e0e0',
-                        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
                     }}
                 >
                     <Box sx={{ mb: 4, textAlign: 'center' }}>
-                        <Typography variant="h4" component="h1" fontWeight="700" color="primary" sx={{ mb: 1 }}>
+                        <Typography
+                            variant="h4"
+                            component="h1"
+                            sx={{
+                                fontWeight: 700,
+                                background: 'linear-gradient(135deg, hsl(180 60% 55%), hsl(29.5 80% 60%))',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                mb: 1
+                            }}
+                        >
                             Zedny LMS
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                             Welcome back! Please login to your account.
                         </Typography>
                     </Box>
 
                     {state?.error && (
-                        <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+                        <Alert
+                            severity="error"
+                            sx={{
+                                width: '100%',
+                                mb: 2,
+                                bgcolor: 'hsl(0 72% 51% / 0.1)',
+                                color: 'hsl(0 72% 51%)',
+                                border: '1px solid hsl(0 72% 51% / 0.2)'
+                            }}
+                        >
                             {state.error}
                         </Alert>
                     )}
@@ -98,8 +114,14 @@ export default function LoginPage() {
                             name="username"
                             autoComplete="username"
                             autoFocus
-                            InputProps={{
-                                sx: { borderRadius: 1.5 }
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    bgcolor: 'hsl(var(--input))',
+                                    color: 'hsl(var(--foreground))',
+                                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                    '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
                             }}
                         />
                         <TextField
@@ -111,14 +133,23 @@ export default function LoginPage() {
                             type={showPassword ? 'text' : 'password'}
                             id="password"
                             autoComplete="current-password"
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    bgcolor: 'hsl(var(--input))',
+                                    color: 'hsl(var(--foreground))',
+                                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                    '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                            }}
                             InputProps={{
-                                sx: { borderRadius: 1.5 },
                                 endAdornment: (
                                     <InputAdornment position="end">
                                         <IconButton
                                             aria-label="toggle password visibility"
                                             onClick={() => setShowPassword(!showPassword)}
                                             edge="end"
+                                            sx={{ color: 'hsl(var(--muted-foreground))' }}
                                         >
                                             {showPassword ? <VisibilityOff /> : <Visibility />}
                                         </IconButton>
@@ -128,7 +159,7 @@ export default function LoginPage() {
                         />
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                            <Link href="#" variant="body2" sx={{ textDecoration: 'none', fontWeight: 500 }}>
+                            <Link href="#" variant="body2" sx={{ textDecoration: 'none', fontWeight: 500, color: 'hsl(var(--primary))' }}>
                                 Forgot password?
                             </Link>
                         </Box>
@@ -136,17 +167,17 @@ export default function LoginPage() {
                         <SubmitButton />
 
                         <Box sx={{ mt: 2, textAlign: 'center' }}>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                                 Don't have an account?{' '}
-                                <Link href="/signup" underline="hover" sx={{ fontWeight: 600 }}>
+                                <Link href="/signup" underline="hover" sx={{ fontWeight: 600, color: 'hsl(var(--secondary))' }}>
                                     Sign up
                                 </Link>
                             </Typography>
                         </Box>
                     </Box>
-                </Card>
+                </Box>
                 <Box sx={{ mt: 4, textAlign: 'center' }}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                         &copy; 2025 Zedny LMS. All rights reserved.
                     </Typography>
                 </Box>

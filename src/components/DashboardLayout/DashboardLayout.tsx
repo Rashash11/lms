@@ -141,41 +141,61 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/login');
     };
 
+    const drawerColors = {
+        bg: 'rgba(13, 20, 20, 0.4)',
+        active: 'rgba(26, 84, 85, 0.15)',
+        hover: 'rgba(141, 166, 166, 0.08)',
+        text: 'hsl(180 10% 95%)',
+        muted: 'hsl(180 10% 60%)',
+        icon: 'hsl(180.6 65.6% 60%)',
+        border: 'rgba(141, 166, 166, 0.1)',
+    };
+
     return (
         <Box sx={{ display: 'flex' }}>
-            <AppBar position="fixed" open={open} elevation={0} sx={{ bgcolor: 'white', borderBottom: '1px solid #e0e0e0' }}>
-                <Toolbar>
+            <AppBar
+                position="fixed"
+                open={open}
+                elevation={0}
+                sx={{
+                    bgcolor: 'rgba(8, 12, 12, 0.8)',
+                    backdropFilter: 'blur(20px)',
+                    borderBottom: `1px solid ${drawerColors.border}`,
+                    color: drawerColors.text
+                }}
+            >
+                <Toolbar sx={{ px: { xs: 2, sm: 3 } }}>
                     <IconButton
                         color="inherit"
                         aria-label="toggle drawer"
                         onClick={handleDrawerToggle}
                         edge="start"
-                        sx={{ mr: 2, color: 'grey.700' }}
+                        sx={{ mr: 2, color: drawerColors.icon }}
                     >
                         {open ? <ChevronLeftIcon /> : <MenuIcon />}
                     </IconButton>
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: 'grey.800' }}>
+                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: drawerColors.text, fontWeight: 700 }}>
                         Zedny LMS
                     </Typography>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Tooltip title="Messages">
-                            <IconButton color="inherit" sx={{ color: 'grey.600' }}>
-                                <Badge badgeContent={4} color="error">
+                            <IconButton color="inherit" sx={{ color: drawerColors.muted }}>
+                                <Badge badgeContent={4} color="secondary">
                                     <MailIcon />
                                 </Badge>
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Notifications">
-                            <IconButton color="inherit" sx={{ color: 'grey.600' }}>
-                                <Badge badgeContent={17} color="error">
+                            <IconButton color="inherit" sx={{ color: drawerColors.muted }}>
+                                <Badge badgeContent={17} color="secondary">
                                     <NotificationsIcon />
                                 </Badge>
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Account">
                             <IconButton onClick={handleProfileMenuOpen} sx={{ p: 0, ml: 1 }}>
-                                <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main' }}>A</Avatar>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: 'hsl(var(--primary))', fontWeight: 700 }}>A</Avatar>
                             </IconButton>
                         </Tooltip>
                     </Box>
@@ -185,41 +205,68 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         onClose={handleMenuClose}
                         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                        PaperProps={{
+                            sx: {
+                                mt: 1.5,
+                                bgcolor: 'rgba(13, 20, 20, 0.9)',
+                                backdropFilter: 'blur(20px)',
+                                border: `1px solid ${drawerColors.border}`,
+                                borderRadius: 3,
+                                boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+                                color: drawerColors.text
+                            }
+                        }}
                     >
-                        <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-                        <MenuItem onClick={handleMenuClose}>My Account</MenuItem>
-                        <Divider />
-                        <MenuItem onClick={handleLogout}>
-                            <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
-                            Logout
+                        <MenuItem onClick={handleMenuClose} sx={{ px: 2, py: 1, mx: 1, borderRadius: 1.5 }}>Profile</MenuItem>
+                        <MenuItem onClick={handleMenuClose} sx={{ px: 2, py: 1, mx: 1, borderRadius: 1.5 }}>My Account</MenuItem>
+                        <Divider sx={{ my: 1, opacity: 0.5 }} />
+                        <MenuItem onClick={handleLogout} sx={{ px: 2, py: 1, mx: 1, borderRadius: 1.5, color: 'hsl(0 72% 51%)' }}>
+                            <ListItemIcon><LogoutIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
+                            <Typography fontWeight={600}>Logout</Typography>
                         </MenuItem>
                     </Menu>
                 </Toolbar>
             </AppBar>
 
-            <Drawer variant="permanent" open={open}>
+            <Drawer
+                variant="permanent"
+                open={open}
+                sx={{
+                    '& .MuiDrawer-paper': {
+                        bgcolor: drawerColors.bg,
+                        backdropFilter: 'blur(24px)',
+                        borderRight: `1px solid ${drawerColors.border}`,
+                        color: drawerColors.text
+                    }
+                }}
+            >
                 <DrawerHeader>
                     {open && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', pl: 1 }}>
-                            <Typography variant="h6" fontWeight="bold" color="primary">
-                                TalentLMS
+                        <Box sx={{ display: 'flex', alignItems: 'center', pl: 2 }}>
+                            <Typography variant="h6" fontWeight="bold" sx={{ color: 'hsl(var(--primary))' }}>
+                                Zedny LMS
                             </Typography>
                         </Box>
                     )}
                 </DrawerHeader>
-                <Divider />
-                <List sx={{ flexGrow: 1 }}>
+                <Divider sx={{ opacity: 0.1 }} />
+                <List sx={{ flexGrow: 1, px: 1 }}>
                     {menuItems.map((item) => (
-                        <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
+                        <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 0.5 }}>
                             <ListItemButton
                                 onClick={() => router.push(item.path)}
                                 sx={{
                                     minHeight: 48,
                                     justifyContent: open ? 'initial' : 'center',
                                     px: 2.5,
-                                    bgcolor: pathname === item.path ? 'action.selected' : 'transparent',
-                                    borderLeft: pathname === item.path ? '3px solid' : '3px solid transparent',
-                                    borderColor: pathname === item.path ? 'primary.main' : 'transparent',
+                                    borderRadius: '10px',
+                                    bgcolor: pathname === item.path ? drawerColors.active : 'transparent',
+                                    color: pathname === item.path ? drawerColors.text : drawerColors.muted,
+                                    transition: 'all 0.2s',
+                                    '&:hover': {
+                                        bgcolor: drawerColors.hover,
+                                        transform: open ? 'translateX(4px)' : 'none'
+                                    },
                                 }}
                             >
                                 <ListItemIcon
@@ -227,7 +274,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         minWidth: 0,
                                         mr: open ? 3 : 'auto',
                                         justifyContent: 'center',
-                                        color: pathname === item.path ? 'primary.main' : 'grey.600',
+                                        color: pathname === item.path ? drawerColors.icon : drawerColors.muted,
                                     }}
                                 >
                                     {item.icon}
@@ -236,36 +283,45 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     primary={item.text}
                                     sx={{
                                         opacity: open ? 1 : 0,
-                                        color: pathname === item.path ? 'primary.main' : 'grey.800',
+                                        '& .MuiTypography-root': { fontWeight: pathname === item.path ? 700 : 500, fontSize: 13 }
                                     }}
                                 />
                             </ListItemButton>
                         </ListItem>
                     ))}
                 </List>
-                <Divider />
-                <List>
+                <Divider sx={{ opacity: 0.1 }} />
+                <List sx={{ px: 1 }}>
                     {bottomMenuItems.map((item) => (
-                        <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
+                        <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 0.5 }}>
                             <ListItemButton
                                 onClick={() => router.push(item.path)}
                                 sx={{
                                     minHeight: 48,
                                     justifyContent: open ? 'initial' : 'center',
                                     px: 2.5,
+                                    borderRadius: '10px',
+                                    color: drawerColors.muted,
+                                    '&:hover': { bgcolor: drawerColors.hover }
                                 }}
                             >
-                                <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center', color: 'grey.600' }}>
+                                <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center', color: 'inherit' }}>
                                     {item.icon}
                                 </ListItemIcon>
-                                <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
+                                <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0, '& .MuiTypography-root': { fontSize: 13, fontWeight: 500 } }} />
                             </ListItemButton>
                         </ListItem>
                     ))}
                 </List>
             </Drawer>
 
-            <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: '#f4f6f8', minHeight: '100vh' }}>
+            <Box component="main" sx={{
+                flexGrow: 1,
+                p: { xs: 2, sm: 3 },
+                bgcolor: 'hsl(var(--background))',
+                minHeight: '100vh',
+                position: 'relative'
+            }}>
                 <DrawerHeader />
                 {children}
             </Box>

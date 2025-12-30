@@ -28,22 +28,21 @@ import CreditCardOutlinedIcon from '@mui/icons-material/CreditCardOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import HistoryIcon from '@mui/icons-material/History';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
 import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
-// TalentLMS Exact Color Palette
-const SIDEBAR_BG = '#2560D8';  // TalentLMS blue (highly saturated)
-const SIDEBAR_BG_DARK = '#1E4DB8';  // Slightly darker for separators/hover
-const ACTIVE_BG = '#1F5FBF';  // Active pill / active row
-const HOVER_BG = 'rgba(255,255,255,0.08)';
-const TEXT_COLOR = '#FFFFFF';
-const MUTED_TEXT = 'rgba(255,255,255,0.75)';
-const ICON_COLOR = 'rgba(255,255,255,0.9)';
-const DIVIDER = 'rgba(255,255,255,0.12)';
-const LOGO_ORANGE = '#F58220';
+// NCOSH Design System Unified Palette
+const SIDEBAR_BG = 'rgba(13, 20, 20, 0.4)';
+const SIDEBAR_BG_SOLID = 'hsl(180 15% 8%)';
+const ACTIVE_BG = 'rgba(26, 84, 85, 0.15)';
+const HOVER_BG = 'rgba(141, 166, 166, 0.08)';
+const TEXT_COLOR = 'hsl(180 10% 95%)';
+const MUTED_TEXT = 'hsl(180 10% 60%)';
+const ICON_COLOR = 'hsl(180.6 65.6% 60%)';
+const DIVIDER = 'rgba(141, 166, 166, 0.1)';
 
 const drawerWidth = 260;
 
@@ -59,14 +58,18 @@ const menuItems = [
     { text: 'Notifications', icon: <NotificationsNoneOutlinedIcon />, path: '/admin/notifications' },
     { text: 'Reports', icon: <AssessmentOutlinedIcon />, path: '/admin/reports', hasArrow: true },
     { text: 'Skills', icon: <EmojiObjectsOutlinedIcon />, path: '/admin/skills', hasBadge: true },
+    { text: 'Skills', icon: <EmojiObjectsOutlinedIcon />, path: '/admin/skills', hasBadge: true },
+    { text: 'Assignments', icon: <AssignmentOutlinedIcon />, path: '/admin/assignments' },
+    { text: 'Account & Settings', icon: <SettingsOutlinedIcon />, path: '/admin/settings', hasArrow: true },
     { text: 'Account & Settings', icon: <SettingsOutlinedIcon />, path: '/admin/settings', hasArrow: true },
     { text: 'Subscription', icon: <CreditCardOutlinedIcon />, path: '/admin/subscription' },
 ];
 
-type RoleKey = 'ADMIN' | 'INSTRUCTOR' | 'LEARNER';
+type RoleKey = 'ADMIN' | 'INSTRUCTOR' | 'SUPER_INSTRUCTOR' | 'LEARNER';
 const roleLabels: Record<RoleKey, string> = {
     'ADMIN': 'Administrator',
     'INSTRUCTOR': 'Instructor',
+    'SUPER_INSTRUCTOR': 'Super instructor',
     'LEARNER': 'Learner'
 };
 
@@ -86,7 +89,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [user, setUser] = useState<UserData | null>(null);
     const [switching, setSwitching] = useState(false);
-    const [demoMode, setDemoMode] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
 
@@ -122,17 +124,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         };
     }, []);
 
-    // Fetch current user on mount
+    // Fetch current user on mount and check route restrictions
     useEffect(() => {
         fetch('/api/me')
             .then(res => res.json())
             .then(data => {
                 if (data.user) {
                     setUser(data.user);
+                    // Route protection for Super Instructors
+                    if (data.user.activeRole === 'SUPER_INSTRUCTOR') {
+                        const restrictedPaths = ['/admin/settings', '/admin/subscription', '/admin/automations', '/admin/branches'];
+                        if (restrictedPaths.some(path => pathname.startsWith(path))) {
+                            router.replace('/admin/403');
+                        }
+                    }
                 }
             })
             .catch(err => console.error('Failed to fetch user:', err));
-    }, []);
+    }, [pathname, router]);
 
     const handleRoleChange = async (role: RoleKey) => {
         if (switching || role === user?.activeRole) return;
@@ -164,12 +173,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         router.push('/login');
     };
 
-
     const drawer = (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: SIDEBAR_BG }}>
+        <Box sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: SIDEBAR_BG,
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            borderRight: `1px solid ${DIVIDER}`
+        }}>
             {/* Logo at top of sidebar */}
             <Box sx={{ height: 70, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Box sx={{ position: 'relative', width: 180, height: 50 }}>
+                <Box sx={{ position: 'relative', width: 180, height: 50, filter: 'drop-shadow(0 0 8px rgba(26, 84, 85, 0.3))' }}>
                     <Image
                         src="/main-logo (1).svg"
                         alt="Zedny Logo"
@@ -181,7 +197,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Box>
 
             <List sx={{ flex: 1, pt: 0, px: 1.5 }}>
-                {menuItems.map((item) => {
+                {menuItems.filter(item => {
+                    if (user?.activeRole === 'SUPER_INSTRUCTOR') {
+                        if (['Account & Settings', 'Subscription', 'Automations', 'Branches'].includes(item.text)) return false;
+                    }
+                    return true;
+                }).map((item) => {
                     const isSelected = pathname === item.path || (item.path === '/admin' && pathname === '/admin');
                     return (
                         <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
@@ -194,29 +215,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 sx={{
                                     height: 40,
                                     px: 1.5,
-                                    borderRadius: 2,
+                                    borderRadius: '10px',
                                     color: isSelected ? TEXT_COLOR : MUTED_TEXT,
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                                     '&.Mui-selected': {
                                         bgcolor: ACTIVE_BG,
+                                        boxShadow: 'inset 0 0 0 1px rgba(26, 84, 85, 0.2)',
                                         '&:hover': { bgcolor: ACTIVE_BG },
+                                        '& .MuiListItemIcon-root': { color: ICON_COLOR }
                                     },
-                                    '&:hover': { bgcolor: HOVER_BG },
+                                    '&:hover': {
+                                        bgcolor: HOVER_BG,
+                                        transform: 'translateX(4px)'
+                                    },
                                 }}
                             >
-                                <ListItemIcon sx={{ minWidth: 28, color: isSelected ? ICON_COLOR : MUTED_TEXT }}>
+                                <ListItemIcon sx={{ minWidth: 28, color: isSelected ? ICON_COLOR : MUTED_TEXT, transition: 'color 0.2s' }}>
                                     {React.cloneElement(item.icon, { sx: { fontSize: 18 } })}
                                 </ListItemIcon>
                                 <ListItemText
                                     primary={item.text}
-                                    primaryTypographyProps={{ fontSize: 13, fontWeight: 500 }}
+                                    primaryTypographyProps={{ fontSize: 13, fontWeight: isSelected ? 600 : 500, letterSpacing: '0.01em' }}
                                 />
                                 {item.hasBadge && (
                                     <Box sx={{
                                         width: 6, height: 6, borderRadius: '50%',
-                                        bgcolor: '#ffa726', ml: 0.5
+                                        bgcolor: 'hsl(var(--secondary))', ml: 0.5,
+                                        boxShadow: '0 0 8px hsl(var(--secondary) / 0.5)'
                                     }} />
                                 )}
-                                {item.hasArrow && <ChevronRightIcon sx={{ fontSize: 16, opacity: 0.6 }} />}
+                                {item.hasArrow && <ChevronRightIcon sx={{ fontSize: 16, opacity: 0.4 }} />}
                             </ListItemButton>
                         </ListItem>
                     );
@@ -228,160 +256,162 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Box sx={{
                     display: 'flex', alignItems: 'center', gap: 1.5,
                     cursor: 'pointer',
+                    p: 1, borderRadius: 2,
+                    '&:hover': { bgcolor: HOVER_BG }
                 }}>
                     <PlayCircleOutlineIcon sx={{ color: ICON_COLOR, fontSize: 18 }} />
-                    <Typography sx={{ color: TEXT_COLOR, fontSize: 13, flex: 1 }}>Demo mode</Typography>
+                    <Typography sx={{ color: TEXT_COLOR, fontSize: 13, flex: 1, fontWeight: 500 }}>Demo mode</Typography>
                     <InfoOutlinedIcon sx={{ color: MUTED_TEXT, fontSize: 16 }} />
                 </Box>
             </Box>
         </Box>
     );
 
-    // If on the course editor page, render full screen without the admin shell
     if (pathname?.startsWith('/admin/courses/new/edit')) {
         return <>{children}</>;
     }
 
     return (
-        <Box sx={{ display: 'flex', bgcolor: '#f5f7fa', minHeight: '100vh' }}>
+        <Box sx={{ display: 'flex', bgcolor: 'hsl(var(--background))', minHeight: '100vh' }}>
             <AppBar
                 position="fixed"
                 sx={{
                     width: { sm: `calc(100% - ${drawerWidth}px)` },
                     ml: { sm: `${drawerWidth}px` },
-                    bgcolor: '#F8F9FA',
-                    color: 'text.primary',
-                    borderBottom: '1px solid #E0E3E7',
+                    bgcolor: 'rgba(8, 12, 12, 0.8)',
+                    color: 'hsl(var(--foreground))',
+                    borderBottom: `1px solid ${DIVIDER}`,
                     boxShadow: 'none',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
                 }}
             >
-                <Toolbar sx={{ px: 3, gap: 2, minHeight: '56px !important', height: 56 }}>
-                    <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ display: { sm: 'none' } }}>
+                <Toolbar sx={{ px: 3, gap: 2, minHeight: '64px !important', height: 64 }}>
+                    <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ display: { sm: 'none' }, color: ICON_COLOR }}>
                         <MenuIcon />
                     </IconButton>
 
-                    {/* Hamburger menu for desktop */}
-                    <IconButton sx={{ display: { xs: 'none', sm: 'flex' }, color: '#3C4852', p: 0.5 }}>
+                    <IconButton sx={{ display: { xs: 'none', sm: 'flex' }, color: ICON_COLOR, p: 0.5 }}>
                         <MenuIcon sx={{ fontSize: 22 }} />
                     </IconButton>
 
-                    {/* Logo in header */}
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box sx={{ position: 'relative', width: 140, height: 36 }}>
-                            <Image
-                                src="/main-logo (1).svg"
-                                alt="Zedny Logo"
-                                width={140}
-                                height={36}
-                                style={{ objectFit: 'contain' }}
-                            />
-                        </Box>
-                    </Box>
+                    <Box sx={{ flexGrow: 1 }} />
 
-                    {/* Search - TalentLMS pill style */}
+                    {/* Search - Glass pill style */}
                     <TextField
-                        placeholder="Search"
+                        placeholder="Search anything..."
                         size="small"
                         sx={{
-                            flex: 1, maxWidth: 500, ml: 3,
+                            width: '100%', maxWidth: 400,
                             '& .MuiOutlinedInput-root': {
-                                bgcolor: '#FFFFFF',
-                                height: 38,
-                                borderRadius: 19,
-                                border: '1px solid #DFE1E6',
+                                bgcolor: 'rgba(141, 166, 166, 0.05)',
+                                height: 40,
+                                borderRadius: 20,
+                                transition: 'all 0.2s',
+                                border: `1px solid ${DIVIDER}`,
                                 '& fieldset': { border: 'none' },
-                                '&:hover': { borderColor: '#C1C7D0' },
+                                '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.08)', borderColor: 'rgba(26, 84, 85, 0.3)' },
+                                '&.Mui-focused': { bgcolor: 'rgba(141, 166, 166, 0.1)', borderColor: 'rgba(26, 84, 85, 0.5)', boxShadow: '0 0 0 4px rgba(26, 84, 85, 0.1)' }
                             },
-                            '& .MuiInputBase-input': { fontSize: 14, py: 0.8, color: '#42526E' }
                         }}
                         InputProps={{
-                            startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#6B778C', fontSize: 20 }} /></InputAdornment>
+                            startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: ICON_COLOR, fontSize: 20 }} /></InputAdornment>
                         }}
                     />
 
                     <Box sx={{ flexGrow: 1 }} />
 
-
-
-                    {/* Notifications */}
-                    <IconButton size="small" sx={{ p: 1 }}>
-                        <NotificationsOutlinedIcon sx={{ fontSize: 22, color: '#42526E' }} />
+                    <IconButton size="small" sx={{ color: MUTED_TEXT, '&:hover': { color: ICON_COLOR } }}>
+                        <NotificationsOutlinedIcon sx={{ fontSize: 22 }} />
                     </IconButton>
 
-                    {/* User Menu */}
+                    {/* User Menu - Glass style */}
                     <Box
                         onClick={(e) => setAnchorEl(e.currentTarget)}
                         sx={{
                             display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer',
-                            bgcolor: '#FFFFFF', border: '1px solid #DFE1E6', borderRadius: 20,
-                            px: 1.5, py: 0.5, height: 36,
-                            '&:hover': { bgcolor: '#F4F5F7', borderColor: '#C1C7D0' }
+                            bgcolor: 'rgba(26, 84, 85, 0.1)', border: `1px solid ${DIVIDER}`, borderRadius: 20,
+                            px: 1, py: 0.5, height: 40,
+                            transition: 'all 0.2s',
+                            '&:hover': { bgcolor: 'rgba(26, 84, 85, 0.15)', borderColor: 'rgba(26, 84, 85, 0.3)' }
                         }}
                     >
-                        <Avatar sx={{ width: 28, height: 28, bgcolor: '#7c4dff', fontSize: 12 }}>
-                            {user?.firstName?.[0]?.toUpperCase() || 'U'}
+                        <Avatar sx={{ width: 30, height: 30, bgcolor: 'hsl(var(--primary))', fontSize: 13, fontWeight: 700, boxShadow: '0 0 10px rgba(26, 84, 85, 0.4)' }}>
+                            {user?.firstName?.[0]?.toUpperCase() || 'A'}
                         </Avatar>
-                        <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                            <Typography variant="body2" fontWeight={600} lineHeight={1.2} fontSize={13}>
-                                {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" fontSize={11}>
-                                {user?.activeRole ? roleLabels[user.activeRole] : 'User'}
+                        <Box sx={{ display: { xs: 'none', lg: 'block' }, mx: 0.5 }}>
+                            <Typography variant="body2" fontWeight={700} fontSize={13} color={TEXT_COLOR}>
+                                {user ? `${user.firstName} ${user.lastName}` : 'Admin'}
                             </Typography>
                         </Box>
-                        <KeyboardArrowDownIcon sx={{ color: '#8B98A5', fontSize: 16 }} />
+                        <KeyboardArrowDownIcon sx={{ color: MUTED_TEXT, fontSize: 16 }} />
                     </Box>
 
                     <Menu
                         anchorEl={anchorEl}
                         open={Boolean(anchorEl)}
                         onClose={() => setAnchorEl(null)}
-                        PaperProps={{ sx: { width: 220, mt: 1 } }}
+                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                        PaperProps={{
+                            sx: {
+                                width: 240,
+                                mt: 1.5,
+                                bgcolor: 'rgba(13, 20, 20, 0.9)',
+                                backdropFilter: 'blur(20px)',
+                                border: `1px solid ${DIVIDER}`,
+                                borderRadius: 3,
+                                boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+                            }
+                        }}
                     >
-                        <Box sx={{ px: 2, py: 1 }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={500}>Switch role</Typography>
+                        {/* ... menu items (style them slightly better if needed) */}
+                        <Box sx={{ px: 2, py: 1.5 }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>Switch role</Typography>
                         </Box>
                         {user?.roles?.map((roleKey) => (
                             <MenuItem
                                 key={roleKey}
                                 onClick={() => handleRoleChange(roleKey)}
-                                sx={{ py: 0.5 }}
+                                sx={{ py: 1, mx: 1, borderRadius: 1.5 }}
                                 disabled={switching}
                             >
-                                <Radio
-                                    checked={user.activeRole === roleKey}
-                                    size="small"
-                                    sx={{ p: 0.5, mr: 1 }}
-                                />
-                                <Typography variant="body2" fontSize={13}>{roleLabels[roleKey]}</Typography>
-                                {switching && user.activeRole !== roleKey && (
-                                    <CircularProgress size={14} sx={{ ml: 'auto' }} />
-                                )}
+                                <Radio checked={user.activeRole === roleKey} size="small" sx={{ p: 0.5, mr: 1, color: ICON_COLOR, '&.Mui-checked': { color: ICON_COLOR } }} />
+                                <Typography variant="body2" fontSize={13} fontWeight={500}>{roleLabels[roleKey]}</Typography>
+                                {switching && user.activeRole !== roleKey && <CircularProgress size={14} sx={{ ml: 'auto', color: ICON_COLOR }} />}
                             </MenuItem>
                         ))}
-                        <Divider sx={{ my: 1 }} />
-                        <MenuItem><PersonOutlineIcon sx={{ mr: 1.5, fontSize: 18 }} /><Typography variant="body2" fontSize={13}>My profile</Typography></MenuItem>
-                        <MenuItem><HistoryIcon sx={{ mr: 1.5, fontSize: 18 }} /><Typography variant="body2" fontSize={13}>Go to legacy interface</Typography></MenuItem>
-                        <MenuItem><OndemandVideoIcon sx={{ mr: 1.5, fontSize: 18 }} /><Typography variant="body2" fontSize={13}>Watch demo</Typography></MenuItem>
-                        <Divider sx={{ my: 1 }} />
-                        <MenuItem onClick={handleLogout}><LogoutIcon sx={{ mr: 1.5, fontSize: 18 }} /><Typography variant="body2" fontSize={13}>Log out</Typography></MenuItem>
+                        <Divider sx={{ my: 1, opacity: 0.5 }} />
+                        <MenuItem sx={{ py: 1, mx: 1, borderRadius: 1.5 }}><PersonOutlineIcon sx={{ mr: 1.5, fontSize: 18, color: ICON_COLOR }} /><Typography variant="body2" fontSize={13}>My profile</Typography></MenuItem>
+                        <MenuItem onClick={handleLogout} sx={{ py: 1, mx: 1, borderRadius: 1.5, color: 'hsl(0 72% 51%)' }}><LogoutIcon sx={{ mr: 1.5, fontSize: 18 }} /><Typography variant="body2" fontSize={13} fontWeight={600}>Log out</Typography></MenuItem>
                     </Menu>
                 </Toolbar>
             </AppBar>
 
-            {/* Sidebar */}
+            {/* Sidebar Container */}
             <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
                 <Drawer
                     variant="temporary"
                     open={mobileOpen}
                     onClose={() => setMobileOpen(false)}
-                    sx={{ display: { xs: 'block', sm: 'none' }, '& .MuiDrawer-paper': { width: drawerWidth, bgcolor: SIDEBAR_BG } }}
+                    sx={{
+                        display: { xs: 'block', sm: 'none' },
+                        '& .MuiDrawer-paper': { width: drawerWidth, border: 'none' }
+                    }}
                 >
                     {drawer}
                 </Drawer>
                 <Drawer
                     variant="permanent"
-                    sx={{ display: { xs: 'none', sm: 'block' }, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', bgcolor: SIDEBAR_BG, border: 'none' } }}
+                    sx={{
+                        display: { xs: 'none', sm: 'block' },
+                        '& .MuiDrawer-paper': {
+                            width: drawerWidth,
+                            boxSizing: 'border-box',
+                            border: 'none',
+                            background: 'transparent'
+                        }
+                    }}
                     open
                 >
                     {drawer}
@@ -389,7 +419,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Box>
 
             {/* Main Content */}
-            <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3, md: 4 }, width: { sm: `calc(100% - ${drawerWidth}px)` }, mt: 7, maxWidth: '100%' }}>
+            <Box component="main" sx={{
+                flexGrow: 1,
+                p: { xs: 2, sm: 3, md: 4 },
+                width: { sm: `calc(100% - ${drawerWidth}px)` },
+                mt: 8,
+                maxWidth: '100%',
+                position: 'relative'
+            }}>
                 {children}
             </Box>
         </Box >

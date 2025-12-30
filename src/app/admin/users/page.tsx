@@ -68,6 +68,8 @@ export default function UsersPage() {
     const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [addUserMenuAnchor, setAddUserMenuAnchor] = useState<null | HTMLElement>(null);
+    const [activeUserRole, setActiveUserRole] = useState<string>('');
+    const [activeUserId, setActiveUserId] = useState<string>('');
 
     // Form state
     const [formData, setFormData] = useState({
@@ -81,6 +83,12 @@ export default function UsersPage() {
 
     useEffect(() => {
         fetchUsers();
+        fetch('/api/me').then(res => res.json()).then(data => {
+            if (data.user) {
+                setActiveUserRole(data.user.activeRole);
+                setActiveUserId(data.user.id);
+            }
+        });
     }, []);
 
     const fetchUsers = async () => {
@@ -230,6 +238,8 @@ export default function UsersPage() {
         switch (role) {
             case 'ADMIN':
                 return 'error';
+            case 'SUPER_INSTRUCTOR':
+                return 'secondary';
             case 'INSTRUCTOR':
                 return 'warning';
             case 'LEARNER':
@@ -260,15 +270,32 @@ export default function UsersPage() {
         <Box>
             {/* Header */}
             <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h4" fontWeight={600}>
+                <Typography variant="h4" fontWeight={600} sx={{ color: 'hsl(var(--foreground))' }}>
                     Users
                 </Typography>
             </Box>
 
             {/* Table Container */}
-            <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+            <Paper
+                className="glass-card"
+                sx={{
+                    width: '100%',
+                    overflow: 'hidden',
+                    bgcolor: 'rgba(13, 20, 20, 0.4)',
+                    border: '1px solid rgba(141, 166, 166, 0.1)',
+                    boxShadow: 'none'
+                }}
+            >
                 {/* Search & Actions Bar */}
-                <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 1, borderColor: 'divider' }}>
+                <Box
+                    sx={{
+                        p: 2,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        borderBottom: '1px solid rgba(141, 166, 166, 0.1)',
+                    }}
+                >
                     <TextField
                         placeholder="Search"
                         size="small"
@@ -277,11 +304,13 @@ export default function UsersPage() {
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <SearchIcon fontSize="small" />
+                                    <SearchIcon fontSize="small" sx={{ color: 'hsl(var(--muted-foreground))' }} />
                                 </InputAdornment>
                             ),
                         }}
-                        sx={{ width: 300 }}
+                        sx={{
+                            width: 300,
+                        }}
                     />
                     <Stack direction="row" spacing={1}>
                         <IconButton size="small">
@@ -292,7 +321,12 @@ export default function UsersPage() {
                             startIcon={<PersonAddIcon />}
                             endIcon={<KeyboardArrowDownIcon />}
                             onClick={(e) => setAddUserMenuAnchor(e.currentTarget)}
-                            sx={{ textTransform: 'none' }}
+                            sx={{
+                                textTransform: 'none',
+                                bgcolor: 'hsl(var(--primary))',
+                                color: 'hsl(var(--primary-foreground))',
+                                '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
+                            }}
                         >
                             Add user
                         </Button>
@@ -328,6 +362,11 @@ export default function UsersPage() {
                                         active={orderBy === 'firstName'}
                                         direction={orderBy === 'firstName' ? order : 'asc'}
                                         onClick={() => handleRequestSort('firstName')}
+                                        sx={{
+                                            fontWeight: 700,
+                                            color: 'hsl(var(--foreground)) !important',
+                                            '& .MuiTableSortLabel-icon': { color: 'hsl(var(--primary)) !important' }
+                                        }}
                                     >
                                         User
                                     </TableSortLabel>
@@ -337,16 +376,26 @@ export default function UsersPage() {
                                         active={orderBy === 'email'}
                                         direction={orderBy === 'email' ? order : 'asc'}
                                         onClick={() => handleRequestSort('email')}
+                                        sx={{
+                                            fontWeight: 700,
+                                            color: 'hsl(var(--foreground)) !important',
+                                            '& .MuiTableSortLabel-icon': { color: 'hsl(var(--primary)) !important' }
+                                        }}
                                     >
                                         Email
                                     </TableSortLabel>
                                 </TableCell>
-                                <TableCell>Type</TableCell>
+                                <TableCell sx={{ fontWeight: 700, color: 'hsl(var(--foreground))' }}>Type</TableCell>
                                 <TableCell>
                                     <TableSortLabel
                                         active={orderBy === 'createdAt'}
                                         direction={orderBy === 'createdAt' ? order : 'asc'}
                                         onClick={() => handleRequestSort('createdAt')}
+                                        sx={{
+                                            fontWeight: 700,
+                                            color: 'hsl(var(--foreground)) !important',
+                                            '& .MuiTableSortLabel-icon': { color: 'hsl(var(--primary)) !important' }
+                                        }}
                                     >
                                         Registration
                                     </TableSortLabel>
@@ -356,6 +405,11 @@ export default function UsersPage() {
                                         active={orderBy === 'lastLoginAt'}
                                         direction={orderBy === 'lastLoginAt' ? order : 'asc'}
                                         onClick={() => handleRequestSort('lastLoginAt')}
+                                        sx={{
+                                            fontWeight: 700,
+                                            color: 'hsl(var(--foreground)) !important',
+                                            '& .MuiTableSortLabel-icon': { color: 'hsl(var(--primary)) !important' }
+                                        }}
                                     >
                                         Last login
                                     </TableSortLabel>
@@ -383,7 +437,10 @@ export default function UsersPage() {
                                     <TableRow
                                         key={user.id}
                                         hover
-                                        sx={{ '&:hover': { backgroundColor: 'action.hover' } }}
+                                        sx={{
+                                            '&:hover': { backgroundColor: 'rgba(141, 166, 166, 0.05) !important' },
+                                            '&.Mui-selected': { bgcolor: 'rgba(26, 84, 85, 0.1)' }
+                                        }}
                                     >
                                         <TableCell padding="checkbox">
                                             <Checkbox
@@ -430,6 +487,7 @@ export default function UsersPage() {
                                             <IconButton
                                                 size="small"
                                                 onClick={(e) => handleOpenMenu(e, user)}
+                                                sx={{ color: 'hsl(var(--muted-foreground))' }}
                                             >
                                                 <MoreVertIcon fontSize="small" />
                                             </IconButton>
@@ -448,8 +506,20 @@ export default function UsersPage() {
                 open={Boolean(anchorEl)}
                 onClose={handleCloseMenu}
             >
-                <MenuItem onClick={handleEdit}>Edit</MenuItem>
-                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+                <MenuItem
+                    onClick={handleEdit}
+                    disabled={activeUserRole === 'SUPER_INSTRUCTOR' && currentUser?.activeRole === 'ADMIN'}
+                >
+                    Edit
+                </MenuItem>
+                <MenuItem
+                    onClick={handleDelete}
+                    sx={{ color: 'error.main' }}
+                    disabled={
+                        (activeUserRole === 'SUPER_INSTRUCTOR' && (currentUser?.activeRole === 'ADMIN' || currentUser?.id === activeUserId)) ||
+                        (currentUser?.id === activeUserId)
+                    }
+                >
                     Delete
                 </MenuItem>
             </Menu>
@@ -511,7 +581,8 @@ export default function UsersPage() {
                                 >
                                     <MenuItem value="LEARNER">Learner</MenuItem>
                                     <MenuItem value="INSTRUCTOR">Instructor</MenuItem>
-                                    <MenuItem value="ADMIN">Administrator</MenuItem>
+                                    <MenuItem value="SUPER_INSTRUCTOR">Super instructor</MenuItem>
+                                    {activeUserRole === 'ADMIN' && <MenuItem value="ADMIN">Administrator</MenuItem>}
                                 </Select>
                             </FormControl>
                         </Grid>
@@ -562,10 +633,12 @@ export default function UsersPage() {
                                     value={formData.activeRole}
                                     label="Role"
                                     onChange={(e) => setFormData({ ...formData, activeRole: e.target.value })}
+                                    disabled={activeUserRole === 'SUPER_INSTRUCTOR' && currentUser?.activeRole === 'ADMIN'}
                                 >
                                     <MenuItem value="LEARNER">Learner</MenuItem>
                                     <MenuItem value="INSTRUCTOR">Instructor</MenuItem>
-                                    <MenuItem value="ADMIN">Administrator</MenuItem>
+                                    <MenuItem value="SUPER_INSTRUCTOR">Super instructor</MenuItem>
+                                    {activeUserRole === 'ADMIN' && <MenuItem value="ADMIN">Administrator</MenuItem>}
                                 </Select>
                             </FormControl>
                         </Grid>

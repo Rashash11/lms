@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 import { z } from 'zod';
 
 const updateCourseSchema = z.object({
@@ -49,6 +51,11 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'course:read')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:read' }, { status: 403 });
+        }
+
         const course = await prisma.course.findUnique({
             where: { id: params.id },
             include: {
@@ -99,6 +106,11 @@ export async function PUT(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'course:update_any')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:update_any' }, { status: 403 });
+        }
+
         const body = await request.json();
 
         const validation = updateCourseSchema.safeParse(body);
@@ -158,6 +170,10 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'course:delete_any')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:delete_any' }, { status: 403 });
+        }
         // Dependencies are handled by Cascade in schema
         await prisma.course.delete({
             where: { id: params.id },
@@ -176,6 +192,11 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'course:update_any') && !can(session, 'course:publish')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission to update or publish courses' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { action } = body;
 

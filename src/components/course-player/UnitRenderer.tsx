@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Typography, Paper, Button } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
 import CodeIcon from '@mui/icons-material/Code';
+
+import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 
 interface UnitRendererProps {
     unit: {
@@ -88,6 +90,61 @@ export default function UnitRenderer({ unit }: UnitRendererProps) {
                         />
                     </Box>
                 );
+            case 'AUDIO':
+                const audioSource = unit.content?.url || unit.content?.audioUrl || unit.content?.content?.url || '';
+
+                if (!audioSource) {
+                    return (
+                        <Box sx={{ p: 4, textAlign: 'center', color: '#718096' }}>
+                            <Typography>No audio configured</Typography>
+                        </Box>
+                    );
+                }
+
+                return (
+                    <Box sx={{ p: 0 }}>
+                        <Paper sx={{
+                            p: 4,
+                            bgcolor: '#f7fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 3
+                        }}>
+                            <Box sx={{
+                                width: 60,
+                                height: 60,
+                                borderRadius: '50%',
+                                bgcolor: '#ebf8ff',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                <GraphicEqIcon sx={{ fontSize: 32, color: '#3182ce' }} />
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
+                                {unit.content?.fileName && (
+                                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#2d3748', mb: 1 }}>
+                                        {unit.content.fileName}
+                                    </Typography>
+                                )}
+                                <audio src={audioSource} controls style={{ width: '100%' }} />
+                                <Typography variant="caption" display="block" sx={{ mt: 1, color: 'text.secondary', fontFamily: 'monospace' }}>
+                                    Debug URL: {audioSource}
+                                </Typography>
+                            </Box>
+                        </Paper>
+                        {unit.content?.description && (
+                            <Box sx={{ mt: 3, p: 2, bgcolor: '#fff', borderRadius: 1 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                    {unit.content.description}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                );
             case 'FILE':
                 return (
                     <Box sx={{ p: 3, textAlign: 'center', bgcolor: '#f8f9fa', borderRadius: 1 }}>
@@ -95,6 +152,16 @@ export default function UnitRenderer({ unit }: UnitRendererProps) {
                         <Typography variant="caption" display="block" color="text.secondary">
                             Size: {unit.content?.filesize ? `${(unit.content.filesize / 1024).toFixed(2)} KB` : 'Unknown'}
                         </Typography>
+                        {unit.content?.url && (
+                            <Button
+                                variant="contained"
+                                href={unit.content.url}
+                                target="_blank"
+                                sx={{ mt: 2 }}
+                            >
+                                Download
+                            </Button>
+                        )}
                     </Box>
                 );
             case 'EMBED':

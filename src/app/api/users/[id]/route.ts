@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { hashPassword, validatePasswordPolicy, RoleKey } from '@/lib/auth';
+import { hashPassword, validatePasswordPolicy, RoleKey, requireAuth } from '@/lib/auth';
+import { can, checkSafetyConstraints } from '@/lib/permissions';
 import { z } from 'zod';
 
 const updateUserSchema = z.object({
@@ -21,6 +22,11 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'user:read')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:read' }, { status: 403 });
+        }
+
         const user = await prisma.user.findUnique({
             where: { id: params.id },
             include: {
@@ -49,6 +55,11 @@ export async function PUT(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'user:update')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:update' }, { status: 403 });
+        }
+
         const body = await request.json();
 
         const validation = updateUserSchema.safeParse(body);
@@ -60,6 +71,30 @@ export async function PUT(
         }
 
         const { firstName, lastName, email, username, status, roles, password, excludeFromEmails, avatar } = validation.data;
+
+        // Fetch target to check safety constraints
+        const target = await prisma.user.findUnique({
+            where: { id: params.id },
+            include: { roles: { select: { roleKey: true } } }
+        });
+
+        if (!target) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        const safety = checkSafetyConstraints(session, {
+            userId: target.id,
+            activeRole: target.roles[0]?.roleKey as any
+        }, 'update_role');
+
+        if (!safety.allowed) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: safety.reason }, { status: 403 });
+        }
+
+        // Safety constraint: Super Instructor cannot assign ADMIN role
+        if (session.activeRole !== 'ADMIN' && roles?.includes('ADMIN')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'You do not have permission to grant Administrator privileges.' }, { status: 403 });
+        }
 
         // Check if email/username already taken by another user
         if (email || username) {
@@ -154,6 +189,30 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'user:delete')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:delete' }, { status: 403 });
+        }
+
+        // Fetch target to check safety constraints
+        const target = await prisma.user.findUnique({
+            where: { id: params.id },
+            include: { roles: { select: { roleKey: true } } }
+        });
+
+        if (!target) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        const safety = checkSafetyConstraints(session, {
+            userId: target.id,
+            activeRole: target.roles[0]?.roleKey as any
+        }, 'delete');
+
+        if (!safety.allowed) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: safety.reason }, { status: 403 });
+        }
+
         // Delete user roles first
         await prisma.userRole.deleteMany({
             where: { userId: params.id },
@@ -177,6 +236,11 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!can(session, 'user:update')) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:update' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { action } = body;
 

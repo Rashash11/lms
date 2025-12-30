@@ -182,7 +182,7 @@ export default function LearningPathsPage() {
         <Box>
             {/* Header */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight={600}>Learning paths</Typography>
+                <Typography variant="h5" sx={{ fontWeight: 800, color: 'hsl(var(--foreground))' }}>Learning paths</Typography>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                     {/* Search */}
                     <TextField
@@ -204,7 +204,7 @@ export default function LearningPathsPage() {
                     <IconButton
                         size="small"
                         sx={{
-                            border: '1px solid #ddd',
+                            border: '1px solid rgba(141, 166, 166, 0.2)',
                             borderRadius: 1,
                             width: 40,
                             height: 40,
@@ -219,12 +219,27 @@ export default function LearningPathsPage() {
                         exclusive
                         onChange={(e, newMode) => newMode && setViewMode(newMode)}
                         size="small"
-                        sx={{ height: 40 }}
+                        sx={{
+                            height: 40,
+                            bgcolor: 'rgba(13, 20, 20, 0.4)',
+                            border: '1px solid rgba(141, 166, 166, 0.1)',
+                            '& .MuiToggleButton-root': {
+                                color: 'hsl(var(--muted-foreground))',
+                                border: 'none',
+                                px: 1.5,
+                                '&.Mui-selected': {
+                                    bgcolor: 'rgba(141, 166, 166, 0.1)',
+                                    color: 'hsl(var(--primary))',
+                                    '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.2)' }
+                                },
+                                '&:hover': { bgcolor: 'rgba(141, 166, 166, 0.05)' }
+                            }
+                        }}
                     >
-                        <ToggleButton value="list" sx={{ px: 1.5 }}>
+                        <ToggleButton value="list">
                             <ViewListIcon fontSize="small" />
                         </ToggleButton>
-                        <ToggleButton value="grid" sx={{ px: 1.5 }}>
+                        <ToggleButton value="grid">
                             <ViewModuleIcon fontSize="small" />
                         </ToggleButton>
                     </ToggleButtonGroup>
@@ -234,6 +249,15 @@ export default function LearningPathsPage() {
                         variant="contained"
                         startIcon={<AddIcon />}
                         disabled={loading}
+                        sx={{
+                            bgcolor: 'hsl(var(--primary))',
+                            color: 'hsl(var(--primary-foreground))',
+                            fontWeight: 700,
+                            textTransform: 'none',
+                            borderRadius: '6px',
+                            height: 40,
+                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
+                        }}
                         onClick={async () => {
                             setLoading(true);
                             try {
@@ -265,9 +289,17 @@ export default function LearningPathsPage() {
 
             {/* Table View */}
             {viewMode === 'list' && (
-                <TableContainer component={Paper} sx={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid #eee' }}>
+                <TableContainer
+                    component={Paper}
+                    className="glass-card"
+                    sx={{
+                        boxShadow: 'none',
+                        border: '1px solid rgba(141, 166, 166, 0.1)',
+                        background: 'rgba(13, 20, 20, 0.4)'
+                    }}
+                >
                     <Table>
-                        <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+                        <TableHead>
                             <TableRow>
                                 <TableCell
                                     sx={{ cursor: 'pointer', fontWeight: 600 }}
@@ -337,7 +369,7 @@ export default function LearningPathsPage() {
                                     <TableRow
                                         key={path.id}
                                         hover
-                                        sx={{ '&:hover': { bgcolor: '#f9f9f9' } }}
+                                        sx={{ '&.Mui-selected': { bgcolor: 'rgba(26, 84, 85, 0.1)' } }}
                                     >
                                         <TableCell>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -348,9 +380,11 @@ export default function LearningPathsPage() {
                                                         size="small"
                                                         sx={{
                                                             height: 20,
-                                                            bgcolor: '#e0e0e0',
-                                                            color: '#666',
-                                                            fontSize: '0.75rem',
+                                                            bgcolor: 'rgba(141, 166, 166, 0.1)',
+                                                            color: 'hsl(var(--muted-foreground))',
+                                                            fontSize: '0.7rem',
+                                                            fontWeight: 600,
+                                                            border: '1px solid rgba(141, 166, 166, 0.2)'
                                                         }}
                                                     />
                                                 )}

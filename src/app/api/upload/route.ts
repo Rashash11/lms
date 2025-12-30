@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: validation.error }, { status: 400 });
         }
 
-        // If courseId and unitId provided, save to disk and database
+        // If courseId and unitId provided, save as UnitAsset
         if (courseId && unitId && kind) {
             // Validate kind
             const validKinds = ['video', 'audio', 'document', 'thumbnail'];
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
             await writeFile(filePath, buffer);
 
             // Create public URL
-            const publicUrl = `/uploads/${courseId}/${unitId}/${fileName}`;
+            const publicUrl = `/files/${courseId}/${unitId}/${fileName}`;
 
             // Save asset metadata to database
             const asset = await prisma.unitAsset.create({
@@ -123,12 +123,51 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({
                 success: true,
                 file: {
-                    id: asset.id,
+                    id: asset.id, // ID from UnitAsset
                     url: asset.url,
                     name: asset.name,
                     size: Number(asset.sizeBytes),
                     mimeType: asset.mimeType,
                     kind: asset.kind,
+                    category: validation.category,
+                },
+            }, { status: 201 });
+
+        } else if (kind && formData.get('context') === 'assignment') {
+            // Assignment Context - Save to disk only, no UnitAsset
+            const validKinds = ['video', 'audio', 'document', 'thumbnail'];
+            if (!validKinds.includes(kind)) {
+                return NextResponse.json(
+                    { error: `Invalid kind. Must be one of: ${validKinds.join(', ')}` },
+                    { status: 400 }
+                );
+            }
+
+            const uploadDir = join(process.cwd(), 'public', 'uploads', 'assignments');
+            if (!existsSync(uploadDir)) {
+                await mkdir(uploadDir, { recursive: true });
+            }
+
+            const timestamp = Date.now();
+            const originalName = file.name;
+            const extension = originalName.substring(originalName.lastIndexOf('.'));
+            const fileName = `assignment_${timestamp}${extension}`;
+            const filePath = join(uploadDir, fileName);
+
+            const bytes = await file.arrayBuffer();
+            const buffer = Buffer.from(bytes);
+            await writeFile(filePath, buffer);
+
+            const publicUrl = `/uploads/assignments/${fileName}`;
+
+            return NextResponse.json({
+                success: true,
+                file: {
+                    url: publicUrl,
+                    name: originalName,
+                    size: file.size,
+                    mimeType: file.type,
+                    kind: kind,
                     category: validation.category,
                 },
             }, { status: 201 });

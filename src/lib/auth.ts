@@ -16,7 +16,7 @@ export const LOCK_CONFIG = {
 };
 
 // Role types matching Prisma enum
-export type RoleKey = "ADMIN" | "INSTRUCTOR" | "LEARNER";
+export type RoleKey = "ADMIN" | "INSTRUCTOR" | "SUPER_INSTRUCTOR" | "LEARNER";
 
 // Session payload type
 export interface SessionPayload {

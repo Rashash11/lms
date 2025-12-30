@@ -115,16 +115,23 @@ export default function TrainingMatrixTab() {
                     size="small"
                     sx={{ flex: 1 }}
                     InputProps={{
-                        startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+                        startAdornment: <SearchIcon sx={{ mr: 1, color: 'hsl(var(--muted-foreground))' }} />,
                     }}
                 />
-                <IconButton>
+                <IconButton sx={{ color: 'hsl(var(--muted-foreground))' }}>
                     <FilterListIcon />
                 </IconButton>
                 <Button
                     variant="outlined"
                     endIcon={<KeyboardArrowDownIcon />}
                     onClick={(e) => setViewAnchor(e.currentTarget)}
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        borderColor: 'rgba(141, 166, 166, 0.2)',
+                        color: 'hsl(var(--foreground))',
+                        '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'rgba(26, 84, 85, 0.05)' }
+                    }}
                 >
                     View
                 </Button>
@@ -132,6 +139,14 @@ export default function TrainingMatrixTab() {
                     variant="contained"
                     endIcon={<KeyboardArrowDownIcon />}
                     onClick={(e) => setExportAnchor(e.currentTarget)}
+                    sx={{
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        bgcolor: 'hsl(var(--primary))',
+                        color: 'hsl(var(--primary-foreground))',
+                        borderRadius: '6px',
+                        '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
+                    }}
                 >
                     Export in Excel
                 </Button>
@@ -149,18 +164,21 @@ export default function TrainingMatrixTab() {
             </Menu>
 
             {/* Matrix Table */}
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} className="glass-card" sx={{ bgcolor: 'rgba(13, 20, 20, 0.4)', border: '1px solid rgba(141, 166, 166, 0.1)' }}>
                 <Table sx={{ minWidth: 650 }} size="small">
                     <TableHead>
-                        <TableRow>
-                            <TableCell sx={{ fontWeight: 600 }}>Users</TableCell>
+                        <TableRow sx={{ borderBottom: '1px solid rgba(141, 166, 166, 0.1)' }}>
+                            <TableCell sx={{ fontWeight: 700, color: 'hsl(var(--foreground))' }}>Users</TableCell>
                             {data.courses.map((course) => (
-                                <TableCell key={course.id} align="center" sx={{ minWidth: 60 }}>
+                                <TableCell key={course.id} align="center" sx={{ minWidth: 60, fontWeight: 700, color: 'hsl(var(--foreground))' }}>
                                     <Box
                                         sx={{
                                             transform: 'rotate(-45deg)',
                                             whiteSpace: 'nowrap',
                                             fontSize: '0.75rem',
+                                            maxWidth: 100,
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
                                         }}
                                     >
                                         {course.title}
@@ -171,8 +189,12 @@ export default function TrainingMatrixTab() {
                     </TableHead>
                     <TableBody>
                         {data.users.map((user) => (
-                            <TableRow key={user.userId} hover>
-                                <TableCell sx={{ fontWeight: 500 }}>{user.userName}</TableCell>
+                            <TableRow
+                                key={user.userId}
+                                hover
+                                sx={{ '&:hover': { backgroundColor: 'rgba(141, 166, 166, 0.05) !important' } }}
+                            >
+                                <TableCell sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>{user.userName}</TableCell>
                                 {user.courses.map((course) => (
                                     <TableCell key={course.courseId} align="center">
                                         <Box
@@ -183,10 +205,11 @@ export default function TrainingMatrixTab() {
                                                 width: 32,
                                                 height: 32,
                                                 borderRadius: '50%',
-                                                bgcolor: getProgressColor(course.progress),
-                                                color: course.progress > 0 ? 'white' : 'text.disabled',
+                                                bgcolor: course.progress === 0 ? 'rgba(141, 166, 166, 0.1)' : getProgressColor(course.progress),
+                                                color: course.progress > 0 ? 'white' : 'rgba(141, 166, 166, 0.3)',
                                                 fontSize: '0.75rem',
-                                                fontWeight: 600,
+                                                fontWeight: 800,
+                                                border: `1px solid ${course.progress > 0 ? 'rgba(255, 255, 255, 0.2)' : 'rgba(141, 166, 166, 0.1)'}`
                                             }}
                                         >
                                             {course.progress > 0 ? `${course.progress}%` : ''}

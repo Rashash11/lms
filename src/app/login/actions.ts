@@ -119,6 +119,8 @@ export async function authenticate(prevState: any, formData: FormData) {
         let redirectPath = '/learner';
         if (activeRole === 'ADMIN') {
             redirectPath = '/admin';
+        } else if (activeRole === 'SUPER_INSTRUCTOR') {
+            redirectPath = '/super-instructor';
         } else if (activeRole === 'INSTRUCTOR') {
             redirectPath = '/instructor';
         }

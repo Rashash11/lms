@@ -47,7 +47,7 @@ export default function SubscriptionPage() {
             <Typography variant="h5" fontWeight={600} sx={{ mb: 3 }}>Subscription</Typography>
 
             {/* Current Plan */}
-            <Paper sx={{ p: 3, mb: 3 }}>
+            <Paper className="glass-card" sx={{ p: 3, mb: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
                     <Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -101,7 +101,7 @@ export default function SubscriptionPage() {
             </Paper>
 
             {/* Current Features */}
-            <Paper sx={{ p: 3, mb: 3 }}>
+            <Paper className="glass-card" sx={{ p: 3, mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>Current plan features</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     {features.map((feature) => (
@@ -111,9 +111,10 @@ export default function SubscriptionPage() {
                             label={feature.name}
                             variant={feature.included ? 'filled' : 'outlined'}
                             sx={{
-                                bgcolor: feature.included ? '#e8f5e9' : 'transparent',
-                                color: feature.included ? '#2e7d32' : 'text.secondary',
+                                bgcolor: feature.included ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
+                                color: feature.included ? '#4caf50' : 'hsl(var(--muted-foreground))',
                                 textDecoration: feature.included ? 'none' : 'line-through',
+                                border: feature.included ? '1px solid rgba(76, 175, 80, 0.2)' : '1px solid rgba(141, 166, 166, 0.2)',
                             }}
                         />
                     ))}
@@ -124,7 +125,7 @@ export default function SubscriptionPage() {
             <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>Available plans</Typography>
             <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                 {plans.map((plan) => (
-                    <Card key={plan.name} sx={{ width: 250, border: '1px solid #e0e0e0' }}>
+                    <Card key={plan.name} className="glass-card" sx={{ width: 250, border: '1px solid rgba(141, 166, 166, 0.1)' }}>
                         <CardContent>
                             <Typography variant="h6" fontWeight={600}>{plan.name}</Typography>
                             <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, my: 2 }}>

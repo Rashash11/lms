@@ -12,8 +12,30 @@ export default function EditLayout({ children }: { children: React.ReactNode }) 
                 right: 0,
                 bottom: 0,
                 overflow: 'auto',
-                bgcolor: '#f5f5f5',
-                zIndex: 1300, // Above the admin layout
+                bgcolor: 'hsl(var(--background))',
+                zIndex: 1300,
+                color: 'hsl(var(--foreground))',
+                '&::before, &::after': {
+                    content: '""',
+                    position: 'fixed',
+                    width: '40vw',
+                    height: '40vw',
+                    borderRadius: '50%',
+                    filter: 'blur(100px)',
+                    zIndex: -1,
+                    opacity: 0.15,
+                    pointerEvents: 'none',
+                },
+                '&::before': {
+                    top: '-10vw',
+                    right: '-10vw',
+                    background: 'radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)',
+                },
+                '&::after': {
+                    bottom: '-10vw',
+                    left: '-10vw',
+                    background: 'radial-gradient(circle, hsl(var(--secondary)) 0%, transparent 70%)',
+                }
             }}
         >
             {children}

@@ -52,9 +52,10 @@ const languages = [
 ];
 
 const userTypes = [
-    { value: 'learner', label: 'Learner-Type' },
-    { value: 'instructor', label: 'Instructor-Type' },
-    { value: 'admin', label: 'Admin-Type' },
+    { value: 'learner', label: 'Learner', role: 'LEARNER' },
+    { value: 'instructor', label: 'Instructor', role: 'INSTRUCTOR' },
+    { value: 'super_instructor', label: 'Super instructor', role: 'SUPER_INSTRUCTOR' },
+    { value: 'admin', label: 'Administrator', role: 'ADMIN' },
 ];
 
 export default function AddUserPage() {
@@ -65,6 +66,16 @@ export default function AddUserPage() {
     const [showAvatarHint, setShowAvatarHint] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [activeUserRole, setActiveUserRole] = useState<string>('');
+
+    // Fetch current user's role on mount
+    useEffect(() => {
+        fetch('/api/me').then(res => res.json()).then(data => {
+            if (data.user) {
+                setActiveUserRole(data.user.activeRole);
+            }
+        });
+    }, []);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -129,13 +140,6 @@ export default function AddUserPage() {
 
         setLoading(true);
         try {
-            // Map user type to role
-            const roleMapping: Record<string, string> = {
-                'learner': 'LEARNER',
-                'instructor': 'INSTRUCTOR',
-                'admin': 'ADMIN',
-            };
-
             const payload = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
@@ -143,7 +147,7 @@ export default function AddUserPage() {
                 username: formData.username,
                 password: formData.password || undefined,
                 status: formData.isActive ? 'ACTIVE' : 'INACTIVE',
-                roles: [roleMapping[formData.userType] || 'LEARNER'],
+                roles: [userTypes.find(t => t.value === formData.userType)?.role || 'LEARNER'],
                 excludeFromEmails: formData.excludeFromEmails,
                 // These fields will be used when the schema is updated
                 bio: formData.bio || undefined,
@@ -181,21 +185,20 @@ export default function AddUserPage() {
     return (
         <Box>
             {/* Breadcrumb */}
-            <Breadcrumbs sx={{ mb: 2 }}>
+            <Breadcrumbs sx={{ mb: 2, '& .MuiBreadcrumbs-separator': { color: 'hsl(var(--muted-foreground))' } }}>
                 <Link
                     href="/admin/users"
                     underline="hover"
-                    color="#1976d2"
-                    sx={{ cursor: 'pointer', fontSize: 14 }}
+                    sx={{ cursor: 'pointer', fontSize: 14, color: 'hsl(var(--primary))' }}
                     onClick={(e) => { e.preventDefault(); router.push('/admin/users'); }}
                 >
                     Users
                 </Link>
-                <Typography color="text.primary" sx={{ fontSize: 14 }}>Add user</Typography>
+                <Typography sx={{ fontSize: 14, color: 'hsl(var(--foreground))' }}>Add user</Typography>
             </Breadcrumbs>
 
             {/* Header */}
-            <Typography variant="h5" fontWeight={600} sx={{ mb: 3, color: '#1a2b4a' }}>
+            <Typography variant="h5" fontWeight={600} sx={{ mb: 3, color: 'hsl(var(--foreground))' }}>
                 Add user
             </Typography>
 
@@ -212,7 +215,8 @@ export default function AddUserPage() {
                             sx={{
                                 width: 150,
                                 height: 180,
-                                bgcolor: '#8b7355',
+                                bgcolor: 'hsl(var(--muted))',
+                                border: '1px solid hsl(var(--border))',
                                 borderRadius: 1,
                                 display: 'flex',
                                 alignItems: 'center',
@@ -241,11 +245,11 @@ export default function AddUserPage() {
                                 right: -20,
                                 top: '50%',
                                 transform: 'translateY(-50%)',
-                                bgcolor: '#1a2b4a',
-                                color: 'white',
+                                bgcolor: 'hsl(var(--primary))',
+                                color: 'hsl(var(--primary-foreground))',
                                 width: 44,
                                 height: 44,
-                                '&:hover': { bgcolor: '#0d47a1' },
+                                '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
                             }}
                         >
                             <CameraAltOutlinedIcon />
@@ -282,19 +286,19 @@ export default function AddUserPage() {
                                     position: 'absolute',
                                     left: 0,
                                     bottom: -50,
-                                    bgcolor: 'white',
-                                    border: '1px solid #e0e0e0',
+                                    bgcolor: 'hsl(var(--card))',
+                                    border: '1px solid hsl(var(--border))',
                                     borderRadius: 1,
                                     p: 1,
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                    boxShadow: '0 8px 32px -8px rgba(0, 0, 0, 0.5)',
                                     whiteSpace: 'nowrap',
                                     zIndex: 10,
                                 }}
                             >
-                                <Typography variant="caption" component="div" sx={{ color: '#666' }}>
-                                    Accepted files: <Link href="#" sx={{ color: '#1976d2' }}>gif</Link>, <Link href="#" sx={{ color: '#1976d2' }}>jpeg</Link>, <Link href="#" sx={{ color: '#1976d2' }}>png</Link>
+                                <Typography variant="caption" component="div" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                                    Accepted files: <Link href="#" sx={{ color: 'hsl(var(--primary))' }}>gif</Link>, <Link href="#" sx={{ color: 'hsl(var(--primary))' }}>jpeg</Link>, <Link href="#" sx={{ color: 'hsl(var(--primary))' }}>png</Link>
                                 </Typography>
-                                <Typography variant="caption" component="div" sx={{ color: '#d32f2f' }}>
+                                <Typography variant="caption" component="div" sx={{ color: 'hsl(var(--destructive))' }}>
                                     Max file size: 3 MB
                                 </Typography>
                             </Box>
@@ -315,7 +319,16 @@ export default function AddUserPage() {
                             onChange={handleChange('firstName')}
                             error={!!errors.firstName}
                             helperText={errors.firstName}
-                            sx={{ mb: 2.5, bgcolor: '#f8f9fa' }}
+                            sx={{
+                                mb: 2.5,
+                                bgcolor: 'hsl(var(--input))',
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'hsl(var(--foreground))',
+                                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                    '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                            }}
                         />
                         <TextField
                             label="Last name"
@@ -326,7 +339,16 @@ export default function AddUserPage() {
                             onChange={handleChange('lastName')}
                             error={!!errors.lastName}
                             helperText={errors.lastName}
-                            sx={{ mb: 2.5, bgcolor: '#f8f9fa' }}
+                            sx={{
+                                mb: 2.5,
+                                bgcolor: 'hsl(var(--input))',
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'hsl(var(--foreground))',
+                                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                    '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                            }}
                         />
                         <TextField
                             label="Email"
@@ -338,7 +360,16 @@ export default function AddUserPage() {
                             onChange={handleChange('email')}
                             error={!!errors.email}
                             helperText={errors.email}
-                            sx={{ mb: 2.5, bgcolor: '#f8f9fa' }}
+                            sx={{
+                                mb: 2.5,
+                                bgcolor: 'hsl(var(--input))',
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'hsl(var(--foreground))',
+                                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                    '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                            }}
                         />
                         <TextField
                             label="Bio"
@@ -347,12 +378,21 @@ export default function AddUserPage() {
                             rows={4}
                             value={formData.bio}
                             onChange={handleChange('bio')}
-                            sx={{ mb: 2.5, bgcolor: '#f8f9fa' }}
+                            sx={{
+                                mb: 2.5,
+                                bgcolor: 'hsl(var(--input))',
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'hsl(var(--foreground))',
+                                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                    '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                                },
+                                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                            }}
                         />
                     </Box>
 
                     {/* Sign in credentials */}
-                    <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, color: '#1a2b4a' }}>
+                    <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, color: 'hsl(var(--foreground))' }}>
                         Sign in credentials
                     </Typography>
                     <Box sx={{ mb: 4 }}>
@@ -365,7 +405,7 @@ export default function AddUserPage() {
                             onChange={handleChange('username')}
                             error={!!errors.username}
                             helperText={errors.username}
-                            sx={{ mb: 2.5, bgcolor: '#f8f9fa' }}
+                            sx={{ mb: 2.5 }}
                         />
                         <TextField
                             label="Password"
@@ -375,7 +415,7 @@ export default function AddUserPage() {
                             placeholder="Type new password"
                             value={formData.password}
                             onChange={handleChange('password')}
-                            sx={{ mb: 1, bgcolor: '#f8f9fa' }}
+                            sx={{ mb: 1 }}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -383,6 +423,7 @@ export default function AddUserPage() {
                                             onClick={() => setShowPassword(!showPassword)}
                                             edge="end"
                                             size="small"
+                                            sx={{ color: 'hsl(var(--muted-foreground))' }}
                                         >
                                             {showPassword ? <VisibilityOff /> : <Visibility />}
                                         </IconButton>
@@ -390,20 +431,20 @@ export default function AddUserPage() {
                                 ),
                             }}
                         />
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                        <Typography variant="caption" sx={{ display: 'block', mb: 2, color: 'hsl(var(--muted-foreground))' }}>
                             Passwords are required to be at least 8 characters long, and contain at least{' '}
-                            <Link href="#" sx={{ color: '#1976d2' }}>one uppercase letter</Link>,{' '}
-                            <Link href="#" sx={{ color: '#1976d2' }}>one lowercase letter</Link> and{' '}
-                            <Link href="#" sx={{ color: '#1976d2' }}>one number</Link>.
+                            <Link href="#" sx={{ color: 'hsl(var(--primary))' }}>one uppercase letter</Link>,{' '}
+                            <Link href="#" sx={{ color: 'hsl(var(--primary))' }}>one lowercase letter</Link> and{' '}
+                            <Link href="#" sx={{ color: 'hsl(var(--primary))' }}>one number</Link>.
                         </Typography>
                     </Box>
 
                     {/* Location and language */}
-                    <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, color: '#1a2b4a' }}>
+                    <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, color: 'hsl(var(--foreground))' }}>
                         Location and language
                     </Typography>
                     <Box sx={{ mb: 4 }}>
-                        <Typography variant="body2" sx={{ mb: 0.5, color: '#1a2b4a' }}>Timezone</Typography>
+                        <Typography variant="body2" sx={{ mb: 0.5, color: 'hsl(var(--foreground))' }}>Timezone</Typography>
                         <Autocomplete
                             options={timezones}
                             getOptionLabel={(option) => option.label}
@@ -417,13 +458,13 @@ export default function AddUserPage() {
                                 <TextField
                                     {...params}
                                     size="small"
-                                    sx={{ mb: 2.5, bgcolor: '#f8f9fa' }}
+                                    sx={{ mb: 2.5 }}
                                     InputProps={{
                                         ...params.InputProps,
                                         endAdornment: (
                                             <>
                                                 <InputAdornment position="end">
-                                                    <SearchIcon sx={{ color: '#999', fontSize: 20 }} />
+                                                    <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 20 }} />
                                                 </InputAdornment>
                                                 {params.InputProps.endAdornment}
                                             </>
@@ -433,12 +474,11 @@ export default function AddUserPage() {
                             )}
                         />
 
-                        <Typography variant="body2" sx={{ mb: 0.5, color: '#1a2b4a' }}>Language</Typography>
+                        <Typography variant="body2" sx={{ mb: 0.5, color: 'hsl(var(--foreground))' }}>Language</Typography>
                         <FormControl fullWidth size="small" sx={{ mb: 2.5 }}>
                             <Select
                                 value={formData.language}
                                 onChange={(e) => setFormData(prev => ({ ...prev, language: e.target.value }))}
-                                sx={{ bgcolor: '#f8f9fa' }}
                             >
                                 {languages.map(lang => (
                                     <MenuItem key={lang.value} value={lang.value}>{lang.label}</MenuItem>
@@ -446,16 +486,21 @@ export default function AddUserPage() {
                             </Select>
                         </FormControl>
 
-                        <Typography variant="body2" sx={{ mb: 0.5, color: '#1a2b4a' }}>
-                            User type <span style={{ color: '#d32f2f' }}>*</span>
+                        <Typography variant="body2" sx={{ mb: 0.5, color: 'hsl(var(--foreground))' }}>
+                            User type <span style={{ color: 'hsl(var(--destructive))' }}>*</span>
                         </Typography>
                         <FormControl fullWidth size="small" sx={{ mb: 2.5 }}>
                             <Select
                                 value={formData.userType}
                                 onChange={(e) => setFormData(prev => ({ ...prev, userType: e.target.value }))}
-                                sx={{ bgcolor: '#f8f9fa' }}
                             >
-                                {userTypes.map(type => (
+                                {userTypes.filter(type => {
+                                    // Super Instructors cannot assign ADMIN role
+                                    if (activeUserRole === 'SUPER_INSTRUCTOR' && type.role === 'ADMIN') {
+                                        return false;
+                                    }
+                                    return true;
+                                }).map(type => (
                                     <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
                                 ))}
                             </Select>
@@ -469,14 +514,14 @@ export default function AddUserPage() {
                                 checked={formData.isActive}
                                 onChange={handleCheckboxChange('isActive')}
                                 sx={{
-                                    color: formData.isActive ? '#1976d2' : undefined,
-                                    '&.Mui-checked': { color: '#1976d2' },
+                                    color: 'hsl(var(--primary))',
+                                    '&.Mui-checked': { color: 'hsl(var(--primary))' },
                                     p: 0, mr: 1,
                                 }}
                             />
-                            <Typography variant="body2" sx={{ color: '#1a2b4a' }}>Active</Typography>
+                            <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>Active</Typography>
                             <IconButton size="small" sx={{ ml: 0.5 }}>
-                                <InfoOutlinedIcon sx={{ fontSize: 16, color: '#ff9800' }} />
+                                <InfoOutlinedIcon sx={{ fontSize: 16, color: 'hsl(var(--warning))' }} />
                             </IconButton>
                         </Box>
 
@@ -486,9 +531,9 @@ export default function AddUserPage() {
                                 onChange={(e) => setFormData(prev => ({ ...prev, showDeactivateAt: e.target.checked }))}
                                 sx={{ p: 0, mr: 1 }}
                             />
-                            <Typography variant="body2" sx={{ color: '#1a2b4a' }}>Deactivate at</Typography>
+                            <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>Deactivate at</Typography>
                             <IconButton size="small" sx={{ ml: 0.5 }}>
-                                <InfoOutlinedIcon sx={{ fontSize: 16, color: '#ff9800' }} />
+                                <InfoOutlinedIcon sx={{ fontSize: 16, color: 'hsl(var(--warning))' }} />
                             </IconButton>
                         </Box>
                         {formData.showDeactivateAt && (
@@ -497,7 +542,7 @@ export default function AddUserPage() {
                                 size="small"
                                 value={formData.deactivateAt}
                                 onChange={handleChange('deactivateAt')}
-                                sx={{ ml: 3, mb: 1.5, bgcolor: '#f8f9fa', width: 200 }}
+                                sx={{ ml: 3, mb: 1.5, width: 200 }}
                             />
                         )}
 
@@ -507,7 +552,7 @@ export default function AddUserPage() {
                                 onChange={handleCheckboxChange('excludeFromEmails')}
                                 sx={{ p: 0, mr: 1 }}
                             />
-                            <Link href="#" underline="hover" sx={{ color: '#1976d2', fontSize: 14 }}>
+                            <Link href="#" underline="hover" sx={{ color: 'hsl(var(--primary))', fontSize: 14 }}>
                                 Exclude from all non-essential emails and notifications
                             </Link>
                         </Box>
@@ -522,10 +567,11 @@ export default function AddUserPage() {
                     onClick={handleSubmit}
                     disabled={loading}
                     sx={{
-                        bgcolor: '#1976d2',
+                        bgcolor: 'hsl(var(--primary))',
+                        color: 'hsl(var(--primary-foreground))',
                         textTransform: 'none',
                         px: 4,
-                        '&:hover': { bgcolor: '#1565c0' },
+                        '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
                     }}
                 >
                     {loading ? 'Saving...' : 'Save'}
@@ -536,9 +582,9 @@ export default function AddUserPage() {
                     sx={{
                         textTransform: 'none',
                         px: 3,
-                        borderColor: '#ccc',
-                        color: '#1a2b4a',
-                        '&:hover': { borderColor: '#999', bgcolor: 'transparent' },
+                        borderColor: 'hsl(var(--border))',
+                        color: 'hsl(var(--foreground))',
+                        '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--accent))' },
                     }}
                 >
                     Cancel
