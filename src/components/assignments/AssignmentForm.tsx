@@ -327,7 +327,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
 
                     {isCourseSpecific && (
                         <Grid container spacing={2}>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <FormControl fullWidth required={role === 'INSTRUCTOR'}>
                                     <InputLabel>Course</InputLabel>
                                     <Select
@@ -342,7 +342,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} md={3}>
+                            <Grid size={{ xs: 12, md: 3 }}>
                                 <FormControl fullWidth>
                                     <InputLabel>Type</InputLabel>
                                     <Select
@@ -356,7 +356,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} md={3}>
+                            <Grid size={{ xs: 12, md: 3 }}>
                                 <FormControl fullWidth>
                                     <InputLabel>Difficulty</InputLabel>
                                     <Select
@@ -375,7 +375,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
 
                     {!isCourseSpecific && (
                         <Grid container spacing={2}>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <FormControl fullWidth>
                                     <InputLabel>Type</InputLabel>
                                     <Select
@@ -389,7 +389,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <FormControl fullWidth>
                                     <InputLabel>Difficulty</InputLabel>
                                     <Select
@@ -478,7 +478,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
             {/* TAB 3: AVAILABILITY */}
             <TabPanel value={tabValue} index={2}>
                 <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <TextField
                             label="Available From"
                             type="datetime-local"
@@ -488,7 +488,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
                             onChange={(e) => handleChange('availableFrom', e.target.value)}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <TextField
                             label="Due Date"
                             type="datetime-local"
@@ -498,7 +498,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
                             onChange={(e) => handleChange('dueAt', e.target.value)}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <TextField
                             label="Close Submissions (Hard Lock)"
                             type="datetime-local"
@@ -520,7 +520,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
 
                     {formData.allowLate && (
                         <Grid container spacing={3} sx={{ mt: 1 }}>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <TextField
                                     label="Penalty per Day (%)"
                                     type="number"
@@ -529,7 +529,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
                                     onChange={(e) => handleChange('latePenalty', Number(e.target.value))}
                                 />
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <TextField
                                     label="Max Late Days"
                                     type="number"
@@ -562,7 +562,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
                         <>
                             <Divider />
                             <Grid container spacing={3}>
-                                <Grid item xs={12} md={4}>
+                                <Grid size={{ xs: 12, md: 4 }}>
                                     <TextField
                                         label="Max Files"
                                         type="number"
@@ -571,7 +571,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
                                         onChange={(e) => handleChange('maxFiles', Number(e.target.value))}
                                     />
                                 </Grid>
-                                <Grid item xs={12} md={4}>
+                                <Grid size={{ xs: 12, md: 4 }}>
                                     <TextField
                                         label="Max Upload Size (MB)"
                                         type="number"
@@ -580,7 +580,7 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
                                         onChange={(e) => handleChange('maxSizeMb', Number(e.target.value))}
                                     />
                                 </Grid>
-                                <Grid item xs={12} md={4}>
+                                <Grid size={{ xs: 12, md: 4 }}>
                                     <TextField
                                         label="Max Attempts"
                                         type="number"
@@ -596,19 +596,19 @@ export default function AssignmentForm({ role, initialData, onSuccess }: Assignm
                     <Divider sx={{ my: 2 }} />
                     <Typography variant="h6">Integrity & Security</Typography>
                     <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <FormControlLabel
                                 control={<Switch checked={formData.plagiarismCheck} onChange={(e) => handleChange('plagiarismCheck', e.target.checked)} />}
                                 label="Enable Integrity Check (Plagiarism)"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <FormControlLabel
                                 control={<Switch checked={formData.requireAIDeclaration} onChange={(e) => handleChange('requireAIDeclaration', e.target.checked)} />}
                                 label="Require AI Usage Declaration"
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <FormControlLabel
                                 control={<Switch checked={formData.lockAfterView} onChange={(e) => handleChange('lockAfterView', e.target.checked)} />}
                                 label="Lock Content After Viewing"
