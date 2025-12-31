@@ -1,0 +1,1141 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.__EFMigrationsHistory (
+  MigrationId character varying NOT NULL,
+  ProductVersion character varying NOT NULL,
+  CONSTRAINT __EFMigrationsHistory_pkey PRIMARY KEY (MigrationId)
+);
+CREATE TABLE public.ai_coach_sessions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  started_at timestamp with time zone NOT NULL DEFAULT now(),
+  ended_at timestamp with time zone,
+  total_seconds integer DEFAULT 0,
+  last_activity_at timestamp with time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ai_coach_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_coach_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.alembic_version (
+  version_num character varying NOT NULL,
+  CONSTRAINT alembic_version_pkey PRIMARY KEY (version_num)
+);
+CREATE TABLE public.answer_choices (
+  id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  choice_text text NOT NULL,
+  is_correct boolean NOT NULL,
+  view_index integer,
+  CONSTRAINT answer_choices_pkey PRIMARY KEY (id),
+  CONSTRAINT answer_choices_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.answers (
+  id uuid NOT NULL,
+  question_id uuid,
+  answer_text text,
+  is_correct boolean,
+  CONSTRAINT answers_pkey PRIMARY KEY (id),
+  CONSTRAINT answers_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.assignment_targets (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  assignment_id uuid NOT NULL,
+  target_node_id integer NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT assignment_targets_pkey PRIMARY KEY (id),
+  CONSTRAINT assignment_targets_assignment_id_fkey FOREIGN KEY (assignment_id) REFERENCES public.assignments(id),
+  CONSTRAINT assignment_targets_target_node_id_fkey FOREIGN KEY (target_node_id) REFERENCES public.organization_node(id)
+);
+CREATE TABLE public.assignments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  learning_item_id uuid NOT NULL,
+  assigned_by_user_id uuid,
+  assigned_by_node_id integer NOT NULL,
+  assigned_by_type USER-DEFINED NOT NULL,
+  priority USER-DEFINED NOT NULL,
+  delivery_mode USER-DEFINED NOT NULL DEFAULT 'self_paced'::delivery_mode,
+  starts_at timestamp without time zone,
+  due_date timestamp without time zone,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  scope_type USER-DEFINED NOT NULL,
+  user_group_id uuid,
+  group_name character varying,
+  CONSTRAINT assignments_pkey PRIMARY KEY (id),
+  CONSTRAINT assignments_learning_item_id_fkey FOREIGN KEY (learning_item_id) REFERENCES public.learning_items(id),
+  CONSTRAINT assignments_assigned_by_user_id_fkey FOREIGN KEY (assigned_by_user_id) REFERENCES public.users(id),
+  CONSTRAINT assignments_assigned_by_node_id_fkey FOREIGN KEY (assigned_by_node_id) REFERENCES public.organization_node(id),
+  CONSTRAINT assignments_user_group_id_fkey FOREIGN KEY (user_group_id) REFERENCES public.user_groups(id)
+);
+CREATE TABLE public.attempt_answers (
+  id uuid NOT NULL,
+  attempt_id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  selected_choice_ids json,
+  answer_text text,
+  status USER-DEFINED NOT NULL,
+  points_earned integer NOT NULL,
+  answer_time double precision,
+  submitted_at timestamp without time zone NOT NULL,
+  confidence double precision,
+  CONSTRAINT attempt_answers_pkey PRIMARY KEY (id),
+  CONSTRAINT attempt_answers_attempt_id_fkey FOREIGN KEY (attempt_id) REFERENCES public.user_quiz_attempts(id),
+  CONSTRAINT attempt_answers_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.attempt_question_links (
+  id uuid NOT NULL,
+  attempt_id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  CONSTRAINT attempt_question_links_pkey PRIMARY KEY (id),
+  CONSTRAINT attempt_question_links_attempt_id_fkey FOREIGN KEY (attempt_id) REFERENCES public.user_quiz_attempts(id),
+  CONSTRAINT attempt_question_links_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.auth_permission (
+  id integer NOT NULL DEFAULT nextval('auth_permission_id_seq'::regclass),
+  name text NOT NULL,
+  full_permission text NOT NULL DEFAULT ''::text,
+  CONSTRAINT auth_permission_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.auth_role (
+  id integer NOT NULL DEFAULT nextval('auth_role_id_seq'::regclass),
+  name text NOT NULL UNIQUE,
+  description text,
+  CONSTRAINT auth_role_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.auth_role_permission (
+  role_id integer NOT NULL,
+  permission_id integer NOT NULL,
+  CONSTRAINT auth_role_permission_pkey PRIMARY KEY (role_id, permission_id),
+  CONSTRAINT auth_role_permission_permission_id_fkey FOREIGN KEY (permission_id) REFERENCES public.auth_permission(id),
+  CONSTRAINT auth_role_permission_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.auth_role(id)
+);
+CREATE TABLE public.book_key_points (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  product_id uuid NOT NULL,
+  key_point text,
+  CONSTRAINT book_key_points_pkey PRIMARY KEY (id),
+  CONSTRAINT book_key_points_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.book_key_points_languages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  language_id integer NOT NULL,
+  key_point text,
+  book_key_point_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  CONSTRAINT book_key_points_languages_pkey PRIMARY KEY (id),
+  CONSTRAINT book_key_points_languages_book_key_point_id_fkey FOREIGN KEY (book_key_point_id) REFERENCES public.book_key_points(id),
+  CONSTRAINT book_key_points_languages_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.book_reading_details (
+  id uuid NOT NULL,
+  product_id uuid UNIQUE,
+  author_name character varying,
+  author_bio text,
+  page_count integer,
+  reading_time integer,
+  is_new boolean,
+  CONSTRAINT book_reading_details_pkey PRIMARY KEY (id),
+  CONSTRAINT book_reading_details_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.book_sections (
+  id uuid NOT NULL,
+  book_id uuid,
+  title character varying,
+  content text,
+  stage_index integer,
+  CONSTRAINT book_sections_pkey PRIMARY KEY (id),
+  CONSTRAINT book_sections_book_id_fkey FOREIGN KEY (book_id) REFERENCES public.book_reading_details(id)
+);
+CREATE TABLE public.book_skills (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  product_id uuid NOT NULL,
+  skill text,
+  CONSTRAINT book_skills_pkey PRIMARY KEY (id),
+  CONSTRAINT book_skills_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.book_skills_languages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  language_id integer NOT NULL,
+  skill text,
+  book_skill_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  CONSTRAINT book_skills_languages_pkey PRIMARY KEY (id),
+  CONSTRAINT book_skills_languages_book_skill_id_fkey FOREIGN KEY (book_skill_id) REFERENCES public.book_skills(id),
+  CONSTRAINT book_skills_languages_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.book_video_details (
+  id uuid NOT NULL,
+  product_id uuid UNIQUE,
+  author_name character varying,
+  expected_time_completion integer,
+  CONSTRAINT book_video_details_pkey PRIMARY KEY (id),
+  CONSTRAINT book_video_details_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.book_videos (
+  id uuid NOT NULL,
+  book_id uuid,
+  url character varying,
+  video_name character varying,
+  video_index integer,
+  old_id integer,
+  duration_in_seconds integer,
+  cover_photo character varying,
+  short_video character varying,
+  storage_path character varying,
+  q360 character varying,
+  q480 character varying,
+  q720 character varying,
+  q1080 character varying,
+  q2k character varying,
+  q4k character varying,
+  mp3 character varying,
+  CONSTRAINT book_videos_pkey PRIMARY KEY (id),
+  CONSTRAINT book_videos_book_id_fkey FOREIGN KEY (book_id) REFERENCES public.book_video_details(id)
+);
+CREATE TABLE public.book_videos_languages (
+  book_video_id uuid NOT NULL,
+  language_id integer NOT NULL,
+  name character varying NOT NULL,
+  CONSTRAINT book_videos_languages_pkey PRIMARY KEY (book_video_id, language_id),
+  CONSTRAINT book_videos_languages_book_video_id_fkey FOREIGN KEY (book_video_id) REFERENCES public.book_videos(id),
+  CONSTRAINT book_videos_languages_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id)
+);
+CREATE TABLE public.categories (
+  id uuid NOT NULL,
+  name character varying NOT NULL,
+  description text,
+  CONSTRAINT categories_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.category_languages (
+  category_id uuid NOT NULL,
+  language_id integer NOT NULL,
+  name character varying NOT NULL,
+  description character varying,
+  CONSTRAINT category_languages_pkey PRIMARY KEY (category_id, language_id),
+  CONSTRAINT category_languages_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id),
+  CONSTRAINT category_languages_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id)
+);
+CREATE TABLE public.certificates (
+  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  qr_code_path text,
+  qr_code text,
+  certificate_form_id integer,
+  short_video text,
+  cover_path text,
+  product_id uuid,
+  learning_paths_id uuid,
+  track_id uuid,
+  level_id integer,
+  created_in timestamp without time zone,
+  created_by integer,
+  updated_in timestamp without time zone,
+  updated_by integer,
+  eg_price_id integer,
+  ksa_price_id integer,
+  uae_price_id integer,
+  com_price_id integer,
+  CONSTRAINT certificates_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.chapter_languages (
+  chapter_id uuid NOT NULL,
+  language_id integer NOT NULL,
+  title character varying NOT NULL,
+  description text,
+  about text,
+  CONSTRAINT chapter_languages_pkey PRIMARY KEY (chapter_id, language_id),
+  CONSTRAINT chapter_languages_chapter_id_fkey FOREIGN KEY (chapter_id) REFERENCES public.chapters(id),
+  CONSTRAINT chapter_languages_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id)
+);
+CREATE TABLE public.chapters (
+  id uuid NOT NULL,
+  old_d integer,
+  course_id uuid,
+  title character varying,
+  description text,
+  view_index integer,
+  about text,
+  quiz_id uuid,
+  CONSTRAINT chapters_pkey PRIMARY KEY (id),
+  CONSTRAINT chapters_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.course_details(id)
+);
+CREATE TABLE public.chats (
+  id uuid NOT NULL,
+  user_id uuid,
+  product_id uuid,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  video_id uuid,
+  agent_type character varying,
+  chat_name character varying,
+  chat_name_updated boolean,
+  CONSTRAINT chats_pkey PRIMARY KEY (id),
+  CONSTRAINT chats_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT chats_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT fk_chats_video FOREIGN KEY (video_id) REFERENCES public.videos(id)
+);
+CREATE TABLE public.companies (
+  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  logo_path text,
+  name text,
+  landline text,
+  hotline text,
+  phone text,
+  domain text,
+  email text,
+  welcome_email text,
+  address text,
+  facebook text,
+  youtube text,
+  linkedin text,
+  instagram text,
+  twitter text,
+  manager_id integer,
+  discount numeric,
+  tax_card text,
+  registration_number text,
+  site_id integer,
+  custom_content text,
+  sta boolean,
+  deleted boolean,
+  deleted_by integer,
+  deleted_in timestamp without time zone,
+  created_in timestamp without time zone,
+  created_by integer,
+  updated_in timestamp without time zone,
+  updated_by integer,
+  CONSTRAINT companies_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.company_certificate (
+  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  company_id integer,
+  product_type_id integer,
+  certificate_form_id integer,
+  created_in timestamp without time zone,
+  sta boolean,
+  CONSTRAINT company_certificate_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.competency (
+  id uuid NOT NULL,
+  name character varying NOT NULL,
+  description text,
+  track_id uuid NOT NULL,
+  CONSTRAINT competency_pkey PRIMARY KEY (id),
+  CONSTRAINT competency_track_id_fkey FOREIGN KEY (track_id) REFERENCES public.track(id)
+);
+CREATE TABLE public.course_details (
+  id uuid NOT NULL,
+  product_id uuid UNIQUE,
+  pre_assessment_id uuid,
+  final_exam_id uuid,
+  certificate_included boolean,
+  CONSTRAINT course_details_pkey PRIMARY KEY (id),
+  CONSTRAINT course_details_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.course_instructors (
+  id uuid NOT NULL,
+  course_id uuid,
+  instructor_id uuid,
+  CONSTRAINT course_instructors_pkey PRIMARY KEY (id),
+  CONSTRAINT course_instructors_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.course_details(id),
+  CONSTRAINT course_instructors_instructor_id_fkey FOREIGN KEY (instructor_id) REFERENCES public.instructors(id)
+);
+CREATE TABLE public.custom_pathway_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  custom_pathway_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  order_index integer NOT NULL CHECK (order_index >= 0),
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT custom_pathway_items_pkey PRIMARY KEY (id),
+  CONSTRAINT custom_pathway_items_custom_pathway_id_fkey FOREIGN KEY (custom_pathway_id) REFERENCES public.custom_pathways(id),
+  CONSTRAINT custom_pathway_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.custom_pathways (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title character varying NOT NULL,
+  description text,
+  created_by_user_id uuid NOT NULL,
+  created_for_org_node_id integer,
+  is_reusable boolean NOT NULL DEFAULT false,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT custom_pathways_pkey PRIMARY KEY (id),
+  CONSTRAINT custom_pathways_created_by_user_id_fkey FOREIGN KEY (created_by_user_id) REFERENCES public.users(id),
+  CONSTRAINT custom_pathways_created_for_org_node_id_fkey FOREIGN KEY (created_for_org_node_id) REFERENCES public.organization_node(id)
+);
+CREATE TABLE public.difficulty (
+  id uuid NOT NULL,
+  name character varying NOT NULL UNIQUE,
+  multiplier double precision NOT NULL,
+  CONSTRAINT difficulty_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.instructor_k_atoms (
+  id uuid NOT NULL,
+  instructor_id uuid NOT NULL,
+  k_atom_id uuid NOT NULL,
+  CONSTRAINT instructor_k_atoms_pkey PRIMARY KEY (id),
+  CONSTRAINT instructor_k_atoms_instructor_id_fkey FOREIGN KEY (instructor_id) REFERENCES public.instructors(id),
+  CONSTRAINT instructor_k_atoms_k_atom_id_fkey FOREIGN KEY (k_atom_id) REFERENCES public.knowledge_atom(id)
+);
+CREATE TABLE public.instructor_languages (
+  instructor_id uuid NOT NULL,
+  language_id integer NOT NULL,
+  name character varying,
+  title character varying,
+  bio text,
+  CONSTRAINT instructor_languages_pkey PRIMARY KEY (instructor_id, language_id),
+  CONSTRAINT instructor_languages_instructor_id_fkey FOREIGN KEY (instructor_id) REFERENCES public.instructors(id),
+  CONSTRAINT instructor_languages_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id)
+);
+CREATE TABLE public.instructor_products (
+  instructor_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  CONSTRAINT instructor_products_pkey PRIMARY KEY (instructor_id, product_id),
+  CONSTRAINT instructor_products_instructor_id_fkey FOREIGN KEY (instructor_id) REFERENCES public.instructors(id),
+  CONSTRAINT instructor_products_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.instructor_ratings (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  instructor_id uuid NOT NULL,
+  rating double precision NOT NULL,
+  review text,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT instructor_ratings_pkey PRIMARY KEY (id),
+  CONSTRAINT instructor_ratings_instructor_id_fkey FOREIGN KEY (instructor_id) REFERENCES public.instructors(id),
+  CONSTRAINT instructor_ratings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.instructor_skills (
+  id uuid NOT NULL,
+  instructor_id uuid,
+  skill_id uuid,
+  CONSTRAINT instructor_skills_pkey PRIMARY KEY (id),
+  CONSTRAINT instructor_skills_instructor_id_fkey FOREIGN KEY (instructor_id) REFERENCES public.instructors(id),
+  CONSTRAINT instructor_skills_skill_id_fkey FOREIGN KEY (skill_id) REFERENCES public.skills(id)
+);
+CREATE TABLE public.instructors (
+  id uuid NOT NULL,
+  name character varying NOT NULL,
+  title character varying,
+  bio text,
+  linkedin character varying,
+  education text,
+  profile_image character varying,
+  is_top_rated boolean,
+  is_new boolean,
+  CONSTRAINT instructors_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.knowledge_atom (
+  id uuid NOT NULL,
+  name character varying NOT NULL,
+  objective text,
+  specific_skill_id uuid NOT NULL,
+  level_id integer NOT NULL,
+  level_description text,
+  CONSTRAINT knowledge_atom_pkey PRIMARY KEY (id),
+  CONSTRAINT knowledge_atom_level_id_fkey FOREIGN KEY (level_id) REFERENCES public.levels(id),
+  CONSTRAINT knowledge_atom_specific_skill_id_fkey FOREIGN KEY (specific_skill_id) REFERENCES public.specific_skill(id)
+);
+CREATE TABLE public.languages (
+  id integer NOT NULL DEFAULT nextval('languages_id_seq'::regclass),
+  code character varying NOT NULL,
+  name character varying NOT NULL UNIQUE,
+  CONSTRAINT languages_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.learning_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  type USER-DEFINED NOT NULL,
+  product_id uuid,
+  custom_pathway_id uuid,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT learning_items_pkey PRIMARY KEY (id),
+  CONSTRAINT learning_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT learning_items_custom_pathway_id_fkey FOREIGN KEY (custom_pathway_id) REFERENCES public.custom_pathways(id)
+);
+CREATE TABLE public.level_languages (
+  level_id integer NOT NULL,
+  language_id integer NOT NULL,
+  name character varying NOT NULL,
+  CONSTRAINT level_languages_pkey PRIMARY KEY (level_id, language_id),
+  CONSTRAINT level_languages_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id),
+  CONSTRAINT level_languages_level_id_fkey FOREIGN KEY (level_id) REFERENCES public.levels(id)
+);
+CREATE TABLE public.levels (
+  id integer NOT NULL DEFAULT nextval('levels_id_seq'::regclass),
+  name character varying NOT NULL,
+  CONSTRAINT levels_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.messages (
+  id uuid NOT NULL,
+  chat_id uuid,
+  role character varying NOT NULL,
+  content text NOT NULL,
+  timestamp timestamp without time zone,
+  CONSTRAINT messages_pkey PRIMARY KEY (id),
+  CONSTRAINT messages_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES public.chats(id)
+);
+CREATE TABLE public.misconceptions (
+  id uuid NOT NULL,
+  knowledge_atom_id uuid NOT NULL,
+  misconception text,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT misconceptions_pkey PRIMARY KEY (id),
+  CONSTRAINT misconceptions_knowledge_atom_id_fkey FOREIGN KEY (knowledge_atom_id) REFERENCES public.knowledge_atom(id)
+);
+CREATE TABLE public.node_types (
+  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  code text NOT NULL UNIQUE,
+  name text NOT NULL,
+  description text,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT node_types_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.objective_bloom_level (
+  id integer NOT NULL DEFAULT nextval('objective_bloom_level_id_seq'::regclass),
+  name character varying NOT NULL UNIQUE,
+  description text,
+  base_point integer NOT NULL CHECK (base_point > 0),
+  CONSTRAINT objective_bloom_level_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.objective_languages (
+  objective_id uuid NOT NULL,
+  language_id integer NOT NULL,
+  name character varying NOT NULL,
+  description character varying,
+  CONSTRAINT objective_languages_pkey PRIMARY KEY (objective_id, language_id),
+  CONSTRAINT objective_languages_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id)
+);
+CREATE TABLE public.objectives (
+  id uuid NOT NULL,
+  name character varying NOT NULL UNIQUE,
+  description character varying,
+  bloom_level_id integer,
+  CONSTRAINT objectives_pkey PRIMARY KEY (id),
+  CONSTRAINT objectives_bloom_level_id_fkey FOREIGN KEY (bloom_level_id) REFERENCES public.objective_bloom_level(id)
+);
+CREATE TABLE public.org (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  org_name text NOT NULL,
+  website text,
+  created_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT org_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.org_service (
+  org_id uuid NOT NULL,
+  service_id uuid NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT org_service_pkey PRIMARY KEY (org_id, service_id),
+  CONSTRAINT org_service_org_id_fkey FOREIGN KEY (org_id) REFERENCES public.org(id),
+  CONSTRAINT org_service_service_id_fkey FOREIGN KEY (service_id) REFERENCES public.service(id)
+);
+CREATE TABLE public.organization_node (
+  id integer NOT NULL DEFAULT nextval('organization_node_id_seq'::regclass),
+  name text NOT NULL,
+  node_type USER-DEFINED,
+  is_active boolean DEFAULT true,
+  created_at timestamp without time zone DEFAULT now(),
+  parent_id integer,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  org_id uuid,
+  path USER-DEFINED,
+  node_type_id integer,
+  CONSTRAINT organization_node_pkey PRIMARY KEY (id),
+  CONSTRAINT organization_node_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.organization_node(id),
+  CONSTRAINT organization_node_org_id_fkey FOREIGN KEY (org_id) REFERENCES public.org(id),
+  CONSTRAINT organization_node_node_type_id_fkey FOREIGN KEY (node_type_id) REFERENCES public.node_types(id)
+);
+CREATE TABLE public.paragraphs (
+  id uuid NOT NULL,
+  video_id uuid,
+  book_video_id uuid,
+  product_type_id integer,
+  context text NOT NULL,
+  view_index integer,
+  CONSTRAINT paragraphs_pkey PRIMARY KEY (id),
+  CONSTRAINT paragraphs_book_video_id_fkey FOREIGN KEY (book_video_id) REFERENCES public.book_videos(id),
+  CONSTRAINT paragraphs_product_type_id_fkey FOREIGN KEY (product_type_id) REFERENCES public.product_types(id),
+  CONSTRAINT paragraphs_video_id_fkey FOREIGN KEY (video_id) REFERENCES public.videos(id)
+);
+CREATE TABLE public.pathway_items (
+  id uuid NOT NULL,
+  product_pathway_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  order_index integer NOT NULL,
+  CONSTRAINT pathway_items_pkey PRIMARY KEY (id),
+  CONSTRAINT pathway_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT pathway_items_product_pathway_id_fkey FOREIGN KEY (product_pathway_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.product_categories (
+  category_id uuid NOT NULL,
+  product_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
+  CONSTRAINT product_categories_pkey PRIMARY KEY (product_id, category_id),
+  CONSTRAINT product_categories_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id),
+  CONSTRAINT product_categories_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.product_instructor (
+  InstructorId uuid NOT NULL,
+  ProductId uuid NOT NULL,
+  CONSTRAINT product_instructor_pkey PRIMARY KEY (InstructorId, ProductId),
+  CONSTRAINT FK_product_instructor_instructors_InstructorId FOREIGN KEY (InstructorId) REFERENCES public.instructors(id),
+  CONSTRAINT FK_product_instructor_products_ProductId FOREIGN KEY (ProductId) REFERENCES public.products(id)
+);
+CREATE TABLE public.product_k_atoms (
+  id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  k_atom_id uuid NOT NULL,
+  CONSTRAINT product_k_atoms_pkey PRIMARY KEY (id),
+  CONSTRAINT product_k_atoms_k_atom_id_fkey FOREIGN KEY (k_atom_id) REFERENCES public.knowledge_atom(id),
+  CONSTRAINT product_k_atoms_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.product_languages (
+  product_id uuid NOT NULL,
+  language_id integer NOT NULL,
+  title character varying NOT NULL,
+  description text,
+  CONSTRAINT product_languages_pkey PRIMARY KEY (product_id, language_id),
+  CONSTRAINT product_languages_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id),
+  CONSTRAINT product_languages_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.product_node (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  product_id uuid NOT NULL,
+  node_id integer NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT product_node_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_product_node_product FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT fk_product_node_node FOREIGN KEY (node_id) REFERENCES public.organization_node(id)
+);
+CREATE TABLE public.product_objectives (
+  product_id uuid NOT NULL,
+  objective_id uuid NOT NULL,
+  CONSTRAINT product_objectives_pkey PRIMARY KEY (product_id, objective_id),
+  CONSTRAINT product_objectives_objective_id_fkey FOREIGN KEY (objective_id) REFERENCES public.objectives(id),
+  CONSTRAINT product_objectives_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.product_ratings (
+  id uuid NOT NULL,
+  user_id uuid,
+  product_id uuid NOT NULL,
+  rating double precision NOT NULL,
+  review text,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT product_ratings_pkey PRIMARY KEY (id),
+  CONSTRAINT product_ratings_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT product_ratings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.product_skills (
+  id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  skill_id uuid NOT NULL,
+  CONSTRAINT product_skills_pkey PRIMARY KEY (id),
+  CONSTRAINT product_skills_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT product_skills_skill_id_fkey FOREIGN KEY (skill_id) REFERENCES public.skills(id)
+);
+CREATE TABLE public.product_type_languages (
+  product_type_id integer NOT NULL,
+  language_id integer NOT NULL,
+  name character varying NOT NULL,
+  CONSTRAINT product_type_languages_pkey PRIMARY KEY (product_type_id, language_id),
+  CONSTRAINT product_type_languages_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id),
+  CONSTRAINT product_type_languages_product_type_id_fkey FOREIGN KEY (product_type_id) REFERENCES public.product_types(id)
+);
+CREATE TABLE public.product_types (
+  id integer NOT NULL DEFAULT nextval('product_types_id_seq'::regclass),
+  name character varying NOT NULL UNIQUE,
+  CONSTRAINT product_types_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.products (
+  id uuid NOT NULL,
+  old_id integer,
+  type_id integer NOT NULL,
+  created_by uuid,
+  updated_by uuid,
+  level_id integer,
+  title character varying NOT NULL,
+  description text,
+  cover character varying,
+  short_video character varying,
+  language character varying,
+  duration character varying,
+  created_at timestamp without time zone NOT NULL,
+  updated_at timestamp without time zone NOT NULL,
+  org_node_id integer,
+  cover_284x160 text,
+  cover_318x238 text,
+  cover_5504x3072 text,
+  cover_248x171 text,
+  status boolean DEFAULT true,
+  CONSTRAINT products_pkey PRIMARY KEY (id),
+  CONSTRAINT products_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id),
+  CONSTRAINT products_level_id_fkey FOREIGN KEY (level_id) REFERENCES public.levels(id),
+  CONSTRAINT products_type_id_fkey FOREIGN KEY (type_id) REFERENCES public.product_types(id),
+  CONSTRAINT products_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id),
+  CONSTRAINT products_org_node_id_fkey FOREIGN KEY (org_node_id) REFERENCES public.organization_node(id)
+);
+CREATE TABLE public.question_knowledge_atoms (
+  id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  knowledge_atom_id uuid NOT NULL,
+  weight double precision,
+  created_at timestamp without time zone,
+  CONSTRAINT question_knowledge_atoms_pkey PRIMARY KEY (id),
+  CONSTRAINT question_knowledge_atoms_knowledge_atom_id_fkey FOREIGN KEY (knowledge_atom_id) REFERENCES public.knowledge_atom(id),
+  CONSTRAINT question_knowledge_atoms_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.question_objectives (
+  id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  objective_id uuid NOT NULL,
+  weight double precision,
+  CONSTRAINT question_objectives_pkey PRIMARY KEY (id),
+  CONSTRAINT question_objectives_objective_id_fkey FOREIGN KEY (objective_id) REFERENCES public.objectives(id),
+  CONSTRAINT question_objectives_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.question_type (
+  id uuid NOT NULL,
+  name character varying NOT NULL UNIQUE,
+  description text,
+  CONSTRAINT question_type_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.questions (
+  id uuid NOT NULL,
+  question_type_id uuid NOT NULL,
+  quiz_id uuid NOT NULL,
+  difficulty_id uuid NOT NULL,
+  question_text text NOT NULL,
+  view_index integer,
+  explanation text,
+  fixed_points integer CHECK (fixed_points > 0),
+  CONSTRAINT questions_pkey PRIMARY KEY (id),
+  CONSTRAINT questions_difficulty_id_fkey FOREIGN KEY (difficulty_id) REFERENCES public.difficulty(id),
+  CONSTRAINT questions_question_type_id_fkey FOREIGN KEY (question_type_id) REFERENCES public.question_type(id),
+  CONSTRAINT questions_quiz_id_fkey FOREIGN KEY (quiz_id) REFERENCES public.quizzes(id)
+);
+CREATE TABLE public.quiz_questions (
+  id uuid NOT NULL,
+  quiz_id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  order_index integer,
+  CONSTRAINT quiz_questions_pkey PRIMARY KEY (id, quiz_id, question_id),
+  CONSTRAINT quiz_questions_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id),
+  CONSTRAINT quiz_questions_quiz_id_fkey FOREIGN KEY (quiz_id) REFERENCES public.quizzes(id)
+);
+CREATE TABLE public.quiz_type (
+  id uuid NOT NULL,
+  name character varying NOT NULL UNIQUE,
+  description text,
+  CONSTRAINT quiz_type_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.quizzes (
+  id uuid NOT NULL,
+  quiz_type_id uuid NOT NULL,
+  title character varying NOT NULL,
+  description text,
+  passing_score double precision NOT NULL CHECK (passing_score >= 0::double precision),
+  time_limit double precision CHECK (time_limit IS NULL OR time_limit > 0::double precision),
+  allowed_attempts integer NOT NULL CHECK (allowed_attempts > 0),
+  attempt_questions_number integer NOT NULL CHECK (attempt_questions_number > 0),
+  CONSTRAINT quizzes_pkey PRIMARY KEY (id),
+  CONSTRAINT quizzes_quiz_type_id_fkey FOREIGN KEY (quiz_type_id) REFERENCES public.quiz_type(id)
+);
+CREATE TABLE public.service (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL UNIQUE,
+  created_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT service_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.skill_languages (
+  skill_id uuid NOT NULL,
+  language_id integer NOT NULL,
+  name character varying NOT NULL,
+  CONSTRAINT skill_languages_pkey PRIMARY KEY (skill_id, language_id),
+  CONSTRAINT skill_languages_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id),
+  CONSTRAINT skill_languages_skill_id_fkey FOREIGN KEY (skill_id) REFERENCES public.skills(id)
+);
+CREATE TABLE public.skill_level (
+  id integer NOT NULL DEFAULT nextval('skill_level_id_seq'::regclass),
+  name character varying NOT NULL,
+  CONSTRAINT skill_level_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.skills (
+  id uuid NOT NULL,
+  name character varying NOT NULL UNIQUE,
+  description text,
+  CONSTRAINT skills_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.specific_skill (
+  id uuid NOT NULL,
+  name character varying NOT NULL,
+  competency_id uuid NOT NULL,
+  CONSTRAINT specific_skill_pkey PRIMARY KEY (id),
+  CONSTRAINT specific_skill_competency_id_fkey FOREIGN KEY (competency_id) REFERENCES public.competency(id)
+);
+CREATE TABLE public.specific_skill_level_description (
+  id uuid NOT NULL,
+  specific_skill_id uuid NOT NULL,
+  level_id integer NOT NULL,
+  description text,
+  CONSTRAINT specific_skill_level_description_pkey PRIMARY KEY (id),
+  CONSTRAINT specific_skill_level_description_level_id_fkey FOREIGN KEY (level_id) REFERENCES public.skill_level(id),
+  CONSTRAINT specific_skill_level_description_specific_skill_id_fkey FOREIGN KEY (specific_skill_id) REFERENCES public.specific_skill(id)
+);
+CREATE TABLE public.specific_skill_level_descriptions (
+  id uuid NOT NULL,
+  specific_skill_id uuid NOT NULL,
+  level_id integer NOT NULL,
+  description text,
+  CONSTRAINT specific_skill_level_descriptions_pkey PRIMARY KEY (id),
+  CONSTRAINT specific_skill_level_descriptions_level_id_fkey FOREIGN KEY (level_id) REFERENCES public.levels(id),
+  CONSTRAINT specific_skill_level_descriptions_specific_skill_id_fkey FOREIGN KEY (specific_skill_id) REFERENCES public.specific_skill(id)
+);
+CREATE TABLE public.staging_book_key_points (
+  product_id uuid NOT NULL,
+  key_points text
+);
+CREATE TABLE public.track (
+  id uuid NOT NULL,
+  name character varying NOT NULL,
+  description text,
+  CONSTRAINT track_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.user_assignments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  assignment_id uuid NOT NULL,
+  learner_id uuid NOT NULL,
+  target_node_id integer NOT NULL,
+  status USER-DEFINED NOT NULL DEFAULT 'not_started'::assignment_status,
+  progress_percent smallint NOT NULL DEFAULT 0 CHECK (progress_percent >= 0 AND progress_percent <= 100),
+  completion_result USER-DEFINED,
+  completed_at timestamp without time zone,
+  assigned_at timestamp without time zone NOT NULL DEFAULT now(),
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  started_at timestamp without time zone,
+  CONSTRAINT user_assignments_pkey PRIMARY KEY (id),
+  CONSTRAINT user_assignments_assignment_id_fkey FOREIGN KEY (assignment_id) REFERENCES public.assignments(id),
+  CONSTRAINT user_assignments_learner_id_fkey FOREIGN KEY (learner_id) REFERENCES public.users(id),
+  CONSTRAINT user_assignments_target_node_id_fkey FOREIGN KEY (target_node_id) REFERENCES public.organization_node(id)
+);
+CREATE TABLE public.user_certificates (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  score integer NOT NULL,
+  created_at timestamp without time zone DEFAULT now(),
+  updated_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT user_certificates_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_user_cert_product FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT fk_user_cert_user FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_education (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  university character varying NOT NULL,
+  major character varying NOT NULL,
+  year integer NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_education_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_user_education_user FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_experiences (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  title character varying,
+  company character varying,
+  description text,
+  CONSTRAINT user_experiences_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_user_experiences_user FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_group_members (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  group_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  added_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT user_group_members_pkey PRIMARY KEY (id),
+  CONSTRAINT user_group_members_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.user_groups(id),
+  CONSTRAINT user_group_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_groups (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  description text,
+  created_by_user_id uuid NOT NULL,
+  org_id uuid NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT user_groups_pkey PRIMARY KEY (id),
+  CONSTRAINT user_groups_created_by_user_id_fkey FOREIGN KEY (created_by_user_id) REFERENCES public.users(id),
+  CONSTRAINT user_groups_org_id_fkey FOREIGN KEY (org_id) REFERENCES public.org(id)
+);
+CREATE TABLE public.user_likes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  is_liked boolean NOT NULL DEFAULT false,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_likes_pkey PRIMARY KEY (id),
+  CONSTRAINT user_likes_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT user_likes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_misconceptions (
+  id uuid NOT NULL,
+  user_id uuid,
+  product_id uuid,
+  knowledge_atom_id uuid,
+  misconception_id uuid,
+  question_id uuid,
+  status character varying NOT NULL,
+  created_at timestamp without time zone,
+  chapter_id uuid,
+  CONSTRAINT user_misconceptions_pkey PRIMARY KEY (id),
+  CONSTRAINT user_misconceptions_chapter_id_fkey FOREIGN KEY (chapter_id) REFERENCES public.chapters(id),
+  CONSTRAINT user_misconceptions_knowledge_atom_id_fkey FOREIGN KEY (knowledge_atom_id) REFERENCES public.knowledge_atom(id),
+  CONSTRAINT user_misconceptions_misconception_id_fkey FOREIGN KEY (misconception_id) REFERENCES public.misconceptions(id),
+  CONSTRAINT user_misconceptions_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT user_misconceptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_products (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  language_id integer NOT NULL,
+  enrolled_at timestamp without time zone,
+  completed_at timestamp with time zone,
+  updated_at timestamp with time zone NOT NULL,
+  progress double precision CHECK (progress >= 0::double precision AND progress <= 100::double precision),
+  status USER-DEFINED NOT NULL,
+  is_like boolean,
+  CONSTRAINT user_products_pkey PRIMARY KEY (id),
+  CONSTRAINT user_products_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id),
+  CONSTRAINT user_products_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT user_products_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_quiz_attempts (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  quiz_id uuid NOT NULL,
+  language_id integer NOT NULL,
+  attempt_number integer,
+  start_time timestamp without time zone,
+  end_time timestamp without time zone,
+  score double precision,
+  is_completed boolean,
+  is_passed boolean,
+  max_score double precision NOT NULL,
+  points_earned double precision,
+  correct_count integer,
+  wrong_count integer,
+  unanswered_count integer,
+  CONSTRAINT user_quiz_attempts_pkey PRIMARY KEY (id),
+  CONSTRAINT user_quiz_attempts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT user_quiz_attempts_quiz_id_fkey FOREIGN KEY (quiz_id) REFERENCES public.quizzes(id),
+  CONSTRAINT user_quiz_attempts_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id)
+);
+CREATE TABLE public.user_role_permission (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  role_id integer NOT NULL,
+  permission_id integer NOT NULL,
+  node_id integer NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_role_permission_pkey PRIMARY KEY (id),
+  CONSTRAINT urp_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT urp_permission_id_fkey FOREIGN KEY (permission_id) REFERENCES public.auth_permission(id),
+  CONSTRAINT urp_node_id_fkey FOREIGN KEY (node_id) REFERENCES public.organization_node(id),
+  CONSTRAINT urp_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.auth_role(id)
+);
+CREATE TABLE public.user_service (
+  user_id uuid NOT NULL,
+  service_id uuid NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT user_service_pkey PRIMARY KEY (user_id, service_id),
+  CONSTRAINT user_service_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT user_service_service_id_fkey FOREIGN KEY (service_id) REFERENCES public.service(id)
+);
+CREATE TABLE public.user_skills (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  skill_name character varying NOT NULL,
+  CONSTRAINT user_skills_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_user_skills_user FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_video_progress (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  video_id uuid,
+  book_video_id uuid,
+  language_id integer NOT NULL,
+  started_at timestamp with time zone NOT NULL,
+  completed_at timestamp with time zone,
+  updated_at timestamp with time zone NOT NULL,
+  last_watching double precision NOT NULL,
+  progress double precision NOT NULL,
+  CONSTRAINT user_video_progress_pkey PRIMARY KEY (id),
+  CONSTRAINT user_video_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT user_video_progress_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT user_video_progress_video_id_fkey FOREIGN KEY (video_id) REFERENCES public.videos(id),
+  CONSTRAINT user_video_progress_book_video_id_fkey FOREIGN KEY (book_video_id) REFERENCES public.book_videos(id),
+  CONSTRAINT user_video_progress_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id)
+);
+CREATE TABLE public.user_waiting_list (
+  id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  created_at timestamp without time zone,
+  status USER-DEFINED,
+  CONSTRAINT user_waiting_list_pkey PRIMARY KEY (id),
+  CONSTRAINT user_waiting_list_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT user_waiting_list_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_xp_summary (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE,
+  total_xp integer NOT NULL DEFAULT 0 CHECK (total_xp >= 0),
+  last_xp_earned_at timestamp with time zone,
+  level_id uuid,
+  CONSTRAINT user_xp_summary_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_user_xp_summary_user FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT user_xp_summary_level_id_fkey FOREIGN KEY (level_id) REFERENCES public.xp_levels_lookup(id)
+);
+CREATE TABLE public.users (
+  id uuid NOT NULL,
+  name character varying,
+  email character varying,
+  password_hash text NOT NULL,
+  profile_image character varying,
+  role USER-DEFINED,
+  is_active boolean,
+  is_verified boolean,
+  last_login_at timestamp without time zone,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  old_id integer NOT NULL DEFAULT 0,
+  bio text,
+  company_admin boolean,
+  company_id integer,
+  language_id integer NOT NULL DEFAULT 1,
+  male boolean,
+  phone text,
+  first_name text,
+  last_name text,
+  country_code smallint,
+  CONSTRAINT users_pkey PRIMARY KEY (id),
+  CONSTRAINT users_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id)
+);
+CREATE TABLE public.video_knowledge_atoms (
+  video_id uuid NOT NULL,
+  knowledge_atom_id uuid NOT NULL,
+  CONSTRAINT video_knowledge_atoms_pkey PRIMARY KEY (video_id, knowledge_atom_id),
+  CONSTRAINT video_knowledge_atoms_knowledge_atom_id_fkey FOREIGN KEY (knowledge_atom_id) REFERENCES public.knowledge_atom(id),
+  CONSTRAINT video_knowledge_atoms_video_id_fkey FOREIGN KEY (video_id) REFERENCES public.videos(id)
+);
+CREATE TABLE public.video_notes (
+  id uuid NOT NULL,
+  video_id uuid,
+  book_video_id uuid,
+  user_id uuid NOT NULL,
+  note_details text NOT NULL,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  note_second double precision NOT NULL,
+  CONSTRAINT video_notes_pkey PRIMARY KEY (id),
+  CONSTRAINT video_notes_book_video_id_fkey FOREIGN KEY (book_video_id) REFERENCES public.book_videos(id),
+  CONSTRAINT video_notes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT video_notes_video_id_fkey FOREIGN KEY (video_id) REFERENCES public.videos(id)
+);
+CREATE TABLE public.video_objectives (
+  video_id uuid NOT NULL,
+  objective_id uuid NOT NULL,
+  CONSTRAINT video_objectives_pkey PRIMARY KEY (video_id, objective_id),
+  CONSTRAINT video_objectives_objective_id_fkey FOREIGN KEY (objective_id) REFERENCES public.objectives(id),
+  CONSTRAINT video_objectives_video_id_fkey FOREIGN KEY (video_id) REFERENCES public.videos(id)
+);
+CREATE TABLE public.videos (
+  id uuid NOT NULL,
+  old_id integer,
+  chapter_id uuid,
+  title character varying,
+  url character varying,
+  duration_in_seconds integer,
+  view_index integer,
+  quiz_id uuid,
+  cover_photo character varying,
+  short_video character varying,
+  storage_path character varying,
+  q360 character varying,
+  q480 character varying,
+  q720 character varying,
+  q1080 character varying,
+  q2k character varying,
+  q4k character varying,
+  mp3 character varying,
+  name text,
+  CONSTRAINT videos_pkey PRIMARY KEY (id),
+  CONSTRAINT videos_chapter_id_fkey FOREIGN KEY (chapter_id) REFERENCES public.chapters(id)
+);
+CREATE TABLE public.videos_languages (
+  video_id uuid NOT NULL,
+  language_id integer NOT NULL,
+  name character varying NOT NULL,
+  CONSTRAINT videos_languages_pkey PRIMARY KEY (video_id, language_id),
+  CONSTRAINT videos_languages_language_id_fkey FOREIGN KEY (language_id) REFERENCES public.languages(id),
+  CONSTRAINT videos_languages_video_id_fkey FOREIGN KEY (video_id) REFERENCES public.videos(id)
+);
+CREATE TABLE public.xp_levels_lookup (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  band character varying NOT NULL,
+  level integer NOT NULL UNIQUE,
+  xp_required integer NOT NULL CHECK (xp_required >= 0),
+  xp_base integer NOT NULL,
+  xp_increment integer NOT NULL,
+  CONSTRAINT xp_levels_lookup_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.xp_types (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  type_code character varying NOT NULL UNIQUE,
+  name character varying NOT NULL,
+  description text,
+  base_xp_value integer NOT NULL CHECK (base_xp_value >= 0),
+  category character varying,
+  is_active boolean NOT NULL DEFAULT true,
+  is_repeatable boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT xp_types_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.xp_user_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  xp_type_id uuid,
+  product_id uuid,
+  video_id uuid,
+  quiz_id uuid,
+  question_id uuid,
+  answer_id uuid,
+  user_answer text,
+  certification_id uuid,
+  xp_earned integer NOT NULL DEFAULT 0 CHECK (xp_earned >= 0),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  attempt_id uuid,
+  CONSTRAINT xp_user_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_xp_user_logs_user FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT fk_xp_user_logs_xp_type FOREIGN KEY (xp_type_id) REFERENCES public.xp_types(id),
+  CONSTRAINT fk_xp_user_logs_product FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT fk_xp_user_logs_video FOREIGN KEY (video_id) REFERENCES public.videos(id),
+  CONSTRAINT fk_xp_user_logs_quiz FOREIGN KEY (quiz_id) REFERENCES public.quizzes(id),
+  CONSTRAINT fk_xp_user_logs_question FOREIGN KEY (question_id) REFERENCES public.questions(id),
+  CONSTRAINT xp_user_logs_attempt_id_fkey FOREIGN KEY (attempt_id) REFERENCES public.user_quiz_attempts(id),
+  CONSTRAINT xp_user_logs_answer_id_fkey FOREIGN KEY (answer_id) REFERENCES public.answer_choices(id)
+);

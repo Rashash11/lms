@@ -58,9 +58,7 @@ const menuItems = [
     { text: 'Notifications', icon: <NotificationsNoneOutlinedIcon />, path: '/admin/notifications' },
     { text: 'Reports', icon: <AssessmentOutlinedIcon />, path: '/admin/reports', hasArrow: true },
     { text: 'Skills', icon: <EmojiObjectsOutlinedIcon />, path: '/admin/skills', hasBadge: true },
-    { text: 'Skills', icon: <EmojiObjectsOutlinedIcon />, path: '/admin/skills', hasBadge: true },
     { text: 'Assignments', icon: <AssignmentOutlinedIcon />, path: '/admin/assignments' },
-    { text: 'Account & Settings', icon: <SettingsOutlinedIcon />, path: '/admin/settings', hasArrow: true },
     { text: 'Account & Settings', icon: <SettingsOutlinedIcon />, path: '/admin/settings', hasArrow: true },
     { text: 'Subscription', icon: <CreditCardOutlinedIcon />, path: '/admin/subscription' },
 ];
