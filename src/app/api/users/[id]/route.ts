@@ -158,7 +158,7 @@ export async function PUT(
             });
 
             // Update active role if current one is no longer assigned
-            if (!roles.includes(user.activeRole)) {
+            if (!roles.includes(user.activeRole as any)) {
                 await prisma.user.update({
                     where: { id: params.id },
                     data: { activeRole: roles[0] },
