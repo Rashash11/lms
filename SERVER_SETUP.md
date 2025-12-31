@@ -52,8 +52,8 @@ NODE_ENV=production
 # Database (Note: Host must be 'postgres' inside Docker)
 POSTGRES_DB=exam_platform
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres123 # Recommended to change this for production
-DATABASE_URL=postgresql://postgres:postgres123@postgres:5432/exam_platform
+POSTGRES_PASSWORD=password # CHANGE THIS for production
+DATABASE_URL=postgresql://postgres:password@postgres:5432/exam_platform
 
 # Redis (Note: Host must be 'redis' inside Docker)
 REDIS_URL="redis://redis:6379"
@@ -146,7 +146,7 @@ To update your server with the latest changes (like rebranding or bug fixes) fro
 3.  **Run these commands:**
 
 ```bash
-cd /opt/mostafa/lms
+cd ~/lms-deploy
 # Pull the latest image
 docker compose pull
 # Restart the app with new changes
