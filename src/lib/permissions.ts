@@ -82,7 +82,7 @@ export function can(user: SessionPayload, permission: string): boolean {
 export function checkSafetyConstraints(
     actor: SessionPayload,
     target: { userId: string; activeRole: RoleKey },
-    action: 'update' | 'delete'
+    action: 'update' | 'delete' | 'update_role'
 ): { allowed: boolean; reason?: string } {
     // Admin can modify anyone
     if (actor.activeRole === 'ADMIN') {
