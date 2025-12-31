@@ -170,10 +170,10 @@ export async function POST(request: NextRequest) {
                 passwordHash,
                 status: status || 'ACTIVE',
                 excludeFromEmails: excludeFromEmails || false,
-                activeRole: (roles?.[0] as RoleKey) || 'LEARNER',
+                activeRole: (roles?.[0] as any) || 'LEARNER',
                 roles: {
                     create: (roles || ['LEARNER']).map((roleKey: string) => ({
-                        roleKey: roleKey as RoleKey,
+                        roleKey: roleKey as any,
                     })),
                 },
             },

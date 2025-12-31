@@ -98,8 +98,8 @@ export async function getTimelineEvents(filters?: TimelineFilters): Promise<Time
             : [],
     ]);
 
-    const userMap = new Map(users.map((u) => [u.id, `${u.firstName} ${u.lastName}`]));
-    const courseMap = new Map(courses.map((c) => [c.id, c.title]));
+    const userMap = new Map(users.map((u) => [u.id, `${u.firstName} ${u.lastName}`] as [string, string]));
+    const courseMap = new Map(courses.map((c) => [c.id, c.title] as [string, string]));
 
     return events.map((event) => {
         const details = event.details as any;

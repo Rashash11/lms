@@ -71,13 +71,13 @@ export async function POST(request: NextRequest) {
         // Update user's active role in DB
         await prisma.user.update({
             where: { id: session.userId },
-            data: { activeRole: role },
+            data: { activeRole: role as any },
         });
 
         // Update session with new active role
         const newSession: SessionPayload = {
             ...session,
-            activeRole: role as RoleKey,
+            activeRole: role as any,
         };
 
         await setSession(newSession);

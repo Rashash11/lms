@@ -17,7 +17,7 @@ export async function GET(
     try {
         const session = await requireAuth();
 
-        const assignment = await prisma.assignment.findUnique({
+        const assignment = await (prisma as any).assignment.findUnique({
             where: { id: params.id },
             include: {
                 course: {
@@ -54,7 +54,7 @@ export async function GET(
                 }
 
                 // Also check if assignment is learner-specific
-                const assignedLearners = await prisma.assignmentLearner.findMany({
+                const assignedLearners = await (prisma as any).assignmentLearner.findMany({
                     where: { assignmentId: assignment.id }
                 });
 
@@ -67,7 +67,7 @@ export async function GET(
                 }
             } else {
                 // Non-course assignment: must be specifically assigned
-                const isAssigned = await prisma.assignmentLearner.findFirst({
+                const isAssigned = await (prisma as any).assignmentLearner.findFirst({
                     where: {
                         assignmentId: assignment.id,
                         userId: session.userId
@@ -124,7 +124,7 @@ export async function PUT(
             return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 });
         }
 
-        const assignment = await prisma.assignment.findUnique({
+        const assignment = await (prisma as any).assignment.findUnique({
             where: { id: params.id },
             include: {
                 course: { include: { instructors: true } }
@@ -155,7 +155,7 @@ export async function PUT(
 
         const { title, description, courseId, dueAt } = validation.data;
 
-        const updatedAssignment = await prisma.assignment.update({
+        const updatedAssignment = await (prisma as any).assignment.update({
             where: { id: params.id },
             data: {
                 title,
@@ -184,7 +184,7 @@ export async function DELETE(
             return NextResponse.json({ error: 'FORBIDDEN: Only Admins can delete assignments' }, { status: 403 });
         }
 
-        await prisma.assignment.delete({
+        await (prisma as any).assignment.delete({
             where: { id: params.id },
         });
 

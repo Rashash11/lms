@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
         }
         // ADMIN and SUPER_INSTRUCTOR see everything (respecting courseId filter if provided)
 
-        const assignments = await prisma.assignment.findMany({
+        const assignments = await (prisma as any).assignment.findMany({
             where,
             include: {
                 assignedLearners: {
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        const assignment = await prisma.assignment.create({
+        const assignment = await (prisma as any).assignment.create({
             data: {
                 title,
                 description,

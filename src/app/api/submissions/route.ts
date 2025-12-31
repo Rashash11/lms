@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Get the assignment to find courseId
-        const assignment = await prisma.assignment.findUnique({
+        const assignment = await (prisma as any).assignment.findUnique({
             where: { id: assignmentId },
             select: {
                 id: true,

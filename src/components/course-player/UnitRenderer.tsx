@@ -28,15 +28,15 @@ export default function UnitRenderer({ unit }: UnitRendererProps) {
             if (!url) return '';
 
             // Extract video ID from various YouTube URL formats
-            let videoId = null;
+            let videoId: string | null = null;
 
             // youtube.com/watch?v=VIDEO_ID
             const watchMatch = url.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
-            if (watchMatch) videoId = watchMatch[1];
+            if (watchMatch && watchMatch[1]) videoId = watchMatch[1] as string;
 
             // youtu.be/VIDEO_ID
             const shortMatch = url.match(/(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-            if (shortMatch) videoId = shortMatch[1];
+            if (shortMatch && shortMatch[1]) videoId = shortMatch[1] as string;
 
             // youtube.com/embed/VIDEO_ID (already embed)
             const embedMatch = url.match(/(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);

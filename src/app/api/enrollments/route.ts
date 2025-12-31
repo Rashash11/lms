@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Calculate expiration if course has time limit
-        let expiresAt = null;
+        let expiresAt: Date | null = null;
         if (course.expiration) {
             expiresAt = course.expiration;
         }

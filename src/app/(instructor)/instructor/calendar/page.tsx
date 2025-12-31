@@ -104,8 +104,8 @@ export default function CalendarPage() {
         setCurrentDate(new Date());
     };
 
-    const getEventsForDay = (day: number) => {
-        return events.filter(event => {
+    const getEventsForDay = (day: number): CalendarEvent[] => {
+        return events.filter((event: CalendarEvent) => {
             const eventDate = new Date(event.startTime);
             return eventDate.getDate() === day &&
                 eventDate.getMonth() === currentDate.getMonth() &&
@@ -114,7 +114,7 @@ export default function CalendarPage() {
     };
 
     const renderCalendarDays = () => {
-        const days = [];
+        const days: React.ReactNode[] = [];
         const prevMonthDays = startingDayOfWeek;
 
         // Previous month's trailing days
