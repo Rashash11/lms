@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 
 // PUT update calendar event
 export async function PUT(
@@ -8,9 +9,9 @@ export async function PUT(
     { params }: { params: { id: string } }
 ) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'calendar:update'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: calendar:update' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -54,9 +55,9 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'calendar:delete'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: calendar:delete' }, { status: 403 });
         }
 
         // Verify ownership

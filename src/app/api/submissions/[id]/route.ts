@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 
 export async function GET(
     request: NextRequest,
@@ -8,6 +9,10 @@ export async function GET(
 ) {
     try {
         const session = await requireAuth();
+
+        if (!(await can(session, 'submission:read'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: submission:read' }, { status: 403 });
+        }
 
         const submission = await (prisma.assignmentSubmission as any).findUnique({
             where: { id: params.id },

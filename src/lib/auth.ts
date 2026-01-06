@@ -1,185 +1,155 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
 
-const secretKey = process.env.JWT_SECRET || "default_secret_key_change_me";
-const key = new TextEncoder().encode(secretKey);
+const JWT_SECRET = process.env.JWT_SECRET || "default_secret_key_change_me";
+const JWT_KEY = new TextEncoder().encode(JWT_SECRET);
+const JWT_ISSUER = "lms-auth";
+const JWT_AUDIENCE = "lms-api";
+const ACCESS_TOKEN_EXPIRY = "15m";
 
-// Password policy: >= 8 chars, uppercase, lowercase, number
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-
-// Account locking config
-export const LOCK_CONFIG = {
-    maxAttempts: 10,
-    lockDurationMs: 5 * 60 * 1000, // 5 minutes
-};
-
-// Role types matching Prisma enum
 export type RoleKey = "ADMIN" | "INSTRUCTOR" | "SUPER_INSTRUCTOR" | "LEARNER";
 
-// Session payload type
-export interface SessionPayload {
+export interface AuthContext {
     userId: string;
     email: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-    roles: RoleKey[];
-    activeRole: RoleKey;
-    exp?: number;
+    role: RoleKey;
+    nodeId?: number;
+    tokenVersion?: number;
 }
 
-// ============= JWT Functions =============
+export interface JWTPayload extends AuthContext {
+    iat: number;
+    exp: number;
+    iss: string;
+    aud: string;
+}
 
-export async function encrypt(payload: SessionPayload) {
+export class AuthError extends Error {
+    constructor(message: string, public statusCode: number = 401) {
+        super(message);
+        this.name = "AuthError";
+    }
+}
+
+export async function signAccessToken(payload: AuthContext): Promise<string> {
     return await new SignJWT(payload as any)
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
-        .setExpirationTime("7d")
-        .sign(key);
+        .setExpirationTime(ACCESS_TOKEN_EXPIRY)
+        .setIssuer(JWT_ISSUER)
+        .setAudience(JWT_AUDIENCE)
+        .sign(JWT_KEY);
 }
 
-export async function decrypt(input: string): Promise<SessionPayload | null> {
+/**
+ * Lightweight token verification for middleware - no DB check, only JWT signature validation
+ * Use this in middleware for performance
+ */
+export async function verifyAccessTokenLight(token: string): Promise<JWTPayload> {
     try {
-        const { payload } = await jwtVerify(input, key, {
+        const { payload } = await jwtVerify(token, JWT_KEY, {
             algorithms: ["HS256"],
+            issuer: JWT_ISSUER,
+            audience: JWT_AUDIENCE,
         });
-        return payload as unknown as SessionPayload;
+
+        return payload as JWTPayload;
+    } catch (err) {
+        throw new AuthError("Invalid or expired token", 401);
+    }
+}
+
+/**
+ * Full token verification with tokenVersion validation
+ * Use this in API routes for security
+ */
+export async function verifyAccessToken(token: string): Promise<JWTPayload> {
+    try {
+        const { payload } = await jwtVerify(token, JWT_KEY, {
+            algorithms: ["HS256"],
+            issuer: JWT_ISSUER,
+            audience: JWT_AUDIENCE,
+        });
+
+        const jwtPayload = payload as JWTPayload;
+
+        // Normalize: JWT tokenVersion defaults to 0 if undefined/null
+        const jwtTokenVersion = jwtPayload.tokenVersion ?? 0;
+
+        // Use raw SQL to read token_version (Prisma client may not be regenerated yet)
+        const result = await prisma.$queryRaw<[{ token_version: number | null }]>`
+            SELECT token_version FROM users WHERE id = ${jwtPayload.userId}
+        `;
+
+        if (!result || result.length === 0) {
+            throw new AuthError("User not found", 401);
+        }
+
+        // Normalize: DB tokenVersion defaults to 0 if NULL
+        const dbTokenVersion = result[0]?.token_version ?? 0;
+
+        // Only reject if there's an explicit mismatch between normalized values
+        if (jwtTokenVersion !== dbTokenVersion) {
+            throw new AuthError("Token has been revoked", 401);
+        }
+
+        return jwtPayload;
+    } catch (err) {
+        if (err instanceof AuthError) throw err;
+        throw new AuthError("Invalid or expired token", 401);
+    }
+}
+
+export async function getAuthContext(): Promise<AuthContext | null> {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("session");
+
+    if (!sessionCookie?.value) {
+        return null;
+    }
+
+    try {
+        const claims = await verifyAccessToken(sessionCookie.value);
+        return {
+            userId: claims.userId,
+            email: claims.email,
+            role: claims.role,
+            nodeId: claims.nodeId,
+            tokenVersion: claims.tokenVersion,
+        };
     } catch {
         return null;
     }
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
-    const cookieStore = await cookies();
-    const session = cookieStore.get("session")?.value;
-    if (!session) return null;
-    return await decrypt(session);
+export async function requireAuth(): Promise<AuthContext> {
+    const context = await getAuthContext();
+    if (!context) {
+        throw new AuthError("Authentication required", 401);
+    }
+    return context;
 }
-
-export async function setSession(payload: SessionPayload) {
-    const session = await encrypt(payload);
-    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const cookieStore = await cookies();
-    cookieStore.set("session", session, {
-        expires,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: 'lax',
-        path: '/'
-    });
-}
-
-export async function clearSession() {
-    const cookieStore = await cookies();
-    cookieStore.set("session", "", { expires: new Date(0), path: '/' });
-}
-
-// ============= Password Functions =============
 
 export async function hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, 12);
+    return await bcrypt.hash(password, 10);
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-    return bcrypt.compare(password, hash);
+export async function comparePassword(password: string, hash: string): Promise<boolean> {
+    return await bcrypt.compare(password, hash);
 }
 
 export function validatePasswordPolicy(password: string): { valid: boolean; error?: string } {
-    if (!password || password.length < 8) {
+    if (password.length < 8) {
         return { valid: false, error: "Password must be at least 8 characters" };
     }
-    if (!PASSWORD_REGEX.test(password)) {
-        return {
-            valid: false,
-            error: "Password must contain uppercase, lowercase, and a number"
-        };
+    if (!/[A-Z]/.test(password)) {
+        return { valid: false, error: "Password must contain at least one uppercase letter" };
+    }
+    if (!/[0-9]/.test(password)) {
+        return { valid: false, error: "Password must contain at least one number" };
     }
     return { valid: true };
 }
-
-// ============= Auth Guard Functions =============
-
-export class AuthError extends Error {
-    statusCode: number;
-    constructor(message: string, statusCode: number = 401) {
-        super(message);
-        this.name = "AuthError";
-        this.statusCode = statusCode;
-    }
-}
-
-/**
- * Require user to be authenticated.
- * Throws AuthError if not authenticated.
- */
-export async function requireAuth(): Promise<SessionPayload> {
-    const session = await getSession();
-    if (!session) {
-        throw new AuthError("Not authenticated", 401);
-    }
-    return session;
-}
-
-/**
- * Require user to have one of the specified roles.
- * Throws AuthError if user doesn't have required role.
- */
-export async function requireRole(allowedRoles: RoleKey[]): Promise<SessionPayload> {
-    const session = await requireAuth();
-
-    // Check if user's active role is in allowed roles
-    if (!allowedRoles.includes(session.activeRole)) {
-        throw new AuthError("Insufficient permissions", 403);
-    }
-
-    return session;
-}
-
-/**
- * Require user to be an admin
- */
-export async function requireAdmin(): Promise<SessionPayload> {
-    return requireRole(["ADMIN"]);
-}
-
-/**
- * Require user to be admin or instructor
- */
-export async function requireInstructor(): Promise<SessionPayload> {
-    return requireRole(["ADMIN", "INSTRUCTOR"]);
-}
-
-// ============= Session Refresh (for middleware) =============
-
-export async function updateSession(request: Request) {
-    const cookieHeader = request.headers.get("cookie");
-    if (!cookieHeader) return null;
-
-    const sessionMatch = cookieHeader.match(/session=([^;]+)/);
-    if (!sessionMatch) return null;
-
-    const session = await decrypt(sessionMatch[1]);
-    if (!session) return null;
-
-    // Refresh the session
-    const newToken = await encrypt(session);
-    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    const res = NextResponse.next();
-    res.cookies.set({
-        name: "session",
-        value: newToken,
-        httpOnly: true,
-        expires,
-        path: '/',
-        secure: process.env.NODE_ENV === "production",
-    });
-
-    return res;
-}
-
-// Legacy exports for backwards compatibility
-export const login = setSession;
-export const logout = clearSession;

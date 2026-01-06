@@ -8,6 +8,9 @@ import {
     Paper, IconButton, Skeleton, Snackbar, Alert
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useApiError } from '@/hooks/useApiError';
+import AccessDenied from '@/components/AccessDenied';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AddIcon from '@mui/icons-material/Add';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
@@ -38,10 +41,15 @@ export default function ConferencesPage() {
         duration: 60,
         meetingUrl: ''
     });
+    const { can, loading: permissionsLoading } = usePermissions();
+    const { handleResponse } = useApiError();
+    const [forbidden, setForbidden] = useState(false);
 
     useEffect(() => {
-        fetchConferences();
-    }, [search, fromDate, toDate]);
+        if (!permissionsLoading && can('conference:read')) {
+            fetchConferences();
+        }
+    }, [search, fromDate, toDate, permissionsLoading]);
 
     const fetchConferences = async () => {
         setLoading(true);
@@ -51,7 +59,12 @@ export default function ConferencesPage() {
             if (fromDate) params.set('from', fromDate);
             if (toDate) params.set('to', toDate);
 
-            const res = await fetch(`/api/instructor/conferences?${params.toString()}`);
+            const res = await fetch(`/api/conferences?${params.toString()}`);
+            if (res.status === 403) {
+                setForbidden(true);
+                return;
+            }
+            if (handleResponse(res)) return;
             const data = await res.json();
             if (data.conferences) {
                 setConferences(data.conferences);
@@ -62,6 +75,11 @@ export default function ConferencesPage() {
             setLoading(false);
         }
     };
+
+    if (permissionsLoading) return null;
+    if (!can('conference:read') || forbidden) {
+        return <AccessDenied requiredPermission="conference:read" />;
+    }
 
     const handleAddConference = async () => {
         try {
@@ -107,19 +125,21 @@ export default function ConferencesPage() {
                 <Typography variant="h5" fontWeight={600} color="#172B4D">
                     Conferences
                 </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setOpenDialog(true)}
-                    sx={{
-                        bgcolor: '#0052CC',
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        '&:hover': { bgcolor: '#0747A6' }
-                    }}
-                >
-                    Add conference
-                </Button>
+                {can('conference:create') && (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setOpenDialog(true)}
+                        sx={{
+                            bgcolor: '#0052CC',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            '&:hover': { bgcolor: '#0747A6' }
+                        }}
+                    >
+                        Add conference
+                    </Button>
+                )}
             </Box>
 
             {/* Controls */}

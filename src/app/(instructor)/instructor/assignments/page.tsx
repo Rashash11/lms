@@ -10,7 +10,10 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AddIcon from '@mui/icons-material/Add';
-import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import AssignmentOutlinedIcon from '@mui/icons-material/Add';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useApiError } from '@/hooks/useApiError';
+import AccessDenied from '@/components/AccessDenied';
 
 interface Assignment {
     id: string;
@@ -26,6 +29,10 @@ interface Assignment {
 }
 
 export default function InstructorAssignmentsPage() {
+    const { can, loading: permissionsLoading } = usePermissions();
+    const { handleResponse } = useApiError();
+    const [accessDenied, setAccessDenied] = useState(false);
+
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -52,8 +59,13 @@ export default function InstructorAssignmentsPage() {
             setLoading(true);
             const [assignmentsRes, coursesRes] = await Promise.all([
                 fetch('/api/assignments'),
-                fetch('/api/courses') // This should return only instructor's courses
+                fetch('/api/courses')
             ]);
+
+            if (handleResponse(assignmentsRes)) {
+                if (assignmentsRes.status === 403) setAccessDenied(true);
+                return;
+            }
 
             if (assignmentsRes.ok) {
                 const data = await assignmentsRes.json();
@@ -143,6 +155,10 @@ export default function InstructorAssignmentsPage() {
         (a.description?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
+    if (accessDenied) {
+        return <AccessDenied />;
+    }
+
     return (
         <Box sx={{ p: 3 }}>
             <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -150,13 +166,16 @@ export default function InstructorAssignmentsPage() {
                     <AssignmentOutlinedIcon fontSize="large" color="primary" />
                     My Assignments
                 </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    href="/instructor/assignments/new"
-                >
-                    Create Assignment
-                </Button>
+                {can('assignment:create') && (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={handleAdd}
+                        disabled={permissionsLoading}
+                    >
+                        Create Assignment
+                    </Button>
+                )}
             </Box>
 
             <Paper sx={{ width: '100%', mb: 2 }}>
@@ -228,7 +247,9 @@ export default function InstructorAssignmentsPage() {
             </Paper>
 
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu}>
-                <MenuItem onClick={handleEdit}>Edit</MenuItem>
+                {can('assignment:update') && (
+                    <MenuItem onClick={handleEdit}>Edit</MenuItem>
+                )}
                 {/* Delete option intentionally omitted for Instructors */}
             </Menu>
 

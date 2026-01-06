@@ -1,18 +1,14 @@
-export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { can } from '@/lib/permissions';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getSession();
-        if (!session?.userId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const session = await requireAuth();
 
-        const activeRole = session.activeRole;
-        if (activeRole !== 'INSTRUCTOR' && activeRole !== 'ADMIN') {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        if (!(await can(session, 'submission:read'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: submission:read' }, { status: 403 });
         }
 
         const { searchParams } = new URL(request.url);

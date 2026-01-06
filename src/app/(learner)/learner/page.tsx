@@ -11,12 +11,15 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import LayoutIcon from '@mui/icons-material/Dashboard';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import { useRouter } from 'next/navigation';
 
 export default function LearnerDashboard() {
     const [loading, setLoading] = useState(true);
     const [enrollments, setEnrollments] = useState<any[]>([]);
+    const [upcomingAssignments, setUpcomingAssignments] = useState<any[]>([]);
     const [stats, setStats] = useState<any>(null);
     const [user, setUser] = useState<any>(null);
     const router = useRouter();
@@ -24,15 +27,29 @@ export default function LearnerDashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [enrollRes, userRes] = await Promise.all([
-                    fetch('/api/enrollments?limit=10'),
+                const [enrollRes, assignRes, userRes] = await Promise.all([
+                    fetch('/api/learner/enrollments'),
+                    fetch('/api/assignments'),
                     fetch('/api/me')
                 ]);
 
                 if (enrollRes.ok) {
-                    const data = await enrollRes.json();
-                    setEnrollments(data.enrollments);
-                    setStats(data.stats);
+                    const enrollData = await enrollRes.json();
+                    setEnrollments(enrollData);
+
+                    // Calculate stats from enrollments
+                    const completed = enrollData.filter((e: any) => e.status === 'COMPLETED').length;
+                    const inProgress = enrollData.filter((e: any) => e.status === 'IN_PROGRESS' || e.status === 'NOT_STARTED').length;
+                    setStats({
+                        total: enrollData.length,
+                        completed,
+                        inProgress
+                    });
+                }
+
+                if (assignRes.ok) {
+                    const assignments = await assignRes.json();
+                    setUpcomingAssignments(assignments.slice(0, 5));
                 }
 
                 if (userRes.ok) {
@@ -61,7 +78,7 @@ export default function LearnerDashboard() {
         { label: 'Enrolled Courses', value: stats?.total || 0, icon: <SchoolIcon />, color: 'primary' },
         { label: 'Completed', value: stats?.completed || 0, icon: <CheckCircleIcon />, color: 'success' },
         { label: 'In Progress', value: stats?.inProgress || 0, icon: <AccessTimeIcon />, color: 'warning' },
-        { label: 'Certificates', value: '0', icon: <CardMembershipIcon />, color: 'info' },
+        { label: 'Upcoming Assignments', value: upcomingAssignments.length, icon: <LayoutIcon />, color: 'info' },
     ];
 
     return (
@@ -102,27 +119,55 @@ export default function LearnerDashboard() {
                                 )}
                             </Box>
                             <CardContent sx={{ flex: 1 }}>
-                                <Typography variant="h6" gutterBottom>{enrollment.course.title}</Typography>
-                                <Box sx={{ mt: 2 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                        <Typography variant="caption">Status</Typography>
-                                        <Typography variant="caption" fontWeight={600}>{enrollment.status.replace('_', ' ')}</Typography>
-                                    </Box>
+                                <Typography variant="h6" gutterBottom>
+                                    {enrollment.course?.title || 'Untitled Course'}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" gutterBottom>
+                                    {enrollment.course?.description?.slice(0, 100)}{enrollment.course?.description?.length > 100 ? '...' : ''}
+                                </Typography>
+
+                                <Box sx={{ mt: 2, mb: 1 }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Progress: {enrollment.stats?.completedUnits || 0} / {enrollment.stats?.totalUnits || 0} units ({enrollment.stats?.percent || 0}%)
+                                    </Typography>
                                     <LinearProgress
                                         variant="determinate"
-                                        value={enrollment.status === 'COMPLETED' ? 100 : (enrollment.status === 'IN_PROGRESS' ? 50 : 0)}
-                                        sx={{ height: 8, borderRadius: 4 }}
+                                        value={enrollment.stats?.percent || 0}
+                                        sx={{ mt: 0.5 }}
                                     />
                                 </Box>
+
+                                <Box sx={{ mt: 1 }}>
+                                    <Chip
+                                        label={enrollment.status || 'NOT_STARTED'}
+                                        size="small"
+                                        color={
+                                            enrollment.status === 'COMPLETED' ? 'success' :
+                                                enrollment.status === 'IN_PROGRESS' ? 'primary' :
+                                                    'default'
+                                        }
+                                    />
+                                    {enrollment.resumeState?.lastAccessedAt && (
+                                        <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                            Last active: {new Date(enrollment.resumeState.lastAccessedAt).toLocaleDateString()}
+                                        </Typography>
+                                    )}
+                                </Box>
                             </CardContent>
-                            <CardActions sx={{ p: 2, pt: 0, mt: 'auto' }}>
+                            <CardActions>
                                 <Button
                                     variant="contained"
-                                    fullWidth
                                     startIcon={<PlayArrowIcon />}
-                                    onClick={() => router.push(`/learner/courses/${enrollment.courseId}`)}
+                                    onClick={() => {
+                                        if (enrollment.resumeState?.lastUnitId) {
+                                            router.push(`/learner/courses/${enrollment.courseId}/units/${enrollment.resumeState.lastUnitId}`);
+                                        } else {
+                                            // Navigate to first unit (will need to fetch units or use a default route)
+                                            router.push(`/learner/courses/${enrollment.courseId}`);
+                                        }
+                                    }}
                                 >
-                                    Continue
+                                    {enrollment.resumeState?.lastUnitId ? 'Continue' : 'Start'}
                                 </Button>
                             </CardActions>
                         </Card>
@@ -149,18 +194,54 @@ export default function LearnerDashboard() {
             </Grid>
 
             <Grid container spacing={3}>
-                {/* Achievements */}
-                <Grid item xs={12}>
+                {/* Upcoming Assignments */}
+                <Grid item xs={12} md={8}>
                     <Card>
                         <CardContent>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                <Typography variant="h6">Recent Achievements</Typography>
+                                <Typography variant="h6">Upcoming Assignments</Typography>
+                                <Button size="small" onClick={() => router.push('/learner/assignments')}>View All</Button>
+                            </Box>
+                            {upcomingAssignments.length > 0 ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    {upcomingAssignments.map((assignment) => (
+                                        <Paper key={assignment.id} sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'background.default' }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <AssignmentIcon color="primary" />
+                                                <Box>
+                                                    <Typography variant="subtitle2" fontWeight={600}>{assignment.title}</Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {assignment.course?.title || 'General Assignment'} • Due: {assignment.dueAt ? new Date(assignment.dueAt).toLocaleDateString() : 'No date'}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                            <Button size="small" variant="outlined" onClick={() => router.push(`/learner/assignments/${assignment.id}`)}>
+                                                Submit
+                                            </Button>
+                                        </Paper>
+                                    ))}
+                                </Box>
+                            ) : (
+                                <Box sx={{ textAlign: 'center', py: 4, bgcolor: 'background.default', borderRadius: 2 }}>
+                                    <AssignmentIcon sx={{ fontSize: 48, color: 'text.disabled', opacity: 0.5 }} />
+                                    <Typography color="text.secondary" sx={{ mt: 1 }}>No upcoming assignments</Typography>
+                                </Box>
+                            )}
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* Achievements */}
+                <Grid item xs={12} md={4}>
+                    <Card sx={{ height: '100%' }}>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="h6">Achievements</Typography>
                                 <Chip label="Coming Soon" size="small" />
                             </Box>
                             <Box sx={{ textAlign: 'center', py: 4, bgcolor: 'background.default', borderRadius: 2 }}>
                                 <EmojiEventsIcon sx={{ fontSize: 48, color: 'text.disabled' }} />
-                                <Typography color="text.secondary" sx={{ mt: 1 }}>Gamification feature is disabled</Typography>
-                                <Typography variant="caption" color="text.disabled">Contact your admin to enable</Typography>
+                                <Typography color="text.secondary" sx={{ mt: 1 }}>Disabled</Typography>
                             </Box>
                         </CardContent>
                     </Card>

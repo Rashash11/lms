@@ -11,6 +11,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AddIcon from '@mui/icons-material/Add';
 import HistoryIcon from '@mui/icons-material/History';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useApiError } from '@/hooks/useApiError';
+import AccessDenied from '@/components/AccessDenied';
 
 interface Assignment {
     id: string;
@@ -26,6 +29,10 @@ interface Assignment {
 }
 
 export default function AssignmentsPage() {
+    const { can, loading: permissionsLoading } = usePermissions();
+    const { handleResponse } = useApiError();
+    const [accessDenied, setAccessDenied] = useState(false);
+
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -52,6 +59,12 @@ export default function AssignmentsPage() {
         try {
             setLoading(true);
             const res = await fetch('/api/assignments');
+
+            if (handleResponse(res)) {
+                if (res.status === 403) setAccessDenied(true);
+                return;
+            }
+
             const data = await res.json();
             setAssignments(data);
         } catch (err) {
@@ -104,9 +117,12 @@ export default function AssignmentsPage() {
         handleCloseMenu();
     };
 
+    const [error, setError] = useState<string | null>(null);
+
     const handleSubmit = async () => {
         const method = currentAssignment ? 'PUT' : 'POST';
         const url = currentAssignment ? `/api/assignments/${currentAssignment.id}` : '/api/assignments';
+        setError(null);
 
         try {
             const res = await fetch(url, {
@@ -117,12 +133,18 @@ export default function AssignmentsPage() {
                     dueAt: formData.dueAt ? new Date(formData.dueAt).toISOString() : null
                 }),
             });
+
+            const data = await res.json();
+
             if (res.ok) {
                 fetchAssignments();
                 setDialogOpen(false);
+            } else {
+                setError(data.message || data.error || 'Failed to save assignment');
             }
         } catch (err) {
             console.error(err);
+            setError('An unexpected error occurred');
         }
     };
 
@@ -144,23 +166,39 @@ export default function AssignmentsPage() {
         (a.description?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
+    if (accessDenied) {
+        return <AccessDenied />;
+    }
+
     return (
         <Box>
             <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h4" fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <HistoryIcon fontSize="large" color="primary" />
+                <Typography variant="h4" fontWeight={800} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, color: 'hsl(var(--foreground))' }}>
+                    <HistoryIcon fontSize="large" sx={{ color: 'hsl(var(--primary))' }} />
                     Assignments
                 </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    href="/admin/assignments/new"
-                >
-                    Add assignment
-                </Button>
+                {can('assignment:create') && (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={handleAdd}
+                        disabled={permissionsLoading}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            bgcolor: 'hsl(var(--primary))',
+                            color: 'hsl(var(--primary-foreground))',
+                            borderRadius: '6px',
+                            px: 3,
+                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
+                        }}
+                    >
+                        Add assignment
+                    </Button>
+                )}
             </Box>
 
-            <Paper sx={{ width: '100%', mb: 2 }}>
+            <Paper className="glass-card" sx={{ width: '100%', mb: 2, bgcolor: 'hsl(var(--card) / 0.4)', border: '1px solid hsl(var(--border) / 0.1)' }}>
                 <Box sx={{ p: 2 }}>
                     <TextField
                         placeholder="Search assignments..."
@@ -171,21 +209,28 @@ export default function AssignmentsPage() {
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <SearchIcon />
+                                    <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
                                 </InputAdornment>
                             ),
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                color: 'hsl(var(--foreground))',
+                                '& fieldset': { borderColor: 'hsl(var(--border) / 0.2)' },
+                                '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                            }
                         }}
                     />
                 </Box>
                 <TableContainer>
                     <Table>
                         <TableHead>
-                            <TableRow>
-                                <TableCell>Title</TableCell>
-                                <TableCell>Course</TableCell>
-                                <TableCell>Due Date</TableCell>
-                                <TableCell>Created</TableCell>
-                                <TableCell align="right">Actions</TableCell>
+                            <TableRow sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }}>
+                                <TableCell sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600 }}>Title</TableCell>
+                                <TableCell sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600 }}>Course</TableCell>
+                                <TableCell sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600 }}>Due Date</TableCell>
+                                <TableCell sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600 }}>Created</TableCell>
+                                <TableCell align="right" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600 }}>Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -195,28 +240,28 @@ export default function AssignmentsPage() {
                                 <TableRow><TableCell colSpan={5} align="center">No assignments found</TableCell></TableRow>
                             ) : (
                                 filtered.map((a) => (
-                                    <TableRow key={a.id} hover>
+                                    <TableRow key={a.id} hover sx={{ '&:hover': { bgcolor: 'hsl(var(--accent) / 0.2)' } }}>
                                         <TableCell>
-                                            <Typography variant="body2" fontWeight={500}>{a.title}</Typography>
-                                            <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 300, display: 'block' }}>
+                                            <Typography variant="body2" fontWeight={600} sx={{ color: 'hsl(var(--foreground))' }}>{a.title}</Typography>
+                                            <Typography variant="caption" noWrap sx={{ color: 'hsl(var(--muted-foreground))', maxWidth: 300, display: 'block' }}>
                                                 {a.description}
                                             </Typography>
                                         </TableCell>
                                         <TableCell>
                                             {a.course ? (
-                                                <Chip label={a.course.title} size="small" variant="outlined" />
+                                                <Chip label={a.course.title} size="small" variant="outlined" sx={{ borderColor: 'hsl(var(--primary) / 0.3)', color: 'hsl(var(--primary))' }} />
                                             ) : (
-                                                <Typography variant="caption" color="text.secondary">N/A</Typography>
+                                                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>N/A</Typography>
                                             )}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell sx={{ color: 'hsl(var(--foreground))' }}>
                                             {a.dueAt ? new Date(a.dueAt).toLocaleDateString() : 'No limit'}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell sx={{ color: 'hsl(var(--foreground))' }}>
                                             {new Date(a.createdAt).toLocaleDateString()}
                                         </TableCell>
                                         <TableCell align="right">
-                                            <IconButton onClick={(e) => handleOpenMenu(e, a)}>
+                                            <IconButton onClick={(e) => handleOpenMenu(e, a)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
                                                 <MoreVertIcon />
                                             </IconButton>
                                         </TableCell>
@@ -229,14 +274,23 @@ export default function AssignmentsPage() {
             </Paper>
 
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu}>
-                <MenuItem onClick={handleEdit}>Edit</MenuItem>
-                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>Delete</MenuItem>
+                {can('assignment:update') && (
+                    <MenuItem onClick={handleEdit}>Edit</MenuItem>
+                )}
+                {can('assignment:delete') && (
+                    <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>Delete</MenuItem>
+                )}
             </Menu>
 
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>{currentAssignment ? 'Edit Assignment' : 'Add Assignment'}</DialogTitle>
                 <DialogContent>
                     <Stack spacing={2} sx={{ mt: 1 }}>
+                        {error && (
+                            <Typography color="error" variant="body2" sx={{ mb: 1 }}>
+                                {error}
+                            </Typography>
+                        )}
                         <TextField
                             label="Title"
                             fullWidth

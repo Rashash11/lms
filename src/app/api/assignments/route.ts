@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import { z } from 'zod';
-
-import { canManageCourse } from '@/lib/permissions';
+import { can } from '@/lib/permissions';
 
 const createAssignmentSchema = z.object({
     title: z.string().min(1, 'Title is required'),
@@ -60,6 +59,10 @@ const createAssignmentSchema = z.object({
 export async function GET(request: NextRequest) {
     try {
         const session = await requireAuth();
+        if (!(await can(session, 'assignment:read'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: assignment:read' }, { status: 403 });
+        }
+
         const { searchParams } = new URL(request.url);
         const courseId = searchParams.get('courseId');
 
@@ -71,84 +74,38 @@ export async function GET(request: NextRequest) {
         }
 
         // ROLE-BASED ACCESS CONTROL
-        if (session.activeRole === 'LEARNER') {
-            // Learner can see:
-            // 1. Assignments from courses they're enrolled in (with learner-specific filtering)
-            // 2. Non-course assignments where they are specifically assigned
+        if (session.role === 'LEARNER') {
+            // Fetch enrolled courses
+            const enrollments = await prisma.enrollment.findMany({
+                where: { userId: session.userId },
+                select: { courseId: true }
+            });
+            const enrolledCourseIds = enrollments.map(e => e.courseId);
 
             if (courseId) {
-                // Verify enrollment
-                const enrollment = await prisma.enrollment.findUnique({
-                    where: {
-                        userId_courseId: {
-                            userId: session.userId,
-                            courseId: courseId
-                        }
-                    }
-                });
-
-                if (!enrollment) {
+                if (!enrolledCourseIds.includes(courseId)) {
                     return NextResponse.json({ error: 'FORBIDDEN: Not enrolled in this course' }, { status: 403 });
                 }
-
-                // Show assignments from this course with learner filtering
                 where.courseId = courseId;
-                where.OR = [
-                    { assignedLearners: { none: {} } },
-                    { assignedLearners: { some: { userId: session.userId } } }
-                ];
             } else {
-                // Return assignments for all enrolled courses + non-course assignments
-                const enrollments = await prisma.enrollment.findMany({
-                    where: { userId: session.userId },
-                    select: { courseId: true }
-                });
-                const courseIds = enrollments.map(e => e.courseId);
-
-                // Show:
-                // 1. Assignments from enrolled courses (no specific learners OR learner is assigned)
-                // 2. Non-course assignments where learner is specifically assigned
-                where.OR = [
-                    {
-                        AND: [
-                            { courseId: { in: courseIds } },
-                            {
-                                OR: [
-                                    { assignedLearners: { none: {} } },
-                                    { assignedLearners: { some: { userId: session.userId } } }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        AND: [
-                            { courseId: null },
-                            { assignedLearners: { some: { userId: session.userId } } }
-                        ]
-                    }
-                ];
+                // Show assignments from enrolled courses
+                where.courseId = { in: enrolledCourseIds };
             }
         }
-        else if (session.activeRole === 'INSTRUCTOR') {
-            // Instructor can see:
-            // 1. Assignments for courses they manage
-            // 2. Assignments where they are the assigned grading instructor
-
+        else if (session.role === 'INSTRUCTOR') {
             if (courseId) {
-                // Check if instructor manages this course OR is assigned to grade
                 const course = await prisma.course.findUnique({
                     where: { id: courseId },
                     include: { instructors: true }
                 });
 
-                const isManager = canManageCourse(session, course);
+                const isManager = course?.instructorId === session.userId ||
+                    course?.instructors?.some((i: any) => i.userId === session.userId);
 
                 if (!isManager) {
-                    // Not a manager, but might still see assignments they're assigned to grade
-                    where.assignedInstructorId = session.userId;
+                    return NextResponse.json({ error: 'FORBIDDEN: You do not manage this course' }, { status: 403 });
                 }
             } else {
-                // Return assignments for all managed courses OR where they're assigned to grade
                 const managedCourses = await prisma.course.findMany({
                     where: {
                         OR: [
@@ -158,32 +115,14 @@ export async function GET(request: NextRequest) {
                     },
                     select: { id: true }
                 });
-                const courseIds = managedCourses.map(c => c.id);
-
-                // Show assignments from managed courses OR assigned to this instructor
-                where.OR = [
-                    { courseId: { in: courseIds } },
-                    { assignedInstructorId: session.userId }
-                ];
+                const managedCourseIds = managedCourses.map(c => c.id);
+                where.courseId = { in: managedCourseIds };
             }
         }
-        // ADMIN and SUPER_INSTRUCTOR see everything (respecting courseId filter if provided)
 
         const assignments = await (prisma as any).assignment.findMany({
             where,
             include: {
-                assignedLearners: {
-                    select: {
-                        userId: true,
-                        user: {
-                            select: {
-                                firstName: true,
-                                lastName: true,
-                                email: true
-                            }
-                        }
-                    }
-                },
                 course: {
                     select: {
                         title: true,
@@ -205,96 +144,55 @@ export async function POST(request: NextRequest) {
     try {
         const session = await requireAuth();
 
-        // Strict Role Check: Learner cannot create assignments
-        if (session.activeRole === 'LEARNER') {
-            return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 });
+        if (!(await can(session, 'assignment:create'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: assignment:create' }, { status: 403 });
         }
 
         const body = await request.json();
         const validation = createAssignmentSchema.safeParse(body);
 
         if (!validation.success) {
-            return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+            return NextResponse.json({
+                error: 'BAD_REQUEST',
+                message: validation.error.errors[0].message,
+                details: validation.error.errors
+            }, { status: 400 });
         }
 
-        const {
-            title, description, courseId, dueAt, attachments,
-            type, gradingMethod, availableFrom, closeAt, allowLate, latePenalty, maxLateDays,
-            maxFiles, maxSizeMb, maxAttempts, allowedFileTypes, allowText, allowFile,
-            plagiarismCheck, similarityThreshold, requireAIDeclaration, lockAfterView,
-            visibility, isGroupAssignment,
-            notifyOnPublish, notifyOnDueDate, notifyOnSubmission,
-            difficulty, estimatedDuration,
-            assignedLearnerIds,
-            assignedInstructorId
-        } = validation.data;
+        const { title, description, courseId, dueAt } = validation.data;
 
         // Check permissions (Instructor can only create for their own courses)
-        if (session.activeRole === 'INSTRUCTOR' && courseId) {
+        if (session.role === 'INSTRUCTOR' && courseId) {
             const course = await prisma.course.findUnique({
                 where: { id: courseId },
                 include: { instructors: true }
             });
 
-            const canManage = canManageCourse(session, course);
-            if (!canManage) {
-                return NextResponse.json({ error: 'You do not have permission to manage this course' }, { status: 403 });
+            if (!course) {
+                return NextResponse.json({ error: 'NOT_FOUND', message: 'Course not found' }, { status: 404 });
+            }
+
+            const isManager = course.instructorId === session.userId ||
+                (course.instructors as any[])?.some((i: any) => i.userId === session.userId);
+            if (!isManager) {
+                return NextResponse.json({ error: 'FORBIDDEN', message: 'You do not have permission to manage this course' }, { status: 403 });
             }
         }
 
-        const assignment = await (prisma as any).assignment.create({
+        // Create assignment with only schema-valid fields
+        const assignment = await prisma.assignment.create({
             data: {
                 title,
-                description,
+                description: description || null,
                 courseId: courseId || null,
                 dueAt: dueAt ? new Date(dueAt) : null,
                 createdBy: session.userId,
-                attachments: attachments as any || [],
-
-                // Enterprise Fields Mapping
-                type: type || 'HOMEWORK',
-                gradingMethod: gradingMethod || 'NUMERIC',
-                availableFrom: availableFrom ? new Date(availableFrom) : null,
-                closeAt: closeAt ? new Date(closeAt) : null,
-                allowLate: allowLate ?? false,
-                latePenalty,
-                maxLateDays,
-
-                maxFiles,
-                maxSizeMb,
-                maxAttempts,
-                allowedFileTypes: allowedFileTypes ?? [],
-                allowText: allowText ?? true,
-                allowFile: allowFile ?? true,
-
-                plagiarismCheck: plagiarismCheck ?? false,
-                similarityThreshold,
-                requireAIDeclaration: requireAIDeclaration ?? false,
-                lockAfterView: lockAfterView ?? false,
-
-                visibility: visibility || 'ALL',
-                isGroupAssignment: isGroupAssignment ?? false,
-
-                notifyOnPublish: notifyOnPublish ?? true,
-                notifyOnDueDate: notifyOnDueDate ?? true,
-                notifyOnSubmission: notifyOnSubmission ?? true,
-
-                difficulty: difficulty || 'MEDIUM',
-                estimatedDuration,
-
-                // Assigned instructor for grading
-                assignedInstructorId: assignedInstructorId || null,
-
-                // Create learner assignments if specified
-                assignedLearners: assignedLearnerIds && assignedLearnerIds.length > 0 ? {
-                    create: assignedLearnerIds.map(userId => ({ userId }))
-                } : undefined
             },
         });
 
-        return NextResponse.json(assignment);
+        return NextResponse.json(assignment, { status: 201 });
     } catch (error) {
         console.error('Error creating assignment:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'INTERNAL_ERROR', message: 'Failed to create assignment' }, { status: 500 });
     }
 }

@@ -4,9 +4,12 @@ import React, { useState } from 'react';
 import {
     Box, Typography, Paper, Button, Card, CardContent, CardActions,
     Chip, IconButton, TextField, InputAdornment, Tabs, Tab, LinearProgress,
-    Avatar, List, ListItem, ListItemAvatar, ListItemText, Switch, FormControlLabel,
+    Avatar, List, ListItem, ListItemAvatar, ListItemText, Switch, FormControlLabel, Skeleton
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useApiError } from '@/hooks/useApiError';
+import AccessDenied from '@/components/AccessDenied';
 import AddIcon from '@mui/icons-material/Add';
 import EmojiObjectsIcon from '@mui/icons-material/EmojiObjects';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
@@ -22,10 +25,43 @@ const skills = [
 ];
 
 export default function SkillsPage() {
-    const [tab, setTab] = useState(0);
     const [search, setSearch] = useState('');
+    const [skillsData, setSkillsData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [tab, setTab] = useState(0);
+    const { can, loading: permissionsLoading } = usePermissions();
+    const { handleResponse } = useApiError();
+    const [forbidden, setForbidden] = useState(false);
 
-    const filteredSkills = skills.filter(skill =>
+    React.useEffect(() => {
+        if (!permissionsLoading && can('skills:read')) {
+            fetchSkills();
+        }
+    }, [permissionsLoading]);
+
+    const fetchSkills = async () => {
+        try {
+            const res = await fetch('/api/skills');
+            if (res.status === 403) {
+                setForbidden(true);
+                return;
+            }
+            if (handleResponse(res)) return;
+            const data = await res.json();
+            setSkillsData(data);
+        } catch (error) {
+            console.error('Failed to fetch skills:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (permissionsLoading) return null;
+    if (!can('skills:read') || forbidden) {
+        return <AccessDenied requiredPermission="skills:read" />;
+    }
+
+    const filteredSkills = skillsData.filter(skill =>
         skill.name.toLowerCase().includes(search.toLowerCase())
     );
 
@@ -38,9 +74,11 @@ export default function SkillsPage() {
                         Define skills and let AI assess your learners
                     </Typography>
                 </Box>
-                <Button variant="contained" startIcon={<AddIcon />}>
-                    Add skill
-                </Button>
+                {can('skills:create') && (
+                    <Button variant="contained" startIcon={<AddIcon />}>
+                        Add skill
+                    </Button>
+                )}
             </Box>
 
             {/* Info Banner */}

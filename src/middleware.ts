@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { decrypt, RoleKey } from '@/lib/auth'
+import { verifyAccessTokenLight, RoleKey } from '@/lib/auth'
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -10,7 +10,10 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith('/login') ||
         pathname.startsWith('/signup') ||
         pathname.startsWith('/reset-password') ||
+        pathname.startsWith('/forgot-password') ||
         pathname.startsWith('/api/auth') ||
+        pathname.startsWith('/api/_debug') || // Dev-only debug endpoints
+        pathname.startsWith('/dev') || // Dev-only pages
         pathname === '/' ||
         pathname.startsWith('/_next') ||
         pathname.startsWith('/favicon.ico') ||
@@ -34,11 +37,17 @@ export async function middleware(request: NextRequest) {
 
     // Get session from cookie
     const sessionCookie = request.cookies.get('session')?.value ?? '';
-    let session: { activeRole: RoleKey; userId: string } | null = null;
+    let session: { role: RoleKey; userId: string; tokenVersion?: number } | null = null;
 
     if (sessionCookie.length > 0) {
         try {
-            session = (await decrypt(sessionCookie)) as { activeRole: RoleKey; userId: string };
+            // Use lightweight verification (no DB call) for middleware performance
+            const payload = await verifyAccessTokenLight(sessionCookie);
+            session = {
+                role: payload.role,
+                userId: payload.userId,
+                tokenVersion: payload.tokenVersion,
+            };
         } catch (e) {
             // Invalid session - will redirect to login
         }
@@ -49,58 +58,57 @@ export async function middleware(request: NextRequest) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('redirect', pathname);
         return NextResponse.redirect(loginUrl);
-    } else {
-        const activeRole = session!.activeRole;
-
-        // Role-based route protection
-        const isAdminRoute = pathname.startsWith('/admin');
-        const isSuperInstructorRoute = pathname.startsWith('/super-instructor');
-        const isInstructorRoute = pathname.startsWith('/instructor');
-        const isLearnerRoute = pathname.startsWith('/learner');
-
-        // Super Instructor routes - only SUPER_INSTRUCTOR role
-        if (isSuperInstructorRoute && activeRole !== 'SUPER_INSTRUCTOR') {
-            if (activeRole === 'ADMIN') {
-                return NextResponse.redirect(new URL('/admin', request.url));
-            } else if (activeRole === 'INSTRUCTOR') {
-                return NextResponse.redirect(new URL('/instructor', request.url));
-            }
-            return NextResponse.redirect(new URL('/learner', request.url));
-        }
-
-        // Admin routes - only ADMIN role (not SUPER_INSTRUCTOR anymore)
-        if (isAdminRoute && activeRole !== 'ADMIN') {
-            if (activeRole === 'SUPER_INSTRUCTOR') {
-                return NextResponse.redirect(new URL('/super-instructor', request.url));
-            } else if (activeRole === 'INSTRUCTOR') {
-                return NextResponse.redirect(new URL('/instructor', request.url));
-            }
-            return NextResponse.redirect(new URL('/learner', request.url));
-        }
-
-        // Instructor routes - ADMIN, SUPER_INSTRUCTOR or INSTRUCTOR
-        if (isInstructorRoute && !['ADMIN', 'SUPER_INSTRUCTOR', 'INSTRUCTOR'].includes(activeRole)) {
-            return NextResponse.redirect(new URL('/learner', request.url));
-        }
-
-        // Learner routes - any authenticated user can access
-        // (all roles can view learner experience)
-
-        // Continue with the request
-        return NextResponse.next();
     }
+
+    const activeRole = session.role;
+
+    // Role-based route protection
+    const isAdminRoute = pathname.startsWith('/admin');
+    const isSuperInstructorRoute = pathname.startsWith('/super-instructor');
+    const isInstructorRoute = pathname.startsWith('/instructor');
+
+    // Super Instructor routes - only SUPER_INSTRUCTOR role
+    if (isSuperInstructorRoute && activeRole !== 'SUPER_INSTRUCTOR') {
+        if (activeRole === 'ADMIN') {
+            return NextResponse.redirect(new URL('/admin', request.url));
+        } else if (activeRole === 'INSTRUCTOR') {
+            return NextResponse.redirect(new URL('/instructor', request.url));
+        }
+        return NextResponse.redirect(new URL('/learner', request.url));
+    }
+
+    // Admin routes - only ADMIN role (not SUPER_INSTRUCTOR anymore)
+    if (isAdminRoute && activeRole !== 'ADMIN') {
+        if (activeRole === 'SUPER_INSTRUCTOR') {
+            return NextResponse.redirect(new URL('/super-instructor', request.url));
+        } else if (activeRole === 'INSTRUCTOR') {
+            return NextResponse.redirect(new URL('/instructor', request.url));
+        }
+        return NextResponse.redirect(new URL('/learner', request.url));
+    }
+
+    // Instructor routes - ADMIN, SUPER_INSTRUCTOR or INSTRUCTOR
+    if (isInstructorRoute && !['ADMIN', 'SUPER_INSTRUCTOR', 'INSTRUCTOR'].includes(activeRole)) {
+        return NextResponse.redirect(new URL('/learner', request.url));
+    }
+
+    // Learner routes - any authenticated user can access
+    // (all roles can view learner experience)
+
+    // Continue with the request
+    return NextResponse.next();
 }
 
 export const config = {
     matcher: [
         /*
          * Match all request paths except:
-         * - api routes that handle their own auth
+         * - /api routes (they handle their own auth)
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
          * - public files (images, etc)
          */
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp3|wav|ogg|mp4|webm|pdf)$).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp3|wav|ogg|mp4|webm|pdf)$).*)',
     ],
 }

@@ -46,7 +46,7 @@ const createCourseSchema = z.object({
 export async function GET(request: NextRequest) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'course:read')) {
+        if (!(await can(session, 'course:read'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:read' }, { status: 403 });
         }
 
@@ -94,7 +94,15 @@ export async function GET(request: NextRequest) {
             limit,
             totalPages: Math.ceil(total / limit),
         });
-    } catch (error) {
+    } catch (error: any) {
+        // Handle authentication errors specifically
+        if (error?.name === 'AuthError' || error?.statusCode === 401) {
+            return NextResponse.json(
+                { error: 'UNAUTHORIZED', message: error.message || 'Authentication required' },
+                { status: 401 }
+            );
+        }
+
         console.error('Error fetching courses:', error);
         return NextResponse.json({ error: 'Failed to fetch courses' }, { status: 500 });
     }
@@ -104,7 +112,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'course:create')) {
+        if (!(await can(session, 'course:create'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:create' }, { status: 403 });
         }
 
@@ -204,7 +212,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'course:delete_any')) {
+        if (!(await can(session, 'course:delete_any'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:delete_any' }, { status: 403 });
         }
 
@@ -241,7 +249,7 @@ export async function DELETE(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'course:update_any') && !can(session, 'course:publish')) {
+        if (!(await can(session, 'course:update_any')) && !(await can(session, 'course:publish'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission to update or publish courses' }, { status: 403 });
         }
 

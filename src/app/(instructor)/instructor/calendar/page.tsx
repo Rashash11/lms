@@ -7,6 +7,9 @@ import {
     TextField, Chip, Snackbar, Alert
 } from '@mui/material';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useApiError } from '@/hooks/useApiError';
+import AccessDenied from '@/components/AccessDenied';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -31,20 +34,27 @@ export default function CalendarPage() {
         endTime: '',
         type: 'custom'
     });
-
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const { can, loading: permissionsLoading } = usePermissions();
+    const { handleResponse } = useApiError();
+    const [forbidden, setForbidden] = useState(false);
 
     useEffect(() => {
-        fetchEvents();
-    }, [currentDate]);
+        if (!permissionsLoading && can('calendar:read')) {
+            fetchEvents();
+        }
+    }, [currentDate, permissionsLoading]);
 
     const fetchEvents = async () => {
         try {
             const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
             const end = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-            const res = await fetch(`/api/instructor/calendar/events?start=${start.toISOString()}&end=${end.toISOString()}`);
+            const res = await fetch(`/api/calendar-events?start=${start.toISOString()}&end=${end.toISOString()}`);
+            if (res.status === 403) {
+                setForbidden(true);
+                return;
+            }
+            if (handleResponse(res)) return;
             const data = await res.json();
             if (data.events) {
                 setEvents(data.events);
@@ -53,6 +63,14 @@ export default function CalendarPage() {
             console.error('Failed to fetch events:', error);
         }
     };
+
+    if (permissionsLoading) return null;
+    if (!can('calendar:read') || forbidden) {
+        return <AccessDenied requiredPermission="calendar:read" />;
+    }
+
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     const handleAddEvent = async () => {
         try {
@@ -237,30 +255,34 @@ export default function CalendarPage() {
                 </Box>
 
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setOpenDialog(true)}
-                        sx={{
-                            bgcolor: '#0052CC',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            '&:hover': { bgcolor: '#0747A6' }
-                        }}
-                    >
-                        Add event
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        sx={{
-                            textTransform: 'none',
-                            borderColor: '#DFE1E6',
-                            color: '#172B4D',
-                            fontWeight: 600
-                        }}
-                    >
-                        Export
-                    </Button>
+                    {can('calendar:create') && (
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => setOpenDialog(true)}
+                            sx={{
+                                bgcolor: '#0052CC',
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                '&:hover': { bgcolor: '#0747A6' }
+                            }}
+                        >
+                            Add event
+                        </Button>
+                    )}
+                    {(can('reports:export') || can('calendar:read')) && (
+                        <Button
+                            variant="outlined"
+                            sx={{
+                                textTransform: 'none',
+                                borderColor: '#DFE1E6',
+                                color: '#172B4D',
+                                fontWeight: 600
+                            }}
+                        >
+                            Export
+                        </Button>
+                    )}
                 </Box>
             </Box>
 

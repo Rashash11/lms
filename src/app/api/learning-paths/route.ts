@@ -7,7 +7,7 @@ import { can } from '@/lib/permissions';
 export async function GET(request: NextRequest) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'learning_path:read')) {
+        if (!(await can(session, 'learning_path:read'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: learning_path:read' }, { status: 403 });
         }
 
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'learning_path:create')) {
+        if (!(await can(session, 'learning_path:create'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: learning_path:create' }, { status: 403 });
         }
 

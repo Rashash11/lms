@@ -16,6 +16,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { useRouter } from 'next/navigation';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface LearningPath {
     id: string;
@@ -32,6 +33,7 @@ type SortField = 'name' | 'code' | 'category' | 'courses' | 'updatedAt';
 
 export default function LearningPathsPage() {
     const router = useRouter();
+    const { can, loading: permissionsLoading } = usePermissions();
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -43,6 +45,10 @@ export default function LearningPathsPage() {
     const [selectedPath, setSelectedPath] = useState<LearningPath | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
+
+    // Permission checks
+    const canCreate = can('learning_path:create');
+    const canDelete = can('learning_path:delete');
 
     const fetchLearningPaths = useCallback(async () => {
         setLoading(true);
@@ -245,45 +251,47 @@ export default function LearningPathsPage() {
                     </ToggleButtonGroup>
 
                     {/* Add Button */}
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        disabled={loading}
-                        sx={{
-                            bgcolor: 'hsl(var(--primary))',
-                            color: 'hsl(var(--primary-foreground))',
-                            fontWeight: 700,
-                            textTransform: 'none',
-                            borderRadius: '6px',
-                            height: 40,
-                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
-                        }}
-                        onClick={async () => {
-                            setLoading(true);
-                            try {
-                                const response = await fetch('/api/learning-paths', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        name: 'New learning path',
-                                        status: 'inactive',
-                                    }),
-                                });
-                                if (response.ok) {
-                                    const newPath = await response.json();
-                                    router.push(`/admin/learning-paths/${newPath.id}/edit`);
-                                } else {
-                                    console.error('Failed to create learning path');
+                    {canCreate && (
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            disabled={loading || permissionsLoading}
+                            sx={{
+                                bgcolor: 'hsl(var(--primary))',
+                                color: 'hsl(var(--primary-foreground))',
+                                fontWeight: 700,
+                                textTransform: 'none',
+                                borderRadius: '6px',
+                                height: 40,
+                                '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
+                            }}
+                            onClick={async () => {
+                                setLoading(true);
+                                try {
+                                    const response = await fetch('/api/learning-paths', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            name: 'New learning path',
+                                            status: 'inactive',
+                                        }),
+                                    });
+                                    if (response.ok) {
+                                        const newPath = await response.json();
+                                        router.push(`/admin/learning-paths/${newPath.id}/edit`);
+                                    } else {
+                                        console.error('Failed to create learning path');
+                                    }
+                                } catch (error) {
+                                    console.error('Error creating learning path:', error);
+                                } finally {
+                                    setLoading(false);
                                 }
-                            } catch (error) {
-                                console.error('Error creating learning path:', error);
-                            } finally {
-                                setLoading(false);
-                            }
-                        }}
-                    >
-                        Add learning path
-                    </Button>
+                            }}
+                        >
+                            Add learning path
+                        </Button>
+                    )}
                 </Box>
             </Box>
 
@@ -427,7 +435,9 @@ export default function LearningPathsPage() {
             >
                 <MenuItem onClick={handleEdit}>Edit</MenuItem>
                 <MenuItem onClick={handleManage}>Manage</MenuItem>
-                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>Delete</MenuItem>
+                {canDelete && (
+                    <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>Delete</MenuItem>
+                )}
             </Menu>
 
             {/* Delete Confirmation Dialog */}

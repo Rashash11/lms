@@ -1,167 +1,141 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import {
-    setSession,
-    verifyPassword,
-    LOCK_CONFIG,
-    RoleKey,
-    SessionPayload
-} from "@/lib/auth";
-import { z } from "zod";
-
-const loginSchema = z.object({
-    email: z.string().email("Invalid email format"),
-    password: z.string().min(1, "Password is required"),
-});
+import { signAccessToken, comparePassword, RoleKey } from "@/lib/auth";
+import { loginLimiter } from "@/lib/rate-limit";
+import { logAuthAudit, getClientIp, getClientUserAgent } from "@/lib/audit-logger";
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
+        const { email, password } = body;
 
-        // Validate input
-        const validation = loginSchema.safeParse(body);
-        if (!validation.success) {
+        if (!email || !password) {
             return NextResponse.json(
-                { error: validation.error.errors[0].message },
+                { error: "BAD_REQUEST", message: "Email and password required" },
                 { status: 400 }
             );
         }
 
-        const { email, password } = validation.data;
+        // Get IP for rate limiting and audit
+        const ip = getClientIp(request.headers);
+        const userAgent = getClientUserAgent(request.headers);
+        const rateLimitKey = `${ip}:${email}`;
 
-        // Find user with roles
-        const user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() },
-            include: { roles: true },
-        });
-
-        if (!user) {
+        if (!loginLimiter.check(rateLimitKey)) {
+            const retryAfter = loginLimiter.getRetryAfter(rateLimitKey);
             return NextResponse.json(
-                { error: "Invalid email or password" },
+                { error: "TOO_MANY_REQUESTS", message: "Too many login attempts. Try again later." },
+                {
+                    status: 429,
+                    headers: { "Retry-After": retryAfter.toString() }
+                }
+            );
+        }
+
+        // Use raw SQL to avoid Prisma field mapping issues
+        const users = await prisma.$queryRaw<Array<{
+            id: string;
+            email: string;
+            passwordHash: string | null;
+            activeRole: string;
+            is_active: boolean;
+            is_verified: boolean;
+        }>>`
+            SELECT id, email, "passwordHash", "activeRole", is_active, is_verified
+            FROM users 
+            WHERE email = ${email}
+        `;
+
+        const user = users[0];
+
+        if (!user || !user.passwordHash) {
+            await logAuthAudit({
+                eventType: "LOGIN_FAIL",
+                ip,
+                userAgent,
+                metadata: { email, reason: "invalid_credentials" },
+            });
+            return NextResponse.json(
+                { error: "UNAUTHORIZED", message: "Invalid email or password" },
                 { status: 401 }
             );
         }
 
-        // Check if account is locked
-        if (user.status === "LOCKED" || (user.lockedUntil && new Date(user.lockedUntil) > new Date())) {
-            const lockedUntil = user.lockedUntil ? new Date(user.lockedUntil).toLocaleTimeString() : "later";
+        const isValidPassword = await comparePassword(password, user.passwordHash);
+        if (!isValidPassword) {
+            await logAuthAudit({
+                eventType: "LOGIN_FAIL",
+                userId: user.id,
+                ip,
+                userAgent,
+                metadata: { email, reason: "invalid_password" },
+            });
             return NextResponse.json(
-                { error: `Account is locked. Try again at ${lockedUntil}` },
-                { status: 423 }
+                { error: "UNAUTHORIZED", message: "Invalid email or password" },
+                { status: 401 }
             );
         }
 
-        // Check if user is inactive
-        if (user.status === "INACTIVE" || user.status === "DEACTIVATED") {
+        if (!user.is_active) {
             return NextResponse.json(
-                { error: "Account is deactivated. Contact administrator." },
+                { error: "FORBIDDEN", message: "Account is disabled" },
                 { status: 403 }
             );
         }
 
-        // Verify password
-        if (!user.passwordHash) {
+        const requireVerified = process.env.REQUIRE_VERIFIED === "true";
+        if (requireVerified && !user.is_verified) {
             return NextResponse.json(
-                { error: "Password not set. Use password reset." },
-                { status: 401 }
+                { error: "FORBIDDEN", message: "Email not verified" },
+                { status: 403 }
             );
         }
 
-        const passwordValid = await verifyPassword(password, user.passwordHash);
-
-        if (!passwordValid) {
-            // Increment failed attempts
-            const newAttempts = user.failedLoginAttempts + 1;
-            const shouldLock = newAttempts >= LOCK_CONFIG.maxAttempts;
-
-            await prisma.user.update({
-                where: { id: user.id },
-                data: {
-                    failedLoginAttempts: newAttempts,
-                    ...(shouldLock && {
-                        lockedUntil: new Date(Date.now() + LOCK_CONFIG.lockDurationMs),
-                    }),
-                },
-            });
-
-            if (shouldLock) {
-                return NextResponse.json(
-                    { error: "Too many failed attempts. Account locked for 5 minutes." },
-                    { status: 423 }
-                );
-            }
-
-            return NextResponse.json(
-                { error: "Invalid email or password" },
-                { status: 401 }
-            );
-        }
-
-        // Success - reset failed attempts and update last login
         await prisma.user.update({
             where: { id: user.id },
-            data: {
-                failedLoginAttempts: 0,
-                lockedUntil: null,
-                lastLoginAt: new Date(),
-            },
+            data: { lastLoginAt: new Date() },
         });
 
-        // Get user roles
-        const roles = user.roles.map(r => r.roleKey as RoleKey);
+        // Get tokenVersion for token invalidation (use raw SQL for reliability)
+        const tokenVersionResult = await prisma.$queryRaw<[{ token_version: number | null }]>`
+            SELECT token_version FROM users WHERE id = ${user.id}
+        `;
+        const userTokenVersion = tokenVersionResult[0]?.token_version ?? 0;
 
-        // If no roles assigned, default to LEARNER
-        if (roles.length === 0) {
-            roles.push("LEARNER");
-        }
-
-        // Determine active role (use stored or default to first role)
-        const activeRole = (user.activeRole as RoleKey) || roles[0];
-
-        // Create session
-        const sessionPayload: SessionPayload = {
+        const token = await signAccessToken({
             userId: user.id,
             email: user.email,
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            roles,
-            activeRole,
-        };
-
-        await setSession(sessionPayload);
-
-        // Log timeline event
-        await prisma.timelineEvent.create({
-            data: {
-                userId: user.id,
-                eventType: "USER_LOGIN",
-                details: {
-                    email: user.email,
-                    role: activeRole,
-                    ip: request.headers.get("x-forwarded-for") || "unknown",
-                },
-            },
+            role: user.activeRole as RoleKey,
+            tokenVersion: userTokenVersion,
         });
 
-        return NextResponse.json({
-            success: true,
-            user: {
-                id: user.id,
-                email: user.email,
-                username: user.username,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                avatar: user.avatar,
-                roles,
-                activeRole,
-            },
+        await logAuthAudit({
+            eventType: "LOGIN_SUCCESS",
+            userId: user.id,
+            ip,
+            userAgent,
+            metadata: { email },
         });
 
-    } catch (error) {
+        const response = NextResponse.json({
+            ok: true,
+            userId: user.id,
+            role: user.activeRole,
+        });
+
+        response.cookies.set("session", token, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+            path: "/",
+            maxAge: 15 * 60, // 15 minutes
+        });
+
+        return response;
+    } catch (error: any) {
         console.error("Login error:", error);
         return NextResponse.json(
-            { error: "An error occurred during login" },
+            { error: "INTERNAL_ERROR", message: "Login failed" },
             { status: 500 }
         );
     }

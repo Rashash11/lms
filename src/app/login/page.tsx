@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import {
     Box,
     Button,
@@ -11,41 +11,69 @@ import {
     Link,
     Alert,
     InputAdornment,
-    IconButton
+    IconButton,
+    CircularProgress
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { authenticate } from './actions';
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
+type RoleKey = 'ADMIN' | 'INSTRUCTOR' | 'SUPER_INSTRUCTOR' | 'LEARNER';
 
-    return (
-        <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            size="large"
-            disabled={pending}
-            sx={{
-                mt: 3,
-                mb: 2,
-                height: 48,
-                fontSize: '1rem',
-                textTransform: 'none',
-                bgcolor: 'hsl(var(--primary))',
-                '&:hover': {
-                    bgcolor: 'hsl(var(--primary) / 0.9)',
-                }
-            }}
-        >
-            {pending ? 'Logging in...' : 'Log in'}
-        </Button>
-    );
+function getRedirectPath(activeRole: RoleKey): string {
+    switch (activeRole) {
+        case 'ADMIN':
+            return '/admin';
+        case 'SUPER_INSTRUCTOR':
+            return '/super-instructor';
+        case 'INSTRUCTOR':
+            return '/instructor';
+        case 'LEARNER':
+        default:
+            return '/learner';
+    }
 }
 
 export default function LoginPage() {
-    const [state, dispatch] = useFormState(authenticate, undefined);
+    const router = useRouter();
+    const [email, setEmail] = React.useState('');
+    const [password, setPassword] = React.useState('');
     const [showPassword, setShowPassword] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
+    const [isLoading, setIsLoading] = React.useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setIsLoading(true);
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+                credentials: 'include', // Important for cookies
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                setError(data.error || 'Login failed');
+                setIsLoading(false);
+                return;
+            }
+
+            // Redirect based on role with full page reload
+            // This ensures all permissions and RBAC data are freshly loaded
+            const redirectPath = getRedirectPath(data.role);
+            window.location.href = redirectPath;
+
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('An error occurred during login');
+            setIsLoading(false);
+        }
+    };
 
     return (
         <Box
@@ -89,7 +117,7 @@ export default function LoginPage() {
                         </Typography>
                     </Box>
 
-                    {state?.error && (
+                    {error && (
                         <Alert
                             severity="error"
                             sx={{
@@ -100,20 +128,24 @@ export default function LoginPage() {
                                 border: '1px solid hsl(0 72% 51% / 0.2)'
                             }}
                         >
-                            {state.error}
+                            {error}
                         </Alert>
                     )}
 
-                    <Box component="form" action={dispatch} sx={{ width: '100%' }}>
+                    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
                         <TextField
                             margin="normal"
                             required
                             fullWidth
-                            id="username"
-                            label="Username or Email"
-                            name="username"
-                            autoComplete="username"
+                            id="email"
+                            label="Email"
+                            name="email"
+                            type="email"
+                            autoComplete="email"
                             autoFocus
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={isLoading}
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     bgcolor: 'hsl(var(--input))',
@@ -133,6 +165,9 @@ export default function LoginPage() {
                             type={showPassword ? 'text' : 'password'}
                             id="password"
                             autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            disabled={isLoading}
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     bgcolor: 'hsl(var(--input))',
@@ -159,12 +194,31 @@ export default function LoginPage() {
                         />
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                            <Link href="#" variant="body2" sx={{ textDecoration: 'none', fontWeight: 500, color: 'hsl(var(--primary))' }}>
+                            <Link href="/forgot-password" variant="body2" sx={{ textDecoration: 'none', fontWeight: 500, color: 'hsl(var(--primary))' }}>
                                 Forgot password?
                             </Link>
                         </Box>
 
-                        <SubmitButton />
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            size="large"
+                            disabled={isLoading}
+                            sx={{
+                                mt: 3,
+                                mb: 2,
+                                height: 48,
+                                fontSize: '1rem',
+                                textTransform: 'none',
+                                bgcolor: 'hsl(var(--primary))',
+                                '&:hover': {
+                                    bgcolor: 'hsl(var(--primary) / 0.9)',
+                                }
+                            }}
+                        >
+                            {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Log in'}
+                        </Button>
 
                         <Box sx={{ mt: 2, textAlign: 'center' }}>
                             <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>

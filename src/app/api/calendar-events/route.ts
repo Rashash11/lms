@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 
 // GET calendar events
 export async function GET(request: NextRequest) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'calendar:read'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: calendar:read' }, { status: 403 });
         }
 
         const events = await prisma.calendarEvent.findMany({
@@ -29,22 +30,25 @@ export async function GET(request: NextRequest) {
 // POST create calendar event
 export async function POST(request: NextRequest) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'calendar:create'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', message: 'Missing permission: calendar:create' }, { status: 403 });
         }
 
         const body = await request.json();
-        const { title, description, startTime, endTime, type, color } = body;
+        const { title, description, startTime, endTime, type } = body;
 
-        const event = await (prisma.calendarEvent as any).create({
+        if (!title || !startTime || !endTime) {
+            return NextResponse.json({ error: 'BAD_REQUEST', message: 'title, startTime, and endTime are required' }, { status: 400 });
+        }
+
+        const event = await prisma.calendarEvent.create({
             data: {
                 title,
-                description,
+                description: description || null,
                 startTime: new Date(startTime),
                 endTime: new Date(endTime),
                 type: type || 'general',
-                color: color || '#6B21A8',
                 instructorId: session.userId,
             }
         });
@@ -52,6 +56,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(event, { status: 201 });
     } catch (error) {
         console.error('Error creating calendar event:', error);
-        return NextResponse.json({ error: 'Failed to create event' }, { status: 500 });
+        return NextResponse.json({ error: 'INTERNAL_ERROR', message: 'Failed to create event' }, { status: 500 });
     }
 }

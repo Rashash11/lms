@@ -38,23 +38,50 @@ function CoursePlayerContent() {
         }
     }, [courseId, unitId]);
 
+    // Track last accessed unit
+    useEffect(() => {
+        if (courseId && unitId) {
+            fetch(`/api/learner/courses/${courseId}/last-unit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ unitId })
+            }).catch(err => console.error('Failed to update last unit:', err));
+        }
+    }, [courseId, unitId]);
+
     const loadData = async () => {
         setLoading(true);
         try {
-            // Fetch enrollment to get course structure and progress
-            const enrollRes = await fetch(`/api/enrollments?courseId=${courseId}`);
+            // 1. Fetch enrollment
+            const enrollRes = await fetch('/api/learner/enrollments');
             if (enrollRes.ok) {
                 const data = await enrollRes.json();
-                const userEnrollment = data.enrollments.find((e: any) => e.courseId === courseId);
-                setEnrollment(userEnrollment);
+                const userEnrollment = data.find((e: any) => e.courseId === courseId);
 
-                // Fetch full course structure
+                if (!userEnrollment) {
+                    router.push('/learner/courses');
+                    return;
+                }
+
+                // 2. Fetch progress (includes completedUnitIds)
+                const progressRes = await fetch(`/api/learner/progress?courseId=${courseId}`);
+                if (progressRes.ok) {
+                    const progressData = await progressRes.json();
+                    setEnrollment({
+                        ...userEnrollment,
+                        ...progressData
+                    });
+                } else {
+                    setEnrollment(userEnrollment);
+                }
+
+                // 3. Fetch full course structure
                 const courseRes = await fetch(`/api/courses/${courseId}`);
                 if (courseRes.ok) {
                     setCourse(await courseRes.json());
                 }
 
-                // Fetch current unit
+                // 4. Fetch current unit
                 const unitRes = await fetch(`/api/courses/${courseId}/units/${unitId}`);
                 if (unitRes.ok) {
                     setUnit(await unitRes.json());
@@ -100,21 +127,21 @@ function CoursePlayerContent() {
     };
 
     const handleMarkComplete = async () => {
-        if (!enrollment || !unit) return;
+        if (!unit) return;
 
         try {
-            const res = await fetch(`/api/enrollments/${enrollment.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'completeUnit',
-                    unitId: unitId
-                })
+            const res = await fetch(`/api/learner/progress/units/${unitId}/complete`, {
+                method: 'POST'
             });
 
             if (res.ok) {
                 const data = await res.json();
-                setEnrollment(data); // Update locally
+                // Update local enrollment state with new percent and completion IDs
+                setEnrollment((prev: any) => ({
+                    ...prev,
+                    percent: data.percent,
+                    completedUnitIds: [...(prev.completedUnitIds || []), unitId]
+                }));
             }
         } catch (error) {
             console.error('Error marking unit complete:', error);
@@ -236,7 +263,7 @@ function CoursePlayerContent() {
                             onUnitClick={handleNavigate}
                             courseTitle={course.title}
                             onBack={() => router.push('/learner/courses')}
-                            progress={enrollment?.progress || 0}
+                            progress={enrollment?.percent || 0}
                             completedUnitIds={enrollment?.completedUnitIds || []}
                         />
                     </Box>

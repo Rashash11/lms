@@ -6,6 +6,9 @@ import {
     List, ListItem, ListItemIcon, ListItemText, Divider, Skeleton
 } from '@mui/material';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useApiError } from '@/hooks/useApiError';
+import AccessDenied from '@/components/AccessDenied';
 import SchoolIcon from '@mui/icons-material/School';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import TableChartIcon from '@mui/icons-material/TableChart';
@@ -14,17 +17,27 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PieChartIcon from '@mui/icons-material/PieChart';
 
 export default function ReportsPage() {
-    const [tab, setTab] = useState(0);
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [tab, setTab] = useState(0);
+    const { can, loading: permissionsLoading } = usePermissions();
+    const { handleResponse } = useApiError();
+    const [forbidden, setForbidden] = useState(false);
 
     useEffect(() => {
-        fetchOverview();
-    }, []);
+        if (!permissionsLoading && can('reports:read')) {
+            fetchOverview();
+        }
+    }, [permissionsLoading]);
 
     const fetchOverview = async () => {
         try {
-            const res = await fetch('/api/instructor/reports/overview');
+            const res = await fetch('/api/reports');
+            if (res.status === 403) {
+                setForbidden(true);
+                return;
+            }
+            if (handleResponse(res)) return;
             const data = await res.json();
             setStats(data);
         } catch (error) {
@@ -33,6 +46,11 @@ export default function ReportsPage() {
             setLoading(false);
         }
     };
+
+    if (permissionsLoading) return null;
+    if (!can('reports:read') || forbidden) {
+        return <AccessDenied requiredPermission="reports:read" />;
+    }
 
     return (
         <Box>

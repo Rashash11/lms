@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 
 // GET /api/learning-paths/[id] - Get single learning path
 export async function GET(
@@ -9,6 +9,11 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!(await can(session, 'learning_path:read'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: learning_path:read' }, { status: 403 });
+        }
+
         const learningPath = await prisma.learningPath.findUnique({
             where: { id: params.id },
             include: {
@@ -68,6 +73,11 @@ export async function PUT(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!(await can(session, 'learning_path:update'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: learning_path:update' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { name, code, category, description, status } = body;
 
@@ -127,6 +137,11 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!(await can(session, 'learning_path:delete'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: learning_path:delete' }, { status: 403 });
+        }
+
         // Check if learning path exists
         const existing = await prisma.learningPath.findUnique({
             where: { id: params.id },
@@ -160,6 +175,11 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await requireAuth();
+        if (!(await can(session, 'learning_path:update'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: learning_path:update' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { name, code, category, description, isActive, image } = body;
 

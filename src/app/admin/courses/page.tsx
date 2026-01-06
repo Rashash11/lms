@@ -20,6 +20,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import LinkIcon from '@mui/icons-material/Link';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface Course {
     id: string;
@@ -35,10 +36,15 @@ interface Course {
 
 export default function CoursesPage() {
     const router = useRouter();
+    const { can, loading: permissionsLoading } = usePermissions();
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [selected, setSelected] = useState<string[]>([]);
+
+    // Permission checks
+    const canCreate = can('course:create');
+    const canDelete = can('course:delete_any');
 
     // Menu states
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -185,30 +191,35 @@ export default function CoursesPage() {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h5" sx={{ fontWeight: 800, color: 'hsl(var(--foreground))' }}>Courses</Typography>
                 <Box>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        endIcon={<ArrowDropDownIcon />}
-                        onClick={(e) => setAddMenuAnchor(e.currentTarget)}
-                        sx={{
-                            textTransform: 'none',
-                            fontWeight: 700,
-                            bgcolor: 'hsl(var(--primary))',
-                            color: 'hsl(var(--primary-foreground))',
-                            borderRadius: '6px',
-                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
-                        }}
-                    >
-                        Add course
-                    </Button>
-                    <Menu
-                        anchorEl={addMenuAnchor}
-                        open={Boolean(addMenuAnchor)}
-                        onClose={() => setAddMenuAnchor(null)}
-                    >
-                        <MenuItem onClick={handleCreateCourse}>Create new course</MenuItem>
-                        <MenuItem onClick={() => setAddMenuAnchor(null)}>Import course</MenuItem>
-                    </Menu>
+                    {canCreate && (
+                        <>
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                endIcon={<ArrowDropDownIcon />}
+                                onClick={(e) => setAddMenuAnchor(e.currentTarget)}
+                                disabled={permissionsLoading}
+                                sx={{
+                                    textTransform: 'none',
+                                    fontWeight: 700,
+                                    bgcolor: 'hsl(var(--primary))',
+                                    color: 'hsl(var(--primary-foreground))',
+                                    borderRadius: '6px',
+                                    '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' }
+                                }}
+                            >
+                                Add course
+                            </Button>
+                            <Menu
+                                anchorEl={addMenuAnchor}
+                                open={Boolean(addMenuAnchor)}
+                                onClose={() => setAddMenuAnchor(null)}
+                            >
+                                <MenuItem onClick={handleCreateCourse}>Create new course</MenuItem>
+                                <MenuItem onClick={() => setAddMenuAnchor(null)}>Import course</MenuItem>
+                            </Menu>
+                        </>
+                    )}
                 </Box>
             </Box>
 
@@ -231,7 +242,7 @@ export default function CoursesPage() {
                 <IconButton size="small" sx={{ border: '1px solid rgba(141, 166, 166, 0.2)' }}>
                     <FilterListIcon fontSize="small" />
                 </IconButton>
-                {selected.length > 0 && (
+                {selected.length > 0 && canDelete && (
                     <Button
                         variant="outlined"
                         color="error"
@@ -387,15 +398,17 @@ export default function CoursesPage() {
                                                         <EditIcon sx={{ fontSize: 18 }} />
                                                     </IconButton>
                                                 </Tooltip>
-                                                <Tooltip title="Delete">
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => handleDeleteClick(course.id)}
-                                                        sx={{ color: 'hsl(var(--destructive))' }}
-                                                    >
-                                                        <DeleteIcon sx={{ fontSize: 18 }} />
-                                                    </IconButton>
-                                                </Tooltip>
+                                                {canDelete && (
+                                                    <Tooltip title="Delete">
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handleDeleteClick(course.id)}
+                                                            sx={{ color: 'hsl(var(--destructive))' }}
+                                                        >
+                                                            <DeleteIcon sx={{ fontSize: 18 }} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
                                                 <IconButton
                                                     size="small"
                                                     sx={{ color: 'hsl(var(--foreground))' }}

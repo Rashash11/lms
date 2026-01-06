@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 
 // GET all conferences for the current instructor
 export async function GET(request: NextRequest) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'conference:read'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: conference:read' }, { status: 403 });
         }
 
         const conferences = await prisma.conference.findMany({
@@ -27,9 +28,9 @@ export async function GET(request: NextRequest) {
 // POST create a new conference
 export async function POST(request: NextRequest) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'conference:create'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: conference:create' }, { status: 403 });
         }
 
         const body = await request.json();

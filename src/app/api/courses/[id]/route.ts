@@ -52,7 +52,7 @@ export async function GET(
 ) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'course:read')) {
+        if (!(await can(session, 'course:read'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:read' }, { status: 403 });
         }
 
@@ -107,7 +107,7 @@ export async function PUT(
 ) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'course:update_any')) {
+        if (!(await can(session, 'course:update_any'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:update_any' }, { status: 403 });
         }
 
@@ -171,9 +171,20 @@ export async function DELETE(
 ) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'course:delete_any')) {
-            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:delete_any' }, { status: 403 });
+        if (!(await can(session, 'course:delete'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: course:delete' }, { status: 403 });
         }
+
+        // Check if course exists first
+        const course = await prisma.course.findUnique({
+            where: { id: params.id },
+            select: { id: true },
+        });
+
+        if (!course) {
+            return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+        }
+
         // Dependencies are handled by Cascade in schema
         await prisma.course.delete({
             where: { id: params.id },
@@ -193,7 +204,7 @@ export async function PATCH(
 ) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'course:update_any') && !can(session, 'course:publish')) {
+        if (!(await can(session, 'course:update_any')) && !(await can(session, 'course:publish'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission to update or publish courses' }, { status: 403 });
         }
 

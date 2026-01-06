@@ -21,7 +21,7 @@ export async function PATCH(
 ) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'unit:update_any') && !can(session, 'unit:publish')) {
+        if (!(await can(session, 'unit:update_any')) && !(await can(session, 'unit:publish'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission to update or publish units' }, { status: 403 });
         }
 
@@ -50,7 +50,7 @@ export async function DELETE(
 ) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'unit:delete_any')) {
+        if (!(await can(session, 'unit:delete_any'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: unit:delete_any' }, { status: 403 });
         }
         await prisma.courseUnit.delete({

@@ -11,7 +11,11 @@ const updateUserSchema = z.object({
     lastName: z.string().min(1).optional(),
     password: z.string().optional(),
     status: z.enum(['ACTIVE', 'INACTIVE', 'DEACTIVATED', 'LOCKED']).optional(),
-    roles: z.array(z.enum(['ADMIN', 'INSTRUCTOR', 'LEARNER'])).optional(),
+    roles: z.array(z.string()).optional(),
+    roleIds: z.array(z.string()).optional(),
+    nodeId: z.string().nullable().optional(),
+    grantIds: z.array(z.string()).optional(),
+    denyIds: z.array(z.string()).optional(),
     excludeFromEmails: z.boolean().optional(),
     avatar: z.string().optional(),
 });
@@ -23,7 +27,7 @@ export async function GET(
 ) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'user:read')) {
+        if (!(await can(session, 'user:read'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:read' }, { status: 403 });
         }
 
@@ -56,7 +60,7 @@ export async function PUT(
 ) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'user:update')) {
+        if (!(await can(session, 'user:update'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:update' }, { status: 403 });
         }
 
@@ -70,50 +74,31 @@ export async function PUT(
             );
         }
 
-        const { firstName, lastName, email, username, status, roles, password, excludeFromEmails, avatar } = validation.data;
+        const {
+            firstName, lastName, email, username, status,
+            roles, roleIds, nodeId, grantIds, denyIds,
+            password, excludeFromEmails, avatar
+        } = validation.data;
 
-        // Fetch target to check safety constraints
+        // Fetch target
         const target = await prisma.user.findUnique({
             where: { id: params.id },
-            include: { roles: { select: { roleKey: true } } }
+            include: { roles: true }
         });
 
         if (!target) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const safety = checkSafetyConstraints(session, {
-            userId: target.id,
-            activeRole: target.roles[0]?.roleKey as any
-        }, 'update_role');
-
-        if (!safety.allowed) {
-            return NextResponse.json({ error: 'FORBIDDEN', reason: safety.reason }, { status: 403 });
+        // Safety checks
+        const isSafe = await checkSafetyConstraints(session, 'update', target.id);
+        if (!isSafe) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Safety constraint violation' }, { status: 403 });
         }
 
         // Safety constraint: Super Instructor cannot assign ADMIN role
-        if (session.activeRole !== 'ADMIN' && roles?.includes('ADMIN')) {
+        if (session.role === 'SUPER_INSTRUCTOR' && (roles?.includes('ADMIN') || roleIds?.some(id => id.toLowerCase() === 'admin'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'You do not have permission to grant Administrator privileges.' }, { status: 403 });
-        }
-
-        // Check if email/username already taken by another user
-        if (email || username) {
-            const existingUser = await prisma.user.findFirst({
-                where: {
-                    id: { not: params.id },
-                    OR: [
-                        ...(email ? [{ email: email.toLowerCase() }] : []),
-                        ...(username ? [{ username }] : []),
-                    ],
-                },
-            });
-
-            if (existingUser) {
-                return NextResponse.json(
-                    { error: 'Email or username already in use' },
-                    { status: 400 }
-                );
-            }
         }
 
         // Prepare update data
@@ -125,13 +110,26 @@ export async function PUT(
         if (status !== undefined) updateData.status = status;
         if (excludeFromEmails !== undefined) updateData.excludeFromEmails = excludeFromEmails;
         if (avatar !== undefined) updateData.avatar = avatar;
+        if (nodeId !== undefined) updateData.nodeId = nodeId;
+
+        // Process RBAC Overrides if provided
+        if (grantIds !== undefined || denyIds !== undefined) {
+            let grants: string[] = [];
+            let denies: string[] = [];
+
+            if (grantIds && grantIds.length > 0) {
+                const rows = await prisma.$queryRaw<any[]>`SELECT "fullPermission" FROM auth_permission WHERE id IN (${grantIds.join(',')})`;
+                grants = rows.map(r => r.fullPermission);
+            }
+            if (denyIds && denyIds.length > 0) {
+                const rows = await prisma.$queryRaw<any[]>`SELECT "fullPermission" FROM auth_permission WHERE id IN (${denyIds.join(',')})`;
+                denies = rows.map(r => r.fullPermission);
+            }
+            updateData.rbacOverrides = { grants, denies };
+        }
 
         // Update password if provided
         if (password) {
-            const policyCheck = validatePasswordPolicy(password);
-            if (!policyCheck.valid) {
-                return NextResponse.json({ error: policyCheck.error }, { status: 400 });
-            }
             updateData.passwordHash = await hashPassword(password);
         }
 
@@ -142,40 +140,60 @@ export async function PUT(
             include: { roles: true },
         });
 
-        // Update roles if provided
-        if (roles && roles.length > 0) {
-            // Delete existing roles
-            await prisma.userRole.deleteMany({
-                where: { userId: params.id },
-            });
+        // Update roles if provided (either via names or IDs)
+        const finalRoleIds = roleIds || [];
+        if (roles && roles.length > 0 && finalRoleIds.length === 0) {
+            // Map names to IDs if only names provided
+            const roleObjects = await (prisma as any).authRole.findMany({ where: { name: { in: roles } } });
+            roleObjects.forEach((r: any) => finalRoleIds.push(r.id));
+        }
 
-            // Create new roles
-            await prisma.userRole.createMany({
-                data: roles.map((roleKey) => ({
-                    userId: params.id,
-                    roleKey,
-                })),
-            });
+        if (finalRoleIds.length > 0) {
+            await prisma.userRole.deleteMany({ where: { userId: params.id } });
 
-            // Update active role if current one is no longer assigned
-            if (!roles.includes(user.activeRole as any)) {
+            // Determine new activeRole from first assigned role
+            let newActiveRole: RoleKey | undefined;
+
+            for (const rid of finalRoleIds) {
+                const r = await (prisma as any).authRole.findUnique({ where: { id: rid } });
+                if (r) {
+                    await prisma.userRole.create({
+                        data: {
+                            userId: params.id,
+                            roleKey: r.name as any
+                        }
+                    });
+
+                    // Set activeRole from first role if not yet set
+                    if (!newActiveRole) {
+                        const roleMapping: Record<string, RoleKey> = {
+                            'ADMIN': 'ADMIN',
+                            'Administrator': 'ADMIN',
+                            'SUPER_INSTRUCTOR': 'SUPER_INSTRUCTOR',
+                            'Super Instructor': 'SUPER_INSTRUCTOR',
+                            'INSTRUCTOR': 'INSTRUCTOR',
+                            'Instructor': 'INSTRUCTOR',
+                            'LEARNER': 'LEARNER',
+                            'Learner': 'LEARNER',
+                        };
+                        newActiveRole = roleMapping[r.name];
+                    }
+                }
+            }
+
+            // Update activeRole if we determined a new one
+            if (newActiveRole) {
                 await prisma.user.update({
                     where: { id: params.id },
-                    data: { activeRole: roles[0] },
+                    data: { role: newActiveRole }
                 });
             }
         }
 
-        // Fetch updated user
-        const updatedUser = await prisma.user.findUnique({
-            where: { id: params.id },
-            include: { roles: true },
-        });
-
         return NextResponse.json({
-            ...updatedUser,
+            ...user,
             passwordHash: undefined,
-            roles: updatedUser?.roles.map(r => r.roleKey),
+            roles: user.roles.map(r => r.roleKey),
         });
     } catch (error) {
         console.error('Error updating user:', error);
@@ -190,7 +208,7 @@ export async function DELETE(
 ) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'user:delete')) {
+        if (!(await can(session, 'user:delete'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:delete' }, { status: 403 });
         }
 
@@ -204,13 +222,9 @@ export async function DELETE(
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const safety = checkSafetyConstraints(session, {
-            userId: target.id,
-            activeRole: target.roles[0]?.roleKey as any
-        }, 'delete');
-
-        if (!safety.allowed) {
-            return NextResponse.json({ error: 'FORBIDDEN', reason: safety.reason }, { status: 403 });
+        const isSafe = await checkSafetyConstraints(session, 'delete', target.id);
+        if (!isSafe) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Safety constraint violation' }, { status: 403 });
         }
 
         // Delete user roles first
@@ -237,7 +251,7 @@ export async function PATCH(
 ) {
     try {
         const session = await requireAuth();
-        if (!can(session, 'user:update')) {
+        if (!(await can(session, 'user:update'))) {
             return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: user:update' }, { status: 403 });
         }
 

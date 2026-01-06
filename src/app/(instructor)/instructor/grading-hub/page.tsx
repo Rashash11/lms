@@ -4,8 +4,11 @@ import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Tabs, Tab,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Paper, Skeleton, Chip
+    Paper, Skeleton, Chip, CircularProgress
 } from '@mui/material';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useApiError } from '@/hooks/useApiError';
+import AccessDenied from '@/components/AccessDenied';
 
 interface Submission {
     id: string;
@@ -25,6 +28,10 @@ interface ILTSession {
 }
 
 export default function GradingHubPage() {
+    const { can, loading: permissionsLoading } = usePermissions();
+    const { handleResponse } = useApiError();
+    const [accessDenied, setAccessDenied] = useState(false);
+
     const [tab, setTab] = useState(0);
     const [loading, setLoading] = useState(true);
     const [assignments, setAssignments] = useState<Submission[]>([]);
@@ -39,6 +46,12 @@ export default function GradingHubPage() {
         try {
             const tabType = tab === 0 ? 'assignments' : 'ilt';
             const res = await fetch(`/api/instructor/grading-hub?tab=${tabType}`);
+
+            if (handleResponse(res)) {
+                if (res.status === 403) setAccessDenied(true);
+                return;
+            }
+
             const data = await res.json();
 
             if (tab === 0 && data.submissions) {
@@ -244,6 +257,10 @@ export default function GradingHubPage() {
             </Typography>
         </Box>
     );
+
+    if (accessDenied || (!permissionsLoading && !can('submission:read'))) {
+        return <AccessDenied />;
+    }
 
     return (
         <Box>

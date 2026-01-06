@@ -155,14 +155,13 @@ export default function LearnerAssignmentDetailPage() {
                 }
             }
 
-            // Create submission
+            // Create/Update submission
             const submissionPayload = {
-                assignmentId,
                 content: textResponse || null,
                 attachments: uploadedFiles,
             };
 
-            const submissionRes = await fetch('/api/submissions', {
+            const submissionRes = await fetch(`/api/assignments/${assignmentId}/submissions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(submissionPayload),

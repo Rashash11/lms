@@ -1,39 +1,44 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
-import { getSession, AuthError } from "@/lib/auth";
+import { getAuthContext, requireAuth, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
     try {
-        const session = await getSession();
+        const session = await getAuthContext();
 
         if (!session) {
-            // Dev mode fallback - return mock user for preview
-            return NextResponse.json({
-                user: {
-                    id: 'preview-user',
-                    email: 'admin@portal.com',
-                    username: 'admin',
-                    firstName: 'Admin',
-                    lastName: 'User',
-                    avatar: null,
-                    status: 'ACTIVE',
-                    roles: ['ADMIN', 'INSTRUCTOR', 'LEARNER'],
-                    activeRole: 'ADMIN',
-                    lastLoginAt: new Date().toISOString(),
-                },
-            });
+            return NextResponse.json(
+                { error: "UNAUTHORIZED", message: "Authentication required" },
+                { status: 401 }
+            );
         }
 
-        // Fetch fresh user data from DB
-        const user = await prisma.user.findUnique({
-            where: { id: session.userId },
-            include: { roles: true },
-        });
+        // Use raw SQL to avoid Prisma field mapping issues
+        const users = await prisma.$queryRaw<Array<{
+            id: string;
+            email: string;
+            username: string;
+            firstName: string;
+            lastName: string;
+            avatar: string | null;
+            status: string;
+            activeRole: string;
+            lastLoginAt: Date | null;
+            is_active: boolean;
+            is_verified: boolean;
+        }>>`
+            SELECT id, email, username, "firstName", "lastName", avatar, status, 
+                   "activeRole", "lastLoginAt", is_active, is_verified
+            FROM users 
+            WHERE id = ${session.userId}
+        `;
+
+        const user = users[0];
 
         if (!user) {
             return NextResponse.json(
-                { error: "User not found" },
+                { error: "NOT_FOUND", message: "User not found" },
                 { status: 404 }
             );
         }
@@ -47,8 +52,10 @@ export async function GET() {
                 lastName: user.lastName,
                 avatar: user.avatar,
                 status: user.status,
-                roles: user.roles.map(r => r.roleKey),
-                activeRole: session.activeRole,
+                role: user.activeRole,
+                activeRole: user.activeRole, // For backward compatibility
+                isActive: user.is_active,
+                isVerified: user.is_verified,
                 lastLoginAt: user.lastLoginAt,
             },
         });
@@ -56,13 +63,13 @@ export async function GET() {
     } catch (error) {
         if (error instanceof AuthError) {
             return NextResponse.json(
-                { error: error.message },
+                { error: "UNAUTHORIZED", message: error.message },
                 { status: error.statusCode }
             );
         }
         console.error("Get me error:", error);
         return NextResponse.json(
-            { error: "An error occurred" },
+            { error: "INTERNAL_ERROR", message: "Failed to fetch user data" },
             { status: 500 }
         );
     }

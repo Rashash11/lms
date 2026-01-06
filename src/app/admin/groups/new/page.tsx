@@ -113,21 +113,25 @@ export default function AddGroupPage() {
     return (
         <Box>
             {/* Breadcrumb */}
-            <Breadcrumbs sx={{ mb: 2 }}>
+            <Breadcrumbs sx={{ mb: 2, '& .MuiBreadcrumbs-separator': { color: 'hsl(var(--muted-foreground))' } }}>
                 <Link
                     href="/admin/groups"
                     underline="hover"
-                    color="#1976d2"
-                    sx={{ cursor: 'pointer', fontSize: 14 }}
+                    sx={{
+                        cursor: 'pointer',
+                        fontSize: 14,
+                        color: 'hsl(var(--primary))',
+                        '&:hover': { color: 'hsl(var(--primary) / 0.8)' }
+                    }}
                     onClick={(e) => { e.preventDefault(); router.push('/admin/groups'); }}
                 >
                     Groups
                 </Link>
-                <Typography color="text.primary" sx={{ fontSize: 14 }}>Add group</Typography>
+                <Typography sx={{ fontSize: 14, color: 'hsl(var(--foreground))' }}>Add group</Typography>
             </Breadcrumbs>
 
             {/* Header */}
-            <Typography variant="h5" fontWeight={600} sx={{ mb: 4, color: '#1a2b4a' }}>
+            <Typography variant="h5" fontWeight={600} sx={{ mb: 4, color: 'hsl(var(--foreground))' }}>
                 Add group
             </Typography>
 
@@ -135,8 +139,8 @@ export default function AddGroupPage() {
             <Box sx={{ maxWidth: 600 }}>
                 {/* Name */}
                 <Box sx={{ mb: 3 }}>
-                    <Typography variant="body2" sx={{ mb: 0.5, color: '#1a2b4a' }}>
-                        Name <span style={{ color: '#d32f2f' }}>*</span>
+                    <Typography variant="body2" sx={{ mb: 0.5, color: 'hsl(var(--foreground))' }}>
+                        Name <span style={{ color: 'hsl(var(--destructive))' }}>*</span>
                     </Typography>
                     <TextField
                         fullWidth
@@ -145,13 +149,22 @@ export default function AddGroupPage() {
                         onChange={handleChange('name')}
                         error={!!errors.name}
                         helperText={errors.name}
-                        sx={{ bgcolor: '#f8f9fa' }}
+                        sx={{
+                            bgcolor: 'hsl(var(--input))',
+                            backdropFilter: 'blur(8px)',
+                            '& .MuiOutlinedInput-root': {
+                                color: 'hsl(var(--foreground))',
+                                '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                                '&.Mui-focused fieldset': { borderSide: '1px solid hsl(var(--primary))' },
+                            },
+                        }}
                     />
                 </Box>
 
                 {/* Description */}
                 <Box sx={{ mb: 3 }}>
-                    <Typography variant="body2" sx={{ mb: 0.5, color: '#1a2b4a' }}>
+                    <Typography variant="body2" sx={{ mb: 0.5, color: 'hsl(var(--foreground))' }}>
                         Description
                     </Typography>
                     <TextField
@@ -163,19 +176,32 @@ export default function AddGroupPage() {
                         onChange={handleChange('description')}
                         error={!!errors.description}
                         helperText={errors.description || `${remainingChars} characters remaining`}
-                        sx={{ bgcolor: '#f8f9fa' }}
+                        sx={{
+                            bgcolor: 'hsl(var(--input))',
+                            backdropFilter: 'blur(8px)',
+                            '& .MuiOutlinedInput-root': {
+                                color: 'hsl(var(--foreground))',
+                                '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                            },
+                            '& .MuiFormHelperText-root': {
+                                color: errors.description ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))',
+                                textAlign: 'right',
+                                mr: 0
+                            }
+                        }}
                     />
                 </Box>
 
                 {/* Price */}
                 <Box sx={{ mb: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                        <Typography variant="body2" sx={{ color: '#1a2b4a' }}>
+                        <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
                             Price
                         </Typography>
                         <Tooltip title="Set a price for selling access to this group." arrow>
                             <IconButton size="small" sx={{ ml: 0.5 }}>
-                                <InfoOutlinedIcon sx={{ fontSize: 16, color: '#ff9800' }} />
+                                <InfoOutlinedIcon sx={{ fontSize: 16, color: 'hsl(var(--warning, #ff9800))' }} />
                             </IconButton>
                         </Tooltip>
                     </Box>
@@ -187,9 +213,17 @@ export default function AddGroupPage() {
                         onChange={handleChange('price')}
                         error={!!errors.price}
                         helperText={errors.price}
-                        sx={{ bgcolor: '#f8f9fa' }}
+                        sx={{
+                            bgcolor: 'hsl(var(--input))',
+                            backdropFilter: 'blur(8px)',
+                            '& .MuiOutlinedInput-root': {
+                                color: 'hsl(var(--foreground))',
+                                '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                            },
+                        }}
                         InputProps={{
-                            endAdornment: <InputAdornment position="end">$</InputAdornment>,
+                            endAdornment: <InputAdornment position="end" sx={{ color: 'hsl(var(--muted-foreground))' }}>$</InputAdornment>,
                         }}
                         inputProps={{ min: 0, step: 0.01 }}
                     />
@@ -202,11 +236,11 @@ export default function AddGroupPage() {
                             <Checkbox
                                 checked={formData.assignGroupKey}
                                 onChange={handleChange('assignGroupKey')}
-                                sx={{ '&.Mui-checked': { color: '#1976d2' } }}
+                                sx={{ color: 'hsl(var(--border))', '&.Mui-checked': { color: 'hsl(var(--primary))' } }}
                             />
                         }
                         label={
-                            <Typography variant="body2" sx={{ color: '#1a2b4a' }}>
+                            <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
                                 Assign group key
                             </Typography>
                         }
@@ -218,7 +252,16 @@ export default function AddGroupPage() {
                             label="Group key"
                             value={formData.groupKey}
                             onChange={handleChange('groupKey')}
-                            sx={{ mt: 1, bgcolor: '#f8f9fa' }}
+                            sx={{
+                                mt: 1,
+                                bgcolor: 'hsl(var(--input))',
+                                backdropFilter: 'blur(8px)',
+                                '& .MuiOutlinedInput-root': {
+                                    color: 'hsl(var(--foreground))',
+                                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                    '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                                },
+                            }}
                         />
                     )}
                 </Box>
@@ -231,18 +274,18 @@ export default function AddGroupPage() {
                                 <Checkbox
                                     checked={formData.autoEnroll}
                                     onChange={handleChange('autoEnroll')}
-                                    sx={{ '&.Mui-checked': { color: '#1976d2' } }}
+                                    sx={{ color: 'hsl(var(--border))', '&.Mui-checked': { color: 'hsl(var(--primary))' } }}
                                 />
                             }
                             label={
-                                <Typography variant="body2" sx={{ color: '#1a2b4a' }}>
+                                <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
                                     Auto-enroll users to courses
                                 </Typography>
                             }
                         />
                         <Tooltip title="Automatically enroll group users to assigned courses." arrow>
                             <IconButton size="small">
-                                <InfoOutlinedIcon sx={{ fontSize: 16, color: '#ff9800' }} />
+                                <InfoOutlinedIcon sx={{ fontSize: 16, color: 'hsl(var(--warning, #ff9800))' }} />
                             </IconButton>
                         </Tooltip>
                     </Box>
@@ -255,10 +298,11 @@ export default function AddGroupPage() {
                         onClick={handleSubmit}
                         disabled={loading}
                         sx={{
-                            bgcolor: '#1976d2',
+                            bgcolor: 'hsl(var(--primary))',
+                            color: 'hsl(var(--primary-foreground))',
                             textTransform: 'none',
                             px: 4,
-                            '&:hover': { bgcolor: '#1565c0' },
+                            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
                         }}
                     >
                         {loading ? 'Saving...' : 'Save'}
@@ -269,9 +313,12 @@ export default function AddGroupPage() {
                         sx={{
                             textTransform: 'none',
                             px: 3,
-                            borderColor: '#ccc',
-                            color: '#1a2b4a',
-                            '&:hover': { borderColor: '#999', bgcolor: 'transparent' },
+                            borderColor: 'hsl(var(--border))',
+                            color: 'hsl(var(--foreground))',
+                            '&:hover': {
+                                borderColor: 'hsl(var(--primary))',
+                                bgcolor: 'hsl(var(--accent))'
+                            },
                         }}
                     >
                         Cancel

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 
 // GET single conference
 export async function GET(
@@ -8,9 +9,9 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'conference:read'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: conference:read' }, { status: 403 });
         }
 
         const conference = await (prisma.conference as any).findUnique({
@@ -39,9 +40,9 @@ export async function PUT(
     { params }: { params: { id: string } }
 ) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'conference:update'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: conference:update' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -111,9 +112,9 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'conference:delete'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: conference:delete' }, { status: 403 });
         }
 
         // Verify ownership

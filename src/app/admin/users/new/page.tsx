@@ -13,6 +13,16 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+    Accordion, AccordionSummary, AccordionDetails,
+    List, ListItem, ListItemText, ListItemIcon,
+    Chip, Divider, CircularProgress, Tooltip
+} from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import SecurityIcon from '@mui/icons-material/Security';
+import DomainIcon from '@mui/icons-material/Domain';
 
 // Common timezones list
 const timezones = [
@@ -58,6 +68,23 @@ const userTypes = [
     { value: 'admin', label: 'Administrator', role: 'ADMIN' },
 ];
 
+interface Role {
+    id: string;
+    name: string;
+    description: string;
+}
+
+interface Permission {
+    id: string;
+    name: string;
+    fullPermission: string;
+}
+
+interface Node {
+    id: string;
+    name: string;
+}
+
 export default function AddUserPage() {
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
@@ -68,14 +95,89 @@ export default function AddUserPage() {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [activeUserRole, setActiveUserRole] = useState<string>('');
 
-    // Fetch current user's role on mount
+    // RBAC state
+    const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+    const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([]);
+    const [availableNodes, setAvailableNodes] = useState<Node[]>([]);
+    const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+    const [grantedPermissionIds, setGrantedPermissionIds] = useState<string[]>([]);
+    const [deniedPermissionIds, setDeniedPermissionIds] = useState<string[]>([]);
+    const [previewPermissions, setPreviewPermissions] = useState<string[]>([]);
+    const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
+    // Fetch initial data
     useEffect(() => {
-        fetch('/api/me').then(res => res.json()).then(data => {
-            if (data.user) {
-                setActiveUserRole(data.user.activeRole);
+        const fetchData = async () => {
+            try {
+                const [meRes, rolesRes, nodesRes] = await Promise.all([
+                    fetch('/api/me'),
+                    fetch('/api/admin/roles'),
+                    fetch('/api/organization-nodes') // Assuming this exists or returns list
+                ]);
+
+                if (meRes.ok) {
+                    const data = await meRes.json();
+                    setActiveUserRole(data.user.activeRole);
+                }
+
+                if (rolesRes.ok) {
+                    const rolesData = await rolesRes.json();
+                    setAvailableRoles(Array.isArray(rolesData) ? rolesData : rolesData.roles || []);
+                }
+
+                if (nodesRes.ok) {
+                    const nodesData = await nodesRes.json();
+                    setAvailableNodes(Array.isArray(nodesData) ? nodesData : nodesData.nodes || []);
+                }
+            } catch (err) {
+                console.error("Failed to fetch RBAC data", err);
             }
-        });
+        };
+        fetchData();
     }, []);
+
+    // Fetch permissions when user:assign_permission is needed
+    useEffect(() => {
+        const fetchPerms = async () => {
+            const res = await fetch('/api/admin/permissions');
+            if (res.ok) {
+                const permsData = await res.json();
+                setAvailablePermissions(Array.isArray(permsData) ? permsData : permsData.permissions || []);
+            }
+        };
+        fetchPerms();
+    }, [activeUserRole]);
+
+    // Update preview whenever RBAC selections change
+    useEffect(() => {
+        const updatePreview = async () => {
+            if (selectedRoleIds.length === 0 && grantedPermissionIds.length === 0) {
+                setPreviewPermissions([]);
+                return;
+            }
+
+            setIsPreviewLoading(true);
+            try {
+                const params = new URLSearchParams();
+                if (selectedNodeId) params.append('nodeId', selectedNodeId.toString());
+                if (selectedRoleIds.length > 0) params.append('roleIds', selectedRoleIds.join(','));
+                if (grantedPermissionIds.length > 0) params.append('grantIds', grantedPermissionIds.join(','));
+                if (deniedPermissionIds.length > 0) params.append('denyIds', deniedPermissionIds.join(','));
+
+                const res = await fetch(`/api/admin/users/preview-permissions?${params.toString()}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setPreviewPermissions(data.permissions);
+                }
+            } finally {
+                setIsPreviewLoading(false);
+            }
+        };
+
+        const timer = setTimeout(updatePreview, 500);
+        return () => clearTimeout(timer);
+    }, [selectedRoleIds, selectedNodeId, grantedPermissionIds, deniedPermissionIds]);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -147,9 +249,16 @@ export default function AddUserPage() {
                 username: formData.username,
                 password: formData.password || undefined,
                 status: formData.isActive ? 'ACTIVE' : 'INACTIVE',
-                roles: [userTypes.find(t => t.value === formData.userType)?.role || 'LEARNER'],
+                // Advanced RBAC fields
+                roleIds: selectedRoleIds,
+                nodeId: selectedNodeId,
+                grantIds: grantedPermissionIds,
+                denyIds: deniedPermissionIds,
+                activeRole: activeUserRole === 'ADMIN' && selectedRoleIds.length > 0
+                    ? availableRoles.find(r => r.id === selectedRoleIds[0])?.name
+                    : userTypes.find(t => t.value === formData.userType)?.role || 'LEARNER',
+
                 excludeFromEmails: formData.excludeFromEmails,
-                // These fields will be used when the schema is updated
                 bio: formData.bio || undefined,
                 timezone: formData.timezone,
                 language: formData.language,
@@ -557,6 +666,156 @@ export default function AddUserPage() {
                             </Link>
                         </Box>
                     </Box>
+
+                    {/* Advanced RBAC Section */}
+                    <Accordion sx={{
+                        mt: 4,
+                        bgcolor: 'hsl(var(--card))',
+                        color: 'hsl(var(--foreground))',
+                        border: '1px solid hsl(var(--border))',
+                        boxShadow: 'none',
+                        '&:before': { display: 'none' }
+                    }}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'hsl(var(--primary))' }} />}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <SecurityIcon sx={{ fontSize: 20, color: 'hsl(var(--primary))' }} />
+                                <Typography fontWeight={600}>Advanced RBAC Settings</Typography>
+                            </Box>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                {/* Node Selection */}
+                                <Box>
+                                    <Typography variant="body2" sx={{ mb: 1, color: 'hsl(var(--muted-foreground))' }}>
+                                        Target Organization Node (Context)
+                                    </Typography>
+                                    <Autocomplete
+                                        options={availableNodes}
+                                        getOptionLabel={(option) => option.name}
+                                        value={availableNodes.find(n => n.id === selectedNodeId) || null}
+                                        onChange={(_, newValue) => setSelectedNodeId(newValue?.id || null)}
+                                        renderInput={(params) => (
+                                            <TextField {...params} size="small" placeholder="Global (No Node)" />
+                                        )}
+                                    />
+                                </Box>
+
+                                {/* Multiple Roles */}
+                                <Box>
+                                    <Typography variant="body2" sx={{ mb: 1, color: 'hsl(var(--muted-foreground))' }}>
+                                        Assign Roles
+                                    </Typography>
+                                    <Autocomplete
+                                        multiple
+                                        options={availableRoles}
+                                        getOptionLabel={(option) => option.name}
+                                        value={availableRoles.filter(r => selectedRoleIds.includes(r.id))}
+                                        onChange={(_, newValue) => setSelectedRoleIds(newValue.map(v => v.id))}
+                                        renderTags={(value, getTagProps) =>
+                                            value.map((option, index) => {
+                                                const { key, ...tagProps } = getTagProps({ index });
+                                                return (
+                                                    <Chip
+                                                        key={key}
+                                                        variant="outlined"
+                                                        label={option.name}
+                                                        {...tagProps}
+                                                        size="small"
+                                                    />
+                                                );
+                                            })
+                                        }
+                                        renderInput={(params) => (
+                                            <TextField {...params} size="small" placeholder="Select roles..." />
+                                        )}
+                                    />
+                                </Box>
+
+                                <Divider />
+
+                                {/* Overrides */}
+                                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                                    <Box sx={{ flex: 1, minWidth: 250 }}>
+                                        <Typography variant="body2" sx={{ mb: 1, color: 'hsl(var(--primary))', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                            <CheckCircleIcon sx={{ fontSize: 16 }} /> Grant Permissions
+                                        </Typography>
+                                        <Autocomplete
+                                            multiple
+                                            options={availablePermissions}
+                                            getOptionLabel={(option) => option.name}
+                                            value={availablePermissions.filter(p => grantedPermissionIds.includes(p.id))}
+                                            onChange={(_, newValue) => setGrantedPermissionIds(newValue.map(v => v.id))}
+                                            renderTags={(value, getTagProps) =>
+                                                value.map((option, index) => {
+                                                    const { key, ...tagProps } = getTagProps({ index });
+                                                    return (
+                                                        <Chip
+                                                            key={key}
+                                                            color="primary"
+                                                            variant="outlined"
+                                                            label={option.name}
+                                                            {...tagProps}
+                                                            size="small"
+                                                        />
+                                                    );
+                                                })
+                                            }
+                                            renderInput={(params) => (
+                                                <TextField {...params} size="small" />
+                                            )}
+                                        />
+                                    </Box>
+                                    <Box sx={{ flex: 1, minWidth: 250 }}>
+                                        <Typography variant="body2" sx={{ mb: 1, color: 'hsl(var(--destructive))', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                            <CancelIcon sx={{ fontSize: 16 }} /> Deny Permissions
+                                        </Typography>
+                                        <Autocomplete
+                                            multiple
+                                            options={availablePermissions}
+                                            getOptionLabel={(option) => option.name}
+                                            value={availablePermissions.filter(p => deniedPermissionIds.includes(p.id))}
+                                            onChange={(_, newValue) => setDeniedPermissionIds(newValue.map(v => v.id))}
+                                            renderTags={(value, getTagProps) =>
+                                                value.map((option, index) => {
+                                                    const { key, ...tagProps } = getTagProps({ index });
+                                                    return (
+                                                        <Chip
+                                                            key={key}
+                                                            color="error"
+                                                            variant="outlined"
+                                                            label={option.name}
+                                                            {...tagProps}
+                                                            size="small"
+                                                        />
+                                                    );
+                                                })
+                                            }
+                                            renderInput={(params) => (
+                                                <TextField {...params} size="small" />
+                                            )}
+                                        />
+                                    </Box>
+                                </Box>
+
+                                {/* Effective Permissions Preview */}
+                                <Box sx={{ mt: 1, p: 2, bgcolor: 'hsl(var(--muted)/0.5)', borderRadius: 1 }}>
+                                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                                        Effective Permissions Preview
+                                        {isPreviewLoading && <CircularProgress size={12} sx={{ ml: 1 }} />}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                        {previewPermissions.length > 0 ? (
+                                            previewPermissions.map(p => (
+                                                <Chip key={p} label={p} size="small" sx={{ fontSize: '0.7rem', height: 20 }} />
+                                            ))
+                                        ) : (
+                                            <Typography variant="caption" color="hsl(var(--muted-foreground))">No permissions computed</Typography>
+                                        )}
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </AccordionDetails>
+                    </Accordion>
                 </Box>
             </Box>
 

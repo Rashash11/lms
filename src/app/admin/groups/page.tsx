@@ -117,8 +117,8 @@ export default function GroupsPage() {
             {/* Stats */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={12} sm={4}>
-                    <Paper className="glass-card" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'rgba(13, 20, 20, 0.4)', border: '1px solid rgba(141, 166, 166, 0.1)' }}>
-                        <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(26, 84, 85, 0.1)', color: 'hsl(var(--primary))' }}>
+                    <Paper className="glass-card" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'hsl(var(--card) / 0.4)', border: '1px solid hsl(var(--border) / 0.1)' }}>
+                        <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'hsl(var(--primary) / 0.1)', color: 'hsl(var(--primary))' }}>
                             <GroupsIcon />
                         </Box>
                         <Box>
@@ -128,8 +128,8 @@ export default function GroupsPage() {
                     </Paper>
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                    <Paper className="glass-card" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'rgba(13, 20, 20, 0.4)', border: '1px solid rgba(141, 166, 166, 0.1)' }}>
-                        <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(76, 175, 80, 0.1)', color: '#4caf50' }}>
+                    <Paper className="glass-card" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'hsl(var(--card) / 0.4)', border: '1px solid hsl(var(--border) / 0.1)' }}>
+                        <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'hsl(var(--success) / 0.1)', color: 'hsl(var(--success))' }}>
                             <PeopleIcon />
                         </Box>
                         <Box>
@@ -139,8 +139,8 @@ export default function GroupsPage() {
                     </Paper>
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                    <Paper className="glass-card" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'rgba(13, 20, 20, 0.4)', border: '1px solid rgba(141, 166, 166, 0.1)' }}>
-                        <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(3, 169, 244, 0.1)', color: '#03a9f4' }}>
+                    <Paper className="glass-card" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'hsl(var(--card) / 0.4)', border: '1px solid hsl(var(--border) / 0.1)' }}>
+                        <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'hsl(var(--info) / 0.1)', color: 'hsl(var(--info))' }}>
                             <SchoolIcon />
                         </Box>
                         <Box>
@@ -152,7 +152,7 @@ export default function GroupsPage() {
             </Grid>
 
             {/* Search */}
-            <Paper className="glass-card" sx={{ p: 2, mb: 2, bgcolor: 'rgba(13, 20, 20, 0.4)', border: '1px solid rgba(141, 166, 166, 0.1)' }}>
+            <Paper className="glass-card" sx={{ p: 2, mb: 2, bgcolor: 'hsl(var(--card) / 0.4)', border: '1px solid hsl(var(--border) / 0.1)' }}>
                 <TextField
                     size="small"
                     placeholder="Search groups..."
@@ -165,7 +165,15 @@ export default function GroupsPage() {
                             </InputAdornment>
                         )
                     }}
-                    sx={{ width: 300 }}
+                    sx={{
+                        width: 300,
+                        '& .MuiOutlinedInput-root': {
+                            color: 'hsl(var(--foreground))',
+                            '& fieldset': { borderColor: 'hsl(var(--border) / 0.2)' },
+                            '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                            '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+                        }
+                    }}
                 />
             </Paper>
 
@@ -176,10 +184,15 @@ export default function GroupsPage() {
                         <Card
                             className="glass-card"
                             sx={{
-                                bgcolor: 'rgba(13, 20, 20, 0.4)',
-                                border: '1px solid rgba(141, 166, 166, 0.1)',
-                                transition: 'transform 0.2s',
-                                '&:hover': { transform: 'translateY(-4px)', bgcolor: 'rgba(13, 20, 20, 0.6)' }
+                                bgcolor: 'hsl(var(--card) / 0.4)',
+                                border: '1px solid hsl(var(--border) / 0.1)',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                '&:hover': {
+                                    transform: 'translateY(-4px)',
+                                    bgcolor: 'hsl(var(--card) / 0.6)',
+                                    borderColor: 'hsl(var(--primary) / 0.3)',
+                                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.4)'
+                                }
                             }}
                         >
                             <CardContent>

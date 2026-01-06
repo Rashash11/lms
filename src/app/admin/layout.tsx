@@ -33,6 +33,9 @@ import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
 import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
+import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
+import { usePermissions } from '@/hooks/usePermissions';
 
 // NCOSH Design System Unified Palette
 const SIDEBAR_BG = 'rgba(13, 20, 20, 0.4)';
@@ -48,19 +51,21 @@ const drawerWidth = 260;
 
 const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/admin' },
-    { text: 'Users', icon: <PeopleOutlineIcon />, path: '/admin/users' },
-    { text: 'Courses', icon: <MenuBookOutlinedIcon />, path: '/admin/courses' },
-    { text: 'Learning paths', icon: <RouteIcon />, path: '/admin/learning-paths' },
+    { text: 'Users', icon: <PeopleOutlineIcon />, path: '/admin/users', permission: 'user:read' },
+    { text: 'Courses', icon: <MenuBookOutlinedIcon />, path: '/admin/courses', permission: 'course:read' },
+    { text: 'Learning paths', icon: <RouteIcon />, path: '/admin/learning-paths', permission: 'learning_path:read' },
     { text: 'Course store', icon: <StorefrontOutlinedIcon />, path: '/admin/course-store', hasArrow: true, hasBadge: true },
     { text: 'Groups', icon: <GroupsOutlinedIcon />, path: '/admin/groups' },
     { text: 'Branches', icon: <AccountTreeOutlinedIcon />, path: '/admin/branches', hasBadge: true },
     { text: 'Automations', icon: <AutoFixHighOutlinedIcon />, path: '/admin/automations', hasBadge: true },
     { text: 'Notifications', icon: <NotificationsNoneOutlinedIcon />, path: '/admin/notifications' },
-    { text: 'Reports', icon: <AssessmentOutlinedIcon />, path: '/admin/reports', hasArrow: true },
-    { text: 'Skills', icon: <EmojiObjectsOutlinedIcon />, path: '/admin/skills', hasBadge: true },
-    { text: 'Assignments', icon: <AssignmentOutlinedIcon />, path: '/admin/assignments' },
+    { text: 'Reports', icon: <AssessmentOutlinedIcon />, path: '/admin/reports', hasArrow: true, permission: 'reports:read' },
+    { text: 'Skills', icon: <EmojiObjectsOutlinedIcon />, path: '/admin/skills', hasBadge: true, permission: 'skills:read' },
+    { text: 'Assignments', icon: <AssignmentOutlinedIcon />, path: '/admin/assignments', permission: 'assignment:read' },
     { text: 'Account & Settings', icon: <SettingsOutlinedIcon />, path: '/admin/settings', hasArrow: true },
     { text: 'Subscription', icon: <CreditCardOutlinedIcon />, path: '/admin/subscription' },
+    { text: 'Sessions', icon: <SecurityOutlinedIcon />, path: '/admin/security/sessions', permission: 'security:sessions:read' },
+    { text: 'Audit Log', icon: <HistoryOutlinedIcon />, path: '/admin/security/audit', permission: 'security:audit:read' },
 ];
 
 type RoleKey = 'ADMIN' | 'INSTRUCTOR' | 'SUPER_INSTRUCTOR' | 'LEARNER';
@@ -89,6 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [switching, setSwitching] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
+    const { can } = usePermissions();
 
     useEffect(() => {
         const onUnhandledRejection = (event: PromiseRejectionEvent) => {
@@ -196,6 +202,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             <List sx={{ flex: 1, pt: 0, px: 1.5 }}>
                 {menuItems.filter(item => {
+                    if (item.permission && !can(item.permission)) return false;
                     if (user?.activeRole === 'SUPER_INSTRUCTOR') {
                         if (['Account & Settings', 'Subscription', 'Automations', 'Branches'].includes(item.text)) return false;
                     }

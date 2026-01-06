@@ -30,21 +30,22 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { usePermissions } from '@/hooks/usePermissions';
 
 // NCOSH Design System Unified Palette
 const drawerWidth = 260;
 
 const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/instructor' },
-    { text: 'Courses', icon: <MenuBookOutlinedIcon />, path: '/instructor/courses' },
-    { text: 'Learning paths', icon: <RouteIcon />, path: '/instructor/learning-paths' },
+    { text: 'Courses', icon: <MenuBookOutlinedIcon />, path: '/instructor/courses', permission: 'course:read' },
+    { text: 'Learning paths', icon: <RouteIcon />, path: '/instructor/learning-paths', permission: 'learning_path:read' },
     { text: 'Groups', icon: <GroupsOutlinedIcon />, path: '/instructor/groups' },
-    { text: 'Grading Hub', icon: <GradingOutlinedIcon />, path: '/instructor/grading-hub' },
-    { text: 'Conferences', icon: <VideocamOutlinedIcon />, path: '/instructor/conferences' },
-    { text: 'Reports', icon: <AssessmentOutlinedIcon />, path: '/instructor/reports' },
-    { text: 'Assignments', icon: <AssignmentOutlinedIcon />, path: '/instructor/assignments' },
-    { text: 'Calendar', icon: <CalendarTodayOutlinedIcon />, path: '/instructor/calendar' },
-    { text: 'Skills', icon: <EmojiObjectsOutlinedIcon />, path: '/instructor/skills' },
+    { text: 'Grading Hub', icon: <GradingOutlinedIcon />, path: '/instructor/grading-hub', permission: 'submission:read' },
+    { text: 'Conferences', icon: <VideocamOutlinedIcon />, path: '/instructor/conferences', permission: 'conference:read' },
+    { text: 'Reports', icon: <AssessmentOutlinedIcon />, path: '/instructor/reports', permission: 'reports:read' },
+    { text: 'Assignments', icon: <AssignmentOutlinedIcon />, path: '/instructor/assignments', permission: 'assignment:read' },
+    { text: 'Calendar', icon: <CalendarTodayOutlinedIcon />, path: '/instructor/calendar', permission: 'calendar:read' },
+    { text: 'Skills', icon: <EmojiObjectsOutlinedIcon />, path: '/instructor/skills', permission: 'skills:read' },
 ];
 
 type RoleKey = 'ADMIN' | 'INSTRUCTOR' | 'LEARNER' | 'SUPER_INSTRUCTOR';
@@ -73,6 +74,7 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
     const [switching, setSwitching] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
+    const { can, loading: permissionsLoading } = usePermissions();
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -153,7 +155,7 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
             </Box>
 
             <List sx={{ flex: 1, pt: 0, px: 1.5 }}>
-                {menuItems.map((item) => {
+                {menuItems.filter(item => !item.permission || can(item.permission)).map((item) => {
                     const isSelected = pathname === item.path || (item.path === '/instructor' && pathname === '/instructor');
                     return (
                         <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>

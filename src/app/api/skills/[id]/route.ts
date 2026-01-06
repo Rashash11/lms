@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
+import { can } from '@/lib/permissions';
 
 // GET single skill
 export async function GET(
@@ -8,9 +9,9 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'skills:read'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: skills:read' }, { status: 403 });
         }
 
         const skill = await (prisma.skill as any).findUnique({
@@ -42,9 +43,9 @@ export async function PUT(
     { params }: { params: { id: string } }
 ) {
     try {
-        const session = await getSession();
-        if (!session || session.activeRole !== 'ADMIN' && session.activeRole !== 'SUPER_INSTRUCTOR') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'skills:update'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: skills:update' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -73,9 +74,9 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
-        const session = await getSession();
-        if (!session || session.activeRole !== 'ADMIN' && session.activeRole !== 'SUPER_INSTRUCTOR') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const session = await requireAuth();
+        if (!(await can(session, 'skills:delete'))) {
+            return NextResponse.json({ error: 'FORBIDDEN', reason: 'Missing permission: skills:delete' }, { status: 403 });
         }
 
         await (prisma.skill as any).delete({
