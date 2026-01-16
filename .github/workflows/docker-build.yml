@@ -25,7 +25,7 @@ jobs:
         run: npx prisma generate
 
       - name: Dependency Check
-        run: node scripts/check-deps.js
+        run: npm run scan:deps
 
       - name: Run Lint
         run: npm run lint

@@ -1,0 +1,185 @@
+﻿≡ƒî▒ Seeding database...
+Γ£à Created tenant: Default Portal
+Γ£à Created branch: Main Branch
+node.exe : Γ¥î Seeding error: 
+PrismaClientValidationError: 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpe 
+   cified: (Γ¥î Seeding err...lidat  
+  ionError: :String) [], RemoteExc   
+ eption
+    + FullyQualifiedErrorId : Native 
+   CommandError
+ 
+Invalid `prisma.user.upsert()` 
+invocation in
+E:\lms\prisma\seed.ts:43:37
+
+  40 
+  41 // Admin user (has all roles)
+  42 const adminPassword = await 
+bcrypt.hash('Admin123!', 12);
+ΓåÆ 43 const admin = await 
+prisma.user.upsert({
+       where: {
+         tenantId_email: {
+         ~~~~~~~~~~~~~~
+           tenantId: "4f0487fd-b468-4
+7bb-af28-cfe6085af962",
+           email: "admin@portal.com"
+         },
+     ?   id?: String,
+     ?   tenantId_id?: 
+UserTenantIdIdCompoundUniqueInput,
+     ?   AND?: UserWhereInput | 
+UserWhereInput[],
+     ?   OR?: UserWhereInput[],
+     ?   NOT?: UserWhereInput | 
+UserWhereInput[],
+     ?   tenantId?: StringFilter | 
+String,
+     ?   username?: StringFilter | 
+String,
+     ?   email?: StringFilter | 
+String,
+     ?   firstName?: StringFilter | 
+String,
+     ?   lastName?: StringFilter | 
+String,
+     ?   bio?: StringNullableFilter 
+| String | Null,
+     ?   timezone?: StringFilter | 
+String,
+     ?   language?: StringFilter | 
+String,
+     ?   userTypeId?: 
+StringNullableFilter | String | Null,
+     ?   passwordHash?: 
+StringNullableFilter | String | Null,
+     ?   avatar?: 
+StringNullableFilter | String | Null,
+     ?   status?: 
+EnumUserStatusFilter | UserStatus,
+     ?   deactivateAt?: 
+DateTimeNullableFilter | DateTime | 
+Null,
+     ?   role?: EnumRoleKeyFilter | 
+RoleKey,
+     ?   isActive?: BoolFilter | 
+Boolean,
+     ?   isVerified?: BoolFilter | 
+Boolean,
+     ?   lastLoginAt?: 
+DateTimeNullableFilter | DateTime | 
+Null,
+     ?   failedLoginAttempts?: 
+IntFilter | Int,
+     ?   lockedUntil?: 
+DateTimeNullableFilter | DateTime | 
+Null,
+     ?   excludeFromEmails?: 
+BoolFilter | Boolean,
+     ?   certificatesArchive?: 
+JsonNullableFilter,
+     ?   rbacOverrides?: 
+JsonNullableFilter,
+     ?   nodeId?: 
+StringNullableFilter | String | Null,
+     ?   tokenVersion?: IntFilter | 
+Int,
+     ?   createdAt?: DateTimeFilter 
+| DateTime,
+     ?   updatedAt?: DateTimeFilter 
+| DateTime,
+     ?   deletedAt?: 
+DateTimeNullableFilter | DateTime | 
+Null,
+     ?   node?: 
+BranchNullableRelationFilter | 
+BranchWhereInput | Null,
+     ?   tenant?: 
+TenantRelationFilter | 
+TenantWhereInput,
+     ?   instructorEvents?: 
+CalendarEventListRelationFilter,
+     ?   instructorConferences?: 
+ConferenceListRelationFilter,
+     ?   instructorGroups?: 
+GroupListRelationFilter,
+     ?   instructorLearningPaths?: 
+LearningPathListRelationFilter,
+     ?   sentRecommendations?: SkillR
+ecommendationListRelationFilter,
+     ?   receivedRecommendations?: Sk
+illRecommendationListRelationFilter,
+     ?   roles?: 
+UserRoleListRelationFilter,
+     ?   userSkills?: 
+UserSkillListRelationFilter,
+     ?   userType?: 
+UserTypeNullableRelationFilter | 
+UserTypeWhereInput | Null,
+     ?   enrollmentRequests?: 
+EnrollmentRequestListRelationFilter,
+     ?   instructorCourses?: 
+CourseInstructorListRelationFilter,
+     ?   lpEnrollments?: LearningPath
+EnrollmentListRelationFilter,
+     ?   pointsLedger?: 
+PointsLedgerListRelationFilter,
+     ?   certificateIssues?: 
+CertificateIssueListRelationFilter,
+     ?   timelineEvents?: 
+TimelineEventListRelationFilter,
+     ?   testAttempts?: 
+TestAttemptListRelationFilter,
+     ?   courseRatings?: 
+CourseRatingListRelationFilter,
+     ?   learnerCourseStates?: 
+LearnerCourseStateListRelationFilter
+       },
+       update: {
+         passwordHash: "$2a$12$Kg7VgO
+SLFB8NlDxEJkG4AOXeakABkQ81YyF/ts1mR2z
+lmC8x/P/6q"
+       },
+       create: {
+         username: "admin",
+         email: "admin@portal.com",
+         firstName: "System",
+         lastName: "Administrator",
+         passwordHash: "$2a$12$Kg7VgO
+SLFB8NlDxEJkG4AOXeakABkQ81YyF/ts1mR2z
+lmC8x/P/6q",
+         status: "ACTIVE",
+         role: "ADMIN",
+         tenantId: "4f0487fd-b468-47b
+b-af28-cfe6085af962"
+       }
+     })
+
+Unknown argument `tenantId_email`. 
+Available options are marked with ?.
+    at wn (E:\lms\node_modules\@prism
+a\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (E:\lms\
+node_modules\@prisma\client\runtime\l
+ibrary.js:121:6958)
+    at $n.handleAndLogRequestError (E
+:\lms\node_modules\@prisma\client\run
+time\library.js:121:6623)
+    at $n.request (E:\lms\node_module
+s\@prisma\client\runtime\library.js:1
+21:6307)
+    at async l (E:\lms\node_modules\@
+prisma\client\runtime\library.js:130:
+9633)
+    at async main 
+(E:\lms\prisma\seed.ts:43:19) {
+  clientVersion: '5.22.0'
+}

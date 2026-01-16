@@ -1,0 +1,38 @@
+﻿
+> zedny-lms@1.0.0 learner:smoke
+> tsx scripts/learner-smoke-test.ts
+
+≡ƒÜÇ Starting Learner End-to-End Smoke Tests...
+Γ£à Login Learner 1 
+Γ£à Fetch Enrollments - 4 found
+Using course: TypeScript Mastery (e3b7fe3f-eddf-4a9c-a7cb-0f5898cbb84b)
+Γ£à Fetch Course Units - 2 units found
+Γ£à Mark Unit Complete 
+Γ£à Verify Progress Reflected - Completed: 0, 0%
+≡ƒôï Found 14 assignments accessible to learner
+Γ£ô Selected assignment (not past due): "Peer Review" (ID: f5b4d092-8a7f-460c-b416-26d578b35251)
+Γ£à Fetch Assignments - 14 found, using: Peer Review
+Γ£à Submit Assignment - Submitted to: Peer Review
+Γ£à Fetch Own Submission - Content matches
+Γ£à Set Last Unit (Resume) 
+Γ£à Get Last Unit (Resume) 
+Γ£à Privacy: Leak Check - Correctly returned 404
+
+--- Learner Smoke Test Summary ---
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé (index) Γöé test                        Γöé status Γöé detail                         Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé 0       Γöé 'Login Learner 1'           Γöé 'PASS' Γöé ''                             Γöé
+Γöé 1       Γöé 'Fetch Enrollments'         Γöé 'PASS' Γöé '4 found'                      Γöé
+Γöé 2       Γöé 'Fetch Course Units'        Γöé 'PASS' Γöé '2 units found'                Γöé
+Γöé 3       Γöé 'Mark Unit Complete'        Γöé 'PASS' Γöé ''                             Γöé
+Γöé 4       Γöé 'Verify Progress Reflected' Γöé 'PASS' Γöé 'Completed: 0, 0%'             Γöé
+Γöé 5       Γöé 'Fetch Assignments'         Γöé 'PASS' Γöé '14 found, using: Peer Review' Γöé
+Γöé 6       Γöé 'Submit Assignment'         Γöé 'PASS' Γöé 'Submitted to: Peer Review'    Γöé
+Γöé 7       Γöé 'Fetch Own Submission'      Γöé 'PASS' Γöé 'Content matches'              Γöé
+Γöé 8       Γöé 'Set Last Unit (Resume)'    Γöé 'PASS' Γöé ''                             Γöé
+Γöé 9       Γöé 'Get Last Unit (Resume)'    Γöé 'PASS' Γöé ''                             Γöé
+Γöé 10      Γöé 'Privacy: Leak Check'       Γöé 'PASS' Γöé 'Correctly returned 404'       Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+Γ£à ALL LEARNER TESTS PASSED!

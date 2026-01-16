@@ -1,0 +1,683 @@
+﻿Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+node.exe : 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpe 
+   cified: (:String) [], RemoteExce  
+  ption
+    + FullyQualifiedErrorId : Native 
+   CommandError
+ 
+Error: Prisma schema validation - 
+(validate wasm)
+Error code: P1012
+[1;91merror[0m: [1mError 
+validating field `user` in model 
+`EnrollmentRequest`: The relation 
+field `user` on model 
+`EnrollmentRequest` is missing an 
+opposite relation field on the model 
+`User`. Either run `prisma format` 
+or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:309[0m
+[1;94m   | [0m
+[1;94m308 | [0m  course     Course 
+   @relation(fields: [tenantId, 
+courseId], references: [tenantId, 
+id], onDelete: Cascade)
+[1;94m309 | [0m  [1;91muser       
+User      @relation(fields: 
+[tenantId, userId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m310 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `user` in model 
+`CourseInstructor`: The relation 
+field `user` on model 
+`CourseInstructor` is missing an 
+opposite relation field on the model 
+`User`. Either run `prisma format` 
+or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:322[0m
+[1;94m   | [0m
+[1;94m321 | [0m  course   Course 
+@relation(fields: [tenantId, 
+courseId], references: [tenantId, 
+id], onDelete: Cascade)
+[1;94m322 | [0m  [1;91muser     
+User   @relation(fields: [tenantId, 
+userId], references: [tenantId, id], 
+onDelete: Cascade)
+[0m
+[1;94m323 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `tenant` in model 
+`Category`: The relation field 
+`tenant` on model `Category` is 
+missing an opposite relation field 
+on the model `Tenant`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:411[0m
+[1;94m   | [0m
+[1;94m410 | [0m  createdAt   
+DateTime @default(now())
+[1;94m411 | [0m  [1;91mtenant     
+ Tenant   @relation(fields: 
+[tenantId], references: [id], 
+onDelete: Cascade)
+[0m
+[1;94m412 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `course` in model 
+`GroupCourse`: The relation field 
+`course` on model `GroupCourse` is 
+missing an opposite relation field 
+on the model `Course`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:461[0m
+[1;94m   | [0m
+[1;94m460 | [0m  group    Group    
+@relation(fields: [tenantId, 
+groupId], references: [tenantId, 
+id], onDelete: Cascade)
+[1;94m461 | [0m  [1;91mcourse   
+Course   @relation(fields: 
+[tenantId, courseId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m462 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `tenant` in model 
+`LearningPath`: The relation field 
+`tenant` on model `LearningPath` is 
+missing an opposite relation field 
+on the model `Tenant`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:492[0m
+[1;94m   | [0m
+[1;94m491 | [0m  instructorId      
+     String?
+[1;94m492 | [0m  [1;91mtenant     
+            Tenant                
+@relation(fields: [tenantId], 
+references: [id], onDelete: Cascade)
+[0m
+[1;94m493 | [0m  courses           
+     LearningPathCourse[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `tenant` in model 
+`LearningPathEnrollment`: The 
+relation field `tenant` on model 
+`LearningPathEnrollment` is missing 
+an opposite relation field on the 
+model `Tenant`. Either run `prisma 
+format` or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:553[0m
+[1;94m   | [0m
+[1;94m552 | [0m  updatedAt   
+DateTime  @updatedAt
+[1;94m553 | [0m  [1;91mtenant     
+ Tenant    @relation(fields: 
+[tenantId], references: [id], 
+onDelete: Cascade)
+[0m
+[1;94m554 | [0m  user        User  
+    @relation(fields: [tenantId, 
+userId], references: [tenantId, id], 
+onDelete: Cascade)
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `user` in model 
+`LearningPathEnrollment`: The 
+relation field `user` on model 
+`LearningPathEnrollment` is missing 
+an opposite relation field on the 
+model `User`. Either run `prisma 
+format` or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:554[0m
+[1;94m   | [0m
+[1;94m553 | [0m  tenant      
+Tenant    @relation(fields: 
+[tenantId], references: [id], 
+onDelete: Cascade)
+[1;94m554 | [0m  [1;91muser       
+ User      @relation(fields: 
+[tenantId, userId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m555 | [0m  path        
+LearningPath @relation(fields: 
+[tenantId, pathId], references: 
+[tenantId, id], onDelete: Cascade)
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `course` in model 
+`Prerequisite`: The relation field 
+`course` on model `Prerequisite` is 
+missing an opposite relation field 
+on the model `Course`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:570[0m
+[1;94m   | [0m
+[1;94m569 | [0m  requiredLevel    
+Int?
+[1;94m570 | [0m  [1;91mcourse     
+      Course 
+@relation("CoursePrerequisites", 
+fields: [tenantId, courseId], 
+references: [tenantId, id], 
+onDelete: Cascade)
+[0m
+[1;94m571 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `tenant` in model 
+`Skill`: The relation field `tenant` 
+on model `Skill` is missing an 
+opposite relation field on the model 
+`Tenant`. Either run `prisma format` 
+or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:594[0m
+[1;94m   | [0m
+[1;94m593 | [0m  userSkills        
+   UserSkill[]
+[1;94m594 | [0m  [1;91mtenant     
+          Tenant                
+@relation(fields: [tenantId], 
+references: [id], onDelete: Cascade)
+[0m
+[1;94m595 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `tenant` in model 
+`JobRole`: The relation field 
+`tenant` on model `JobRole` is 
+missing an opposite relation field 
+on the model `Tenant`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:669[0m
+[1;94m   | [0m
+[1;94m668 | [0m  skills      
+RoleSkill[]
+[1;94m669 | [0m  [1;91mtenant     
+ Tenant      @relation(fields: 
+[tenantId], references: [id], 
+onDelete: Cascade)
+[0m
+[1;94m670 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `conference` in 
+model `ConferenceParticipant`: The 
+relation field `conference` on model 
+`ConferenceParticipant` is missing 
+an opposite relation field on the 
+model `Conference`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:764[0m
+[1;94m   | [0m
+[1;94m763 | [0m  notified     
+Boolean @default(false)
+[1;94m764 | [0m  [1;91mconference 
+  Conference @relation(fields: 
+[tenantId, conferenceId], 
+references: [tenantId, id], 
+onDelete: Cascade)
+[0m
+[1;94m765 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `tenant` in model 
+`GamificationSettings`: The relation 
+field `tenant` on model 
+`GamificationSettings` is missing an 
+opposite relation field on the model 
+`Tenant`. Either run `prisma format` 
+or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:818[0m
+[1;94m   | [0m
+[1;94m817 | [0m  maxLevel          
+ Int     @default(20)
+[1;94m818 | [0m  [1;91mtenant     
+        Tenant  @relation(fields: 
+[tenantId], references: [id], 
+onDelete: Cascade)
+[0m
+[1;94m819 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `user` in model 
+`PointsLedger`: The relation field 
+`user` on model `PointsLedger` is 
+missing an opposite relation field 
+on the model `User`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:831[0m
+[1;94m   | [0m
+[1;94m830 | [0m  createdAt 
+DateTime @default(now())
+[1;94m831 | [0m  [1;91muser      
+User     @relation(fields: 
+[tenantId, userId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m832 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `tenant` in model 
+`Badge`: The relation field `tenant` 
+on model `Badge` is missing an 
+opposite relation field on the model 
+`Tenant`. Either run `prisma format` 
+or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:846[0m
+[1;94m   | [0m
+[1;94m845 | [0m  createdAt   
+DateTime @default(now())
+[1;94m846 | [0m  [1;91mtenant     
+ Tenant   @relation(fields: 
+[tenantId], references: [id], 
+onDelete: Cascade)
+[0m
+[1;94m847 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `tenant` in model 
+`Reward`: The relation field 
+`tenant` on model `Reward` is 
+missing an opposite relation field 
+on the model `Tenant`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:873[0m
+[1;94m   | [0m
+[1;94m872 | [0m  active          
+Boolean @default(true)
+[1;94m873 | [0m  [1;91mtenant     
+     Tenant   @relation(fields: 
+[tenantId], references: [id], 
+onDelete: Cascade)
+[0m
+[1;94m874 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `tenant` in model 
+`Notification`: The relation field 
+`tenant` on model `Notification` is 
+missing an opposite relation field 
+on the model `Tenant`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:898[0m
+[1;94m   | [0m
+[1;94m897 | [0m  queue           
+NotificationQueue[]
+[1;94m898 | [0m  [1;91mtenant     
+     Tenant                
+@relation(fields: [tenantId], 
+references: [id], onDelete: Cascade)
+[0m
+[1;94m899 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `tenant` in model 
+`CertificateTemplate`: The relation 
+field `tenant` on model 
+`CertificateTemplate` is missing an 
+opposite relation field on the model 
+`Tenant`. Either run `prisma format` 
+or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:981[0m
+[1;94m   | [0m
+[1;94m980 | [0m  updatedAt 
+DateTime @updatedAt
+[1;94m981 | [0m  [1;91mtenant    
+Tenant   @relation(fields: 
+[tenantId], references: [id], 
+onDelete: Cascade)
+[0m
+[1;94m982 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `user` in model 
+`CertificateIssue`: The relation 
+field `user` on model 
+`CertificateIssue` is missing an 
+opposite relation field on the model 
+`User`. Either run `prisma format` 
+or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:998[0m
+[1;94m   | [0m
+[1;94m997 | [0m  linkedInShared 
+Boolean   @default(false)
+[1;94m998 | [0m  [1;91muser       
+    User      @relation(fields: 
+[tenantId, userId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m999 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `course` in model 
+`AcquiredLibraryCourse`: The 
+relation field `course` on model 
+`AcquiredLibraryCourse` is missing 
+an opposite relation field on the 
+model `Course`. Either run `prisma 
+format` or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1056[0m
+[1;94m   | [0m
+[1;94m1055 | [0m  acquiredAt       
+ DateTime @default(now())
+[1;94m1056 | [0m  [1;91mcourse    
+        Course   @relation(fields: 
+[tenantId, localCourseId], 
+references: [tenantId, id], 
+onDelete: Cascade)
+[0m
+[1;94m1057 | [0m  libraryCourse    
+ TalentLibraryCourse 
+@relation(fields: [libraryCourseId], 
+references: [id], onDelete: Cascade)
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `user` in model 
+`TimelineEvent`: The relation field 
+`user` on model `TimelineEvent` is 
+missing an opposite relation field 
+on the model `User`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1139[0m
+[1;94m   | [0m
+[1;94m1138 | [0m  timestamp 
+DateTime @default(now())
+[1;94m1139 | [0m  [1;91muser      
+User?    @relation(fields: 
+[tenantId, userId], references: 
+[tenantId, id])
+[0m
+[1;94m1140 | [0m  course    
+Course?  @relation(fields: 
+[tenantId, courseId], references: 
+[tenantId, id])
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `course` in model 
+`TimelineEvent`: The relation field 
+`course` on model `TimelineEvent` is 
+missing an opposite relation field 
+on the model `Course`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1140[0m
+[1;94m   | [0m
+[1;94m1139 | [0m  user      User?  
+  @relation(fields: [tenantId, 
+userId], references: [tenantId, id])
+[1;94m1140 | [0m  [1;91mcourse    
+Course?  @relation(fields: 
+[tenantId, courseId], references: 
+[tenantId, id])
+[0m
+[1;94m1141 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `file` in model 
+`FileVisibility`: The relation field 
+`file` on model `FileVisibility` is 
+missing an opposite relation field 
+on the model `File`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1384[0m
+[1;94m   | [0m
+[1;94m1383 | [0m  canView Boolean 
+@default(true)
+[1;94m1384 | [0m  [1;91mfile    
+File    @relation(fields: [tenantId, 
+fileId], references: [tenantId, id], 
+onDelete: Cascade)
+[0m
+[1;94m1385 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `course` in model 
+`AssignmentSubmission`: The relation 
+field `course` on model 
+`AssignmentSubmission` is missing an 
+opposite relation field on the model 
+`Course`. Either run `prisma format` 
+or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1408[0m
+[1;94m   | [0m
+[1;94m1407 | [0m  file             
+File?     @relation(fields: 
+[tenantId, fileId], references: 
+[tenantId, id])
+[1;94m1408 | [0m  [1;91mcourse    
+       Course    @relation(fields: 
+[tenantId, courseId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m1409 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `unit` in model 
+`Test`: The relation field `unit` on 
+model `Test` is missing an opposite 
+relation field on the model 
+`CourseUnit`. Either run `prisma 
+format` or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1460[0m
+[1;94m   | [0m
+[1;94m1459 | [0m  updatedAt       
+DateTime @updatedAt
+[1;94m1460 | [0m  [1;91munit      
+      CourseUnit @relation(fields: 
+[tenantId, unitId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m1461 | [0m  attempts        
+TestAttempt[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `course` in model 
+`QuestionPool`: The relation field 
+`course` on model `QuestionPool` is 
+missing an opposite relation field 
+on the model `Course`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1496[0m
+[1;94m   | [0m
+[1;94m1495 | [0m  createdAt    
+DateTime @default(now())
+[1;94m1496 | [0m  [1;91mcourse    
+   Course?  @relation(fields: 
+[tenantId, courseId], references: 
+[tenantId, id])
+[0m
+[1;94m1497 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `question` in model 
+`FreeTextKeyword`: The relation 
+field `question` on model 
+`FreeTextKeyword` is missing an 
+opposite relation field on the model 
+`Question`. Either run `prisma 
+format` or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1509[0m
+[1;94m   | [0m
+[1;94m1508 | [0m  isRequired     
+Boolean @default(false)
+[1;94m1509 | [0m  [1;91mquestion  
+     Question @relation(fields: 
+[tenantId, questionId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m1510 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `user` in model 
+`TestAttempt`: The relation field 
+`user` on model `TestAttempt` is 
+missing an opposite relation field 
+on the model `User`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1528[0m
+[1;94m   | [0m
+[1;94m1527 | [0m  test        Test 
+     @relation(fields: [tenantId, 
+testId], references: [tenantId, id], 
+onDelete: Cascade)
+[1;94m1528 | [0m  [1;91muser      
+  User      @relation(fields: 
+[tenantId, userId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m1529 | [0m  course      
+Course    @relation(fields: 
+[tenantId, courseId], references: 
+[tenantId, id], onDelete: Cascade)
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `course` in model 
+`TestAttempt`: The relation field 
+`course` on model `TestAttempt` is 
+missing an opposite relation field 
+on the model `Course`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1529[0m
+[1;94m   | [0m
+[1;94m1528 | [0m  user        User 
+     @relation(fields: [tenantId, 
+userId], references: [tenantId, id], 
+onDelete: Cascade)
+[1;94m1529 | [0m  [1;91mcourse    
+  Course    @relation(fields: 
+[tenantId, courseId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m1530 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `course` in model 
+`CourseRating`: The relation field 
+`course` on model `CourseRating` is 
+missing an opposite relation field 
+on the model `Course`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1553[0m
+[1;94m   | [0m
+[1;94m1552 | [0m  updatedAt 
+DateTime @updatedAt
+[1;94m1553 | [0m  [1;91mcourse    
+Course   @relation(fields: 
+[tenantId, courseId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m1554 | [0m  user      User   
+  @relation(fields: [tenantId, 
+userId], references: [tenantId, id], 
+onDelete: Cascade)
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `user` in model 
+`CourseRating`: The relation field 
+`user` on model `CourseRating` is 
+missing an opposite relation field 
+on the model `User`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1554[0m
+[1;94m   | [0m
+[1;94m1553 | [0m  course    Course 
+  @relation(fields: [tenantId, 
+courseId], references: [tenantId, 
+id], onDelete: Cascade)
+[1;94m1554 | [0m  [1;91muser      
+User     @relation(fields: 
+[tenantId, userId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m1555 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `enrollment` in 
+model `EnrollmentExtension`: The 
+relation field `enrollment` on model 
+`EnrollmentExtension` is missing an 
+opposite relation field on the model 
+`Enrollment`. Either run `prisma 
+format` or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1571[0m
+[1;94m   | [0m
+[1;94m1570 | [0m  extendedAt       
+ DateTime @default(now())
+[1;94m1571 | [0m  
+[1;91menrollment        Enrollment 
+@relation(fields: [tenantId, 
+enrollmentId], references: 
+[tenantId, id], onDelete: Cascade)
+[0m
+[1;94m1572 | [0m
+[1;94m   | [0m
+
+Validation Error Count: 31
+[Context: validate]
+
+Prisma CLI Version : 5.22.0

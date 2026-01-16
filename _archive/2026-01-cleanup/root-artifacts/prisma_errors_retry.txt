@@ -1,0 +1,507 @@
+﻿Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+node.exe : 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpe 
+   cified: (:String) [], RemoteExce  
+  ption
+    + FullyQualifiedErrorId : Native 
+   CommandError
+ 
+Error: Prisma schema validation - 
+(validate wasm)
+Error code: P1012
+[1;91merror[0m: [1mError 
+validating field `homepages` in 
+model `Tenant`: The relation field 
+`homepages` on model `Tenant` is 
+missing an opposite relation field 
+on the model `Homepage`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:35[0m
+[1;94m   | [0m
+[1;94m34 | [0m  
+certificateTemplates 
+CertificateTemplate[]
+[1;94m35 | [0m  [1;91mhomepages   
+  Homepage[]
+[0m
+[1;94m36 | [0m  integrations  
+Integration[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `integrations` in 
+model `Tenant`: The relation field 
+`integrations` on model `Tenant` is 
+missing an opposite relation field 
+on the model `Integration`. Either 
+run `prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:36[0m
+[1;94m   | [0m
+[1;94m35 | [0m  homepages     
+Homepage[]
+[1;94m36 | [0m  
+[1;91mintegrations  Integration[]
+[0m
+[1;94m37 | [0m  apiKeys       
+APIKey[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `apiKeys` in model 
+`Tenant`: The relation field 
+`apiKeys` on model `Tenant` is 
+missing an opposite relation field 
+on the model `APIKey`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:37[0m
+[1;94m   | [0m
+[1;94m36 | [0m  integrations  
+Integration[]
+[1;94m37 | [0m  [1;91mapiKeys     
+  APIKey[]
+[0m
+[1;94m38 | [0m  ssoConfigs    
+SSOConfig[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `ssoConfigs` in 
+model `Tenant`: The relation field 
+`ssoConfigs` on model `Tenant` is 
+missing an opposite relation field 
+on the model `SSOConfig`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:38[0m
+[1;94m   | [0m
+[1;94m37 | [0m  apiKeys       
+APIKey[]
+[1;94m38 | [0m  [1;91mssoConfigs  
+  SSOConfig[]
+[0m
+[1;94m39 | [0m  
+impersonationSessions 
+ImpersonationSession[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field 
+`impersonationSessions` in model 
+`Tenant`: The relation field 
+`impersonationSessions` on model 
+`Tenant` is missing an opposite 
+relation field on the model 
+`ImpersonationSession`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:39[0m
+[1;94m   | [0m
+[1;94m38 | [0m  ssoConfigs    
+SSOConfig[]
+[1;94m39 | [0m  
+[1;91mimpersonationSessions 
+ImpersonationSession[]
+[0m
+[1;94m40 | [0m  importJobs    
+ImportJob[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `importJobs` in 
+model `Tenant`: The relation field 
+`importJobs` on model `Tenant` is 
+missing an opposite relation field 
+on the model `ImportJob`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:40[0m
+[1;94m   | [0m
+[1;94m39 | [0m  
+impersonationSessions 
+ImpersonationSession[]
+[1;94m40 | [0m  [1;91mimportJobs  
+  ImportJob[]
+[0m
+[1;94m41 | [0m  importResults 
+ImportResult[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `importResults` in 
+model `Tenant`: The relation field 
+`importResults` on model `Tenant` is 
+missing an opposite relation field 
+on the model `ImportResult`. Either 
+run `prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:41[0m
+[1;94m   | [0m
+[1;94m40 | [0m  importJobs    
+ImportJob[]
+[1;94m41 | [0m  
+[1;91mimportResults ImportResult[]
+[0m
+[1;94m42 | [0m  uploadPolicies 
+UploadPolicy[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `uploadPolicies` in 
+model `Tenant`: The relation field 
+`uploadPolicies` on model `Tenant` 
+is missing an opposite relation 
+field on the model `UploadPolicy`. 
+Either run `prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:42[0m
+[1;94m   | [0m
+[1;94m41 | [0m  importResults 
+ImportResult[]
+[1;94m42 | [0m  
+[1;91muploadPolicies UploadPolicy[]
+[0m
+[1;94m43 | [0m  messageThreads 
+MessageThread[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `messageThreads` in 
+model `Tenant`: The relation field 
+`messageThreads` on model `Tenant` 
+is missing an opposite relation 
+field on the model `MessageThread`. 
+Either run `prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:43[0m
+[1;94m   | [0m
+[1;94m42 | [0m  uploadPolicies 
+UploadPolicy[]
+[1;94m43 | [0m  
+[1;91mmessageThreads MessageThread[]
+[0m
+[1;94m44 | [0m  messages       
+Message[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `messages` in model 
+`Tenant`: The relation field 
+`messages` on model `Tenant` is 
+missing an opposite relation field 
+on the model `Message`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:44[0m
+[1;94m   | [0m
+[1;94m43 | [0m  messageThreads 
+MessageThread[]
+[1;94m44 | [0m  [1;91mmessages    
+   Message[]
+[0m
+[1;94m45 | [0m  messageRecipients 
+MessageRecipient[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `messageRecipients` 
+in model `Tenant`: The relation 
+field `messageRecipients` on model 
+`Tenant` is missing an opposite 
+relation field on the model 
+`MessageRecipient`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:45[0m
+[1;94m   | [0m
+[1;94m44 | [0m  messages       
+Message[]
+[1;94m45 | [0m  
+[1;91mmessageRecipients 
+MessageRecipient[]
+[0m
+[1;94m46 | [0m  
+messagingPermissions 
+MessagingPermissions[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field 
+`messagingPermissions` in model 
+`Tenant`: The relation field 
+`messagingPermissions` on model 
+`Tenant` is missing an opposite 
+relation field on the model 
+`MessagingPermissions`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:46[0m
+[1;94m   | [0m
+[1;94m45 | [0m  messageRecipients 
+MessageRecipient[]
+[1;94m46 | [0m  
+[1;91mmessagingPermissions 
+MessagingPermissions[]
+[0m
+[1;94m47 | [0m  files          
+File[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `files` in model 
+`Tenant`: The relation field `files` 
+on model `Tenant` is missing an 
+opposite relation field on the model 
+`File`. Either run `prisma format` 
+or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:47[0m
+[1;94m   | [0m
+[1;94m46 | [0m  
+messagingPermissions 
+MessagingPermissions[]
+[1;94m47 | [0m  [1;91mfiles       
+   File[]
+[0m
+[1;94m48 | [0m  fileVisibilities 
+FileVisibility[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `fileVisibilities` 
+in model `Tenant`: The relation 
+field `fileVisibilities` on model 
+`Tenant` is missing an opposite 
+relation field on the model 
+`FileVisibility`. Either run `prisma 
+format` or add it manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:48[0m
+[1;94m   | [0m
+[1;94m47 | [0m  files          
+File[]
+[1;94m48 | [0m  
+[1;91mfileVisibilities 
+FileVisibility[]
+[0m
+[1;94m49 | [0m  
+assignmentSubmissions 
+AssignmentSubmission[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field 
+`assignmentSubmissions` in model 
+`Tenant`: The relation field 
+`assignmentSubmissions` on model 
+`Tenant` is missing an opposite 
+relation field on the model 
+`AssignmentSubmission`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:49[0m
+[1;94m   | [0m
+[1;94m48 | [0m  fileVisibilities 
+FileVisibility[]
+[1;94m49 | [0m  
+[1;91massignmentSubmissions 
+AssignmentSubmission[]
+[0m
+[1;94m50 | [0m  iltSessions    
+ILTSession[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `iltSessions` in 
+model `Tenant`: The relation field 
+`iltSessions` on model `Tenant` is 
+missing an opposite relation field 
+on the model `ILTSession`. Either 
+run `prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:50[0m
+[1;94m   | [0m
+[1;94m49 | [0m  
+assignmentSubmissions 
+AssignmentSubmission[]
+[1;94m50 | [0m  [1;91miltSessions 
+   ILTSession[]
+[0m
+[1;94m51 | [0m  iltAttendance  
+ILTAttendance[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `iltAttendance` in 
+model `Tenant`: The relation field 
+`iltAttendance` on model `Tenant` is 
+missing an opposite relation field 
+on the model `ILTAttendance`. Either 
+run `prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:51[0m
+[1;94m   | [0m
+[1;94m50 | [0m  iltSessions    
+ILTSession[]
+[1;94m51 | [0m  
+[1;91miltAttendance  ILTAttendance[]
+[0m
+[1;94m52 | [0m  testAttempts   
+TestAttempt[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `testAttempts` in 
+model `Tenant`: The relation field 
+`testAttempts` on model `Tenant` is 
+missing an opposite relation field 
+on the model `TestAttempt`. Either 
+run `prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:52[0m
+[1;94m   | [0m
+[1;94m51 | [0m  iltAttendance  
+ILTAttendance[]
+[1;94m52 | [0m  
+[1;91mtestAttempts   TestAttempt[]
+[0m
+[1;94m53 | [0m  courseRatings  
+CourseRating[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `courseRatings` in 
+model `Tenant`: The relation field 
+`courseRatings` on model `Tenant` is 
+missing an opposite relation field 
+on the model `CourseRating`. Either 
+run `prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:53[0m
+[1;94m   | [0m
+[1;94m52 | [0m  testAttempts   
+TestAttempt[]
+[1;94m53 | [0m  
+[1;91mcourseRatings  CourseRating[]
+[0m
+[1;94m54 | [0m  
+enrollmentExtensions 
+EnrollmentExtension[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field 
+`enrollmentExtensions` in model 
+`Tenant`: The relation field 
+`enrollmentExtensions` on model 
+`Tenant` is missing an opposite 
+relation field on the model 
+`EnrollmentExtension`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:54[0m
+[1;94m   | [0m
+[1;94m53 | [0m  courseRatings  
+CourseRating[]
+[1;94m54 | [0m  
+[1;91menrollmentExtensions 
+EnrollmentExtension[]
+[0m
+[1;94m55 | [0m  
+learnerCourseStates 
+LearnerCourseState[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field 
+`learnerCourseStates` in model 
+`Tenant`: The relation field 
+`learnerCourseStates` on model 
+`Tenant` is missing an opposite 
+relation field on the model 
+`LearnerCourseState`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:55[0m
+[1;94m   | [0m
+[1;94m54 | [0m  
+enrollmentExtensions 
+EnrollmentExtension[]
+[1;94m55 | [0m  
+[1;91mlearnerCourseStates 
+LearnerCourseState[]
+[0m
+[1;94m56 | [0m  automations    
+Automation[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `automations` in 
+model `Tenant`: The relation field 
+`automations` on model `Tenant` is 
+missing an opposite relation field 
+on the model `Automation`. Either 
+run `prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:56[0m
+[1;94m   | [0m
+[1;94m55 | [0m  
+learnerCourseStates 
+LearnerCourseState[]
+[1;94m56 | [0m  [1;91mautomations 
+   Automation[]
+[0m
+[1;94m57 | [0m  automationLogs 
+AutomationLog[]
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `automationLogs` in 
+model `Tenant`: The relation field 
+`automationLogs` on model `Tenant` 
+is missing an opposite relation 
+field on the model `AutomationLog`. 
+Either run `prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:57[0m
+[1;94m   | [0m
+[1;94m56 | [0m  automations    
+Automation[]
+[1;94m57 | [0m  
+[1;91mautomationLogs AutomationLog[]
+[0m
+[1;94m58 | [0m
+[1;94m   | [0m
+[1;91merror[0m: [1mError 
+validating field `file` in model 
+`FileVisibility`: The relation field 
+`file` on model `FileVisibility` is 
+missing an opposite relation field 
+on the model `File`. Either run 
+`prisma format` or add it 
+manually.[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:1438[0m
+[1;94m   | [0m
+[1;94m1437 | [0m  canView Boolean 
+@default(true)
+[1;94m1438 | [0m  [1;91mfile    
+File    @relation(fields: [tenantId, 
+fileId], references: [tenantId, id], 
+onDelete: Cascade)
+[0m
+[1;94m1439 | [0m
+[1;94m   | [0m
+
+Validation Error Count: 24
+[Context: validate]
+
+Prisma CLI Version : 5.22.0

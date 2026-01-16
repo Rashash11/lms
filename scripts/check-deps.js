@@ -1,74 +1,111 @@
 const fs = require('fs');
 const path = require('path');
+const Module = require('module');
 
-const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-const dependencies = new Set([
+const ROOT = process.cwd();
+const packageJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+
+const declared = new Set([
     ...Object.keys(packageJson.dependencies || {}),
     ...Object.keys(packageJson.devDependencies || {}),
-    'react', 'react-dom', 'next', 'prisma', '@prisma/client', // common built-ins or already checked
-    // Node.js built-ins
-    'fs', 'path', 'crypto', 'os', 'http', 'https', 'stream', 'util', 'events', 'zlib', 'url', 'querystring'
 ]);
 
-// Add common sub-paths and built-ins that use slashes
-dependencies.add('fs/promises');
-dependencies.add('stream/promises');
-dependencies.add('util/types');
+const builtins = new Set(Module.builtinModules);
+for (const b of Module.builtinModules) {
+    if (b.startsWith('node:')) builtins.add(b.slice('node:'.length));
+}
 
-// Add Next.js internals that are common
-dependencies.add('next/server');
-dependencies.add('next/headers');
-dependencies.add('next/navigation');
-dependencies.add('next/cache');
+const INTERNAL_PREFIXES = ['@/', '@modules/', '@shared/'];
 
 const failures = [];
 
+function isInternalImport(spec) {
+    return INTERNAL_PREFIXES.some((p) => spec.startsWith(p));
+}
+
+function isRelative(spec) {
+    return spec.startsWith('.') || spec.startsWith('/');
+}
+
+function basePackageName(spec) {
+    if (spec.startsWith('node:')) return 'node';
+    const parts = spec.split('/');
+    if (spec.startsWith('@')) return parts.length >= 2 ? `${parts[0]}/${parts[1]}` : spec;
+    return parts[0];
+}
+
+function recordFailure(filePath, fullImport) {
+    const pkg = basePackageName(fullImport);
+    if (!pkg) return;
+    if (isRelative(fullImport) || isInternalImport(fullImport)) return;
+    if (builtins.has(pkg) || builtins.has(fullImport) || pkg === 'node') return;
+    if (declared.has(pkg)) return;
+    failures.push({ file: filePath, package: pkg, fullImport });
+}
+
 function checkFile(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
-    const importRegex = /from ['"]([^@.][^'"]*)['"]/g;
-    let match;
 
-    while ((match = importRegex.exec(content)) !== null) {
-        const importPath = match[1];
-        // Get the base package name (e.g., @mui/material -> @mui/material, lodash/clone -> lodash)
-        const parts = importPath.split('/');
-        const packageName = importPath.startsWith('@') ? `${parts[0]}/${parts[1]}` : parts[0];
+    const patterns = [
+        /^\s*import\s+.+?\sfrom\s+['"]([^'"]+)['"]/gm,
+        /^\s*import\s+['"]([^'"]+)['"]/gm,
+        /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+        /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+    ];
 
-        if (!dependencies.has(packageName) && !packageName.startsWith('@/')) {
-            failures.push({
-                file: filePath,
-                package: packageName,
-                fullImport: importPath
-            });
+    for (const re of patterns) {
+        let match;
+        while ((match = re.exec(content)) !== null) {
+            recordFailure(filePath, match[1]);
         }
     }
 }
 
 function walk(dir) {
-    const files = fs.readdirSync(dir);
-    for (const file of files) {
-        const fullPath = path.join(dir, file);
-        if (fs.statSync(fullPath).isDirectory()) {
-            if (file !== 'node_modules' && file !== '.next') {
-                walk(fullPath);
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            if (
+                entry.name === 'node_modules' ||
+                entry.name === '.next' ||
+                entry.name === 'dist' ||
+                entry.name === 'build' ||
+                entry.name === '_archive' ||
+                entry.name === '.trae' ||
+                entry.name === '.gemini' ||
+                entry.name === '.agent' ||
+                (fullPath.includes(path.join('tools', 'scripts')) && entry.name === 'fix')
+            ) {
+                continue;
             }
-        } else if (/\.(ts|tsx|js|jsx)$/.test(file)) {
-            checkFile(fullPath);
+            walk(fullPath);
+            continue;
         }
+        if (!/\.(ts|tsx|js|jsx|mjs|cjs)$/.test(entry.name)) continue;
+        checkFile(fullPath);
     }
 }
 
 console.log('--- Checking for undeclared dependencies ---');
-walk('src');
+
+const targets = [
+    path.join(ROOT, 'apps', 'web', 'src'),
+    path.join(ROOT, 'scripts'),
+    path.join(ROOT, 'tools', 'scripts'),
+    path.join(ROOT, 'tests'),
+];
+
+for (const t of targets) {
+    if (fs.existsSync(t)) walk(t);
+}
 
 if (failures.length > 0) {
     console.error('\n❌ Found imports from packages not listed in package.json:\n');
-    failures.forEach(f => {
+    for (const f of failures) {
         console.error(`- ${f.file}: "${f.fullImport}" (Package: ${f.package})`);
-    });
-    console.log('\nTip: Run "npm install <package-name>" to fix these.');
+    }
     process.exit(1);
-} else {
-    console.log('\n✅ All imports are declared in package.json.');
-    process.exit(0);
 }
+
+console.log('\n✅ All imports are declared in package.json.');

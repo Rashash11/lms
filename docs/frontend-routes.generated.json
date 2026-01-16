@@ -1,0 +1,800 @@
+{
+  "generatedAt": "2026-01-14T10:39:01.154Z",
+  "routes": [
+    {
+      "path": "/",
+      "filePath": "src/app/page.tsx",
+      "roleGroup": "public",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin",
+      "filePath": "src/app/admin/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/403",
+      "filePath": "src/app/admin/403/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/assignments",
+      "filePath": "src/app/admin/assignments/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/assignments/new",
+      "filePath": "src/app/admin/assignments/new/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/automations",
+      "filePath": "src/app/admin/automations/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/branches",
+      "filePath": "src/app/admin/branches/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/branches/[id]/edit",
+      "filePath": "src/app/admin/branches/[id]/edit/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/admin/branches/create",
+      "filePath": "src/app/admin/branches/create/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/course-store",
+      "filePath": "src/app/admin/course-store/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/course-store/[section]",
+      "filePath": "src/app/admin/course-store/[section]/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[section]"
+      ]
+    },
+    {
+      "path": "/admin/courses",
+      "filePath": "src/app/admin/courses/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/courses/[id]",
+      "filePath": "src/app/admin/courses/[id]/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/admin/courses/new/edit",
+      "filePath": "src/app/admin/courses/new/edit/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/discussions",
+      "filePath": "src/app/admin/discussions/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/files",
+      "filePath": "src/app/admin/files/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/gamification",
+      "filePath": "src/app/admin/gamification/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/groups",
+      "filePath": "src/app/admin/groups/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/groups/new",
+      "filePath": "src/app/admin/groups/new/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/learning-paths",
+      "filePath": "src/app/admin/learning-paths/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/learning-paths/[id]/edit",
+      "filePath": "src/app/admin/learning-paths/[id]/edit/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/admin/learning-paths/new",
+      "filePath": "src/app/admin/learning-paths/new/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/notifications",
+      "filePath": "src/app/admin/notifications/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/reports",
+      "filePath": "src/app/admin/reports/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/security/audit",
+      "filePath": "src/app/admin/security/audit/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/security/sessions",
+      "filePath": "src/app/admin/security/sessions/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/settings",
+      "filePath": "src/app/admin/settings/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/skills",
+      "filePath": "src/app/admin/skills/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/subscription",
+      "filePath": "src/app/admin/subscription/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/users",
+      "filePath": "src/app/admin/users/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/admin/users/[id]/edit",
+      "filePath": "src/app/admin/users/[id]/edit/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/admin/users/new",
+      "filePath": "src/app/admin/users/new/page.tsx",
+      "roleGroup": "admin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/candidate",
+      "filePath": "src/app/(candidate)/candidate/page.tsx",
+      "roleGroup": "candidate",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/candidate/exams",
+      "filePath": "src/app/(candidate)/candidate/exams/page.tsx",
+      "roleGroup": "candidate",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/candidate/help",
+      "filePath": "src/app/(candidate)/candidate/help/page.tsx",
+      "roleGroup": "candidate",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/candidate/history",
+      "filePath": "src/app/(candidate)/candidate/history/page.tsx",
+      "roleGroup": "candidate",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/candidate/onboarding",
+      "filePath": "src/app/(candidate)/candidate/onboarding/page.tsx",
+      "roleGroup": "candidate",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/candidate/profile",
+      "filePath": "src/app/(candidate)/candidate/profile/page.tsx",
+      "roleGroup": "candidate",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/candidates",
+      "filePath": "src/app/(dashboard)/candidates/page.tsx",
+      "roleGroup": "dashboard",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/candidates/report",
+      "filePath": "src/app/(dashboard)/candidates/report/page.tsx",
+      "roleGroup": "dashboard",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/courses",
+      "filePath": "src/app/(dashboard)/courses/page.tsx",
+      "roleGroup": "dashboard",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/courses/[id]/units/[unitId]",
+      "filePath": "src/app/courses/[id]/units/[unitId]/page.tsx",
+      "roleGroup": "dashboard",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]",
+        "[unitId]"
+      ]
+    },
+    {
+      "path": "/courses/new",
+      "filePath": "src/app/courses/new/page.tsx",
+      "roleGroup": "dashboard",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/dashboard",
+      "filePath": "src/app/(dashboard)/dashboard/page.tsx",
+      "roleGroup": "dashboard",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/dev/auth",
+      "filePath": "src/app/dev/auth/page.tsx",
+      "roleGroup": "other",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/enroll/[key]",
+      "filePath": "src/app/enroll/[key]/page.tsx",
+      "roleGroup": "other",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[key]"
+      ]
+    },
+    {
+      "path": "/forgot-password",
+      "filePath": "src/app/forgot-password/page.tsx",
+      "roleGroup": "other",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor",
+      "filePath": "src/app/(instructor)/instructor/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/assignments",
+      "filePath": "src/app/(instructor)/instructor/assignments/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/assignments/new",
+      "filePath": "src/app/(instructor)/instructor/assignments/new/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/calendar",
+      "filePath": "src/app/(instructor)/instructor/calendar/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/conferences",
+      "filePath": "src/app/(instructor)/instructor/conferences/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/courses",
+      "filePath": "src/app/(instructor)/instructor/courses/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/courses/[id]",
+      "filePath": "src/app/(instructor)/instructor/courses/[id]/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/instructor/courses/new",
+      "filePath": "src/app/(instructor)/instructor/courses/new/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/courses/new/edit",
+      "filePath": "src/app/(instructor)/instructor/courses/new/edit/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/discussions",
+      "filePath": "src/app/(instructor)/instructor/discussions/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/grading",
+      "filePath": "src/app/(instructor)/instructor/grading/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/grading-hub",
+      "filePath": "src/app/(instructor)/instructor/grading-hub/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/groups",
+      "filePath": "src/app/(instructor)/instructor/groups/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/ilt",
+      "filePath": "src/app/(instructor)/instructor/ilt/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/learners",
+      "filePath": "src/app/(instructor)/instructor/learners/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/learning-paths",
+      "filePath": "src/app/(instructor)/instructor/learning-paths/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/learning-paths/new",
+      "filePath": "src/app/(instructor)/instructor/learning-paths/new/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/messages",
+      "filePath": "src/app/(instructor)/instructor/messages/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/reports",
+      "filePath": "src/app/(instructor)/instructor/reports/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/skills",
+      "filePath": "src/app/(instructor)/instructor/skills/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/instructor/skills/[id]",
+      "filePath": "src/app/(instructor)/instructor/skills/[id]/page.tsx",
+      "roleGroup": "instructor",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/learner",
+      "filePath": "src/app/(learner)/learner/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/learner/achievements",
+      "filePath": "src/app/(learner)/learner/achievements/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/learner/assignments",
+      "filePath": "src/app/(learner)/learner/assignments/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/learner/assignments/[id]",
+      "filePath": "src/app/(learner)/learner/assignments/[id]/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/learner/catalog",
+      "filePath": "src/app/(learner)/learner/catalog/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/learner/certificates",
+      "filePath": "src/app/(learner)/learner/certificates/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/learner/courses",
+      "filePath": "src/app/(learner)/learner/courses/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/learner/courses/[id]",
+      "filePath": "src/app/(learner)/learner/courses/[id]/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/learner/courses/[id]/units/[unitId]",
+      "filePath": "src/app/(learner)/learner/courses/[id]/units/[unitId]/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]",
+        "[unitId]"
+      ]
+    },
+    {
+      "path": "/learner/discussions",
+      "filePath": "src/app/(learner)/learner/discussions/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/learner/ilt",
+      "filePath": "src/app/(learner)/learner/ilt/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/learner/leaderboard",
+      "filePath": "src/app/(learner)/learner/leaderboard/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/learner/messages",
+      "filePath": "src/app/(learner)/learner/messages/page.tsx",
+      "roleGroup": "learner",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/login",
+      "filePath": "src/app/login/page.tsx",
+      "roleGroup": "other",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/signup",
+      "filePath": "src/app/signup/page.tsx",
+      "roleGroup": "other",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor",
+      "filePath": "src/app/(super-instructor)/super-instructor/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/assignments",
+      "filePath": "src/app/(super-instructor)/super-instructor/assignments/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/assignments/new",
+      "filePath": "src/app/(super-instructor)/super-instructor/assignments/new/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/calendar",
+      "filePath": "src/app/(super-instructor)/super-instructor/calendar/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/conferences",
+      "filePath": "src/app/(super-instructor)/super-instructor/conferences/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/conferences/new",
+      "filePath": "src/app/(super-instructor)/super-instructor/conferences/new/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/courses",
+      "filePath": "src/app/(super-instructor)/super-instructor/courses/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/courses/new",
+      "filePath": "src/app/(super-instructor)/super-instructor/courses/new/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/grading-hub",
+      "filePath": "src/app/(super-instructor)/super-instructor/grading-hub/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/grading-hub/[id]",
+      "filePath": "src/app/(super-instructor)/super-instructor/grading-hub/[id]/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/super-instructor/groups",
+      "filePath": "src/app/(super-instructor)/super-instructor/groups/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/groups/new",
+      "filePath": "src/app/(super-instructor)/super-instructor/groups/new/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/learning-paths",
+      "filePath": "src/app/(super-instructor)/super-instructor/learning-paths/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/learning-paths/[id]/edit",
+      "filePath": "src/app/(super-instructor)/super-instructor/learning-paths/[id]/edit/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/super-instructor/learning-paths/new",
+      "filePath": "src/app/(super-instructor)/super-instructor/learning-paths/new/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/reports",
+      "filePath": "src/app/(super-instructor)/super-instructor/reports/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/skills",
+      "filePath": "src/app/(super-instructor)/super-instructor/skills/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/skills/new",
+      "filePath": "src/app/(super-instructor)/super-instructor/skills/new/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/users",
+      "filePath": "src/app/(super-instructor)/super-instructor/users/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/super-instructor/users/[id]/edit",
+      "filePath": "src/app/(super-instructor)/super-instructor/users/[id]/edit/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": true,
+      "dynamicSegments": [
+        "[id]"
+      ]
+    },
+    {
+      "path": "/super-instructor/users/new",
+      "filePath": "src/app/(super-instructor)/super-instructor/users/new/page.tsx",
+      "roleGroup": "super-instructor",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/superadmin",
+      "filePath": "src/app/(superadmin)/superadmin/page.tsx",
+      "roleGroup": "superadmin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/superadmin/system-health",
+      "filePath": "src/app/(superadmin)/superadmin/system-health/page.tsx",
+      "roleGroup": "superadmin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/superadmin/tenants",
+      "filePath": "src/app/(superadmin)/superadmin/tenants/page.tsx",
+      "roleGroup": "superadmin",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/theme-preview",
+      "filePath": "src/app/theme-preview/page.tsx",
+      "roleGroup": "other",
+      "isDynamic": false,
+      "dynamicSegments": []
+    },
+    {
+      "path": "/users",
+      "filePath": "src/app/(dashboard)/users/page.tsx",
+      "roleGroup": "dashboard",
+      "isDynamic": false,
+      "dynamicSegments": []
+    }
+  ]
+}

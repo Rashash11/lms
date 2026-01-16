@@ -1,0 +1,48 @@
+﻿Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+node.exe : 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpe 
+   cified: (:String) [], RemoteExce  
+  ption
+    + FullyQualifiedErrorId : Native 
+   CommandError
+ 
+Error: Prisma schema validation - 
+(validate wasm)
+Error code: P1012
+[1;91merror[0m: [1mError 
+validating model "User": Ambiguous 
+relation detected. The fields 
+`learner_course_state` and 
+`learnerCourseStates` in model 
+`User` both refer to 
+`learner_course_state`. Please 
+provide different relation names for 
+them by adding 
+`@relation(<name>).[0m
+  [1;94m-->[0m  
+[4mprisma\schema.prisma:141[0m
+[1;94m   | [0m
+[1;94m140 | [0m  instructorGroups  
+      Group[]                
+@relation("InstructorGroups")
+[1;94m141 | [0m  
+[1;91mlearner_course_state    
+learner_course_state[]
+[0m
+[1;94m142 | [0m  
+instructorLearningPaths 
+LearningPath[]         
+@relation("InstructorLearningPaths")
+[1;94m   | [0m
+
+Validation Error Count: 1
+[Context: validate]
+
+Prisma CLI Version : 5.22.0

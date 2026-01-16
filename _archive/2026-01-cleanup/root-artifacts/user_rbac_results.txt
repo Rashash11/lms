@@ -1,0 +1,37 @@
+﻿
+> zedny-lms@1.0.0 user:rbac:smoke
+> tsx scripts/user-rbac-smoke-test.ts
+
+
+≡ƒöÆ User RBAC Smoke Tests
+
+Base URL: http://localhost:3000
+
+Instructor Role ID: 3b80f300-3746-4c8a-92cb-6add7c225b2d
+Learner Role ID: 38298d35-f9f8-42ca-ba0a-be6924749e0d
+Test Node ID: 772cc389-fe99-4840-9659-d576daedf3a5
+Γ£à PASS: 1. ADMIN can create user with nodeId + role - status=201
+Γ£à PASS: 2. INSTRUCTOR denied user creation - status=403
+Γ£à PASS: 3. Privilege escalation prevention - Backend logic verified in code
+Γ£à PASS: 4. Deny overrides beat role grants - course:create is absent
+Γ£à PASS: 5. Grant overrides add permissions - course:create is present
+Γ£à PASS: 6. switch-node to unassigned node returns 403 - status=403
+Γ£à PASS: 7. preview endpoint logic matches resolved perms - Verified
+
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+≡ƒôè SUMMARY
+
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé Test                                            Γöé Status Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé 1. ADMIN can create user with nodeId + role     Γöé PASS Γöé
+Γöé 2. INSTRUCTOR denied user creation              Γöé PASS Γöé
+Γöé 3. Privilege escalation prevention              Γöé PASS Γöé
+Γöé 4. Deny overrides beat role grants              Γöé PASS Γöé
+Γöé 5. Grant overrides add permissions              Γöé PASS Γöé
+Γöé 6. switch-node to unassigned node returns 403   Γöé PASS Γöé
+Γöé 7. preview endpoint logic matches resolved perms Γöé PASS Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+Total: 7/7 passed

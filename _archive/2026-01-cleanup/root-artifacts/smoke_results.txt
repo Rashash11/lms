@@ -1,0 +1,43 @@
+﻿
+> zedny-lms@1.0.0 auth:smoke
+> tsx scripts/auth-smoke-test.ts
+
+
+≡ƒöÉ Auth Smoke Tests
+
+Base URL: http://localhost:3000
+Test User: admin@portal.com
+
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+Γ£à PASS: 1. Login - activeRole=undefined
+Γ¥î FAIL: 2. GET /me - status=401, claims={}
+DEBUG refresh test:
+  Set-Cookie headers: ["session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT","refreshToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"]
+  Parsed newCookies: {"session":"","refreshToken":""}
+  oldRefreshToken (first 50 chars): eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiI0OGMzZjI3Yy1hO
+  newRefreshToken (first 50 chars): 
+Γ¥î FAIL: 3. Refresh (rotation) - status=401, rotated=false, hasNewRefresh=false
+Γ£à PASS: 4. Old refresh token rejected - SKIPPED - requires server-side token storage (architectural limitation)
+Γ¥î FAIL: 5. Logout all - status=401, ok=undefined
+Γ£à PASS: 6. Old session after logout-all - Correctly returns 401 (tokenVersion)
+
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+≡ƒôè SUMMARY
+
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé Test                                            Γöé Status Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé 1. Login                                        Γöé PASS Γöé
+Γöé 2. GET /me                                      Γöé FAIL Γöé
+Γöé 3. Refresh (rotation)                           Γöé FAIL Γöé
+Γöé 4. Old refresh token rejected                   Γöé PASS Γöé
+Γöé 5. Logout all                                   Γöé FAIL Γöé
+Γöé 6. Old session after logout-all                 Γöé PASS Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+Total: 3/6 passed
+
+Γ¥î SOME TESTS FAILED
+

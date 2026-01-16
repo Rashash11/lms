@@ -25,35 +25,41 @@
         ],
         "paths": {
             "@/*": [
-                "./src/*"
+                "./apps/web/src/*"
+            ],
+            "@modules/*": [
+                "./apps/web/src/modules/*"
+            ],
+            "@shared/*": [
+                "./apps/web/src/shared/*"
             ],
             "@/components/*": [
-                "./src/components/*"
+                "./apps/web/src/components/*"
             ],
             "@/lib/*": [
-                "./src/lib/*"
+                "./apps/web/src/server/*"
             ],
             "@/types/*": [
-                "./src/types/*"
+                "./apps/web/src/shared/types/*"
             ],
             "@/hooks/*": [
-                "./src/hooks/*"
-            ],
-            "@/utils/*": [
-                "./src/utils/*"
+                "./apps/web/src/shared/hooks/*"
             ]
         }
     },
     "include": [
-        "next-env.d.ts",
-        "**/*.ts",
-        "**/*.tsx",
-        ".next/types/**/*.ts"
+        "apps/web/next-env.d.ts",
+        "apps/web/**/*.ts",
+        "apps/web/**/*.tsx",
+        "tests/**/*.ts",
+        "tests/**/*.tsx"
     ],
     "exclude": [
         "node_modules",
-        ".next/types/app/(admin)/**/*",
+        ".next",
         "prisma",
+        "scripts",
+        "tools",
         "vite.config.ts",
         "talentlms-dashboard-clone"
     ]
